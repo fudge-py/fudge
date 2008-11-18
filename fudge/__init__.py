@@ -30,24 +30,77 @@ def start():
 def stop():
     registry.stop()
 
+def fmt_val(val):
+    """format a value for inclusion in an 
+    informative text string
+    """
+    val = repr(val)
+    if len(val) > 10:
+        close = val[-1]
+        val = val[0:7] + "..."
+        if close in ("'", '"', ']', '}', ')'):
+            val = val + close
+    return val
+
+def fmt_dict_vals(dict_vals):
+    """returns list of key=val pairs formatted
+    for inclusion in an informative text string
+    """
+    items = dict_vals.items()
+    if not items:
+        return [fmt_val(None)]
+    return ["%s=%s" % (k, fmt_val(v)) for k,v in items]
+    
 class ExpectedCall(object):
     
     def __call__(self, *args, **kwargs):
-        self.actual_args = args
-        self.actual_kwargs = kwargs
+        if self.expected_args:
+            if args != self.expected_args:
+                raise AssertionError(
+                    "%s was called unexpectedly with args %s" % (self, args))
+        elif len(args) != self.expected_arg_count:
+            raise AssertionError(
+                "%s was called with %s arg(s) but expected %s" % (
+                    self, len(args), self.expected_arg_count))
+                    
+        if self.expected_kwargs:
+            if kwargs != self.expected_kwargs:
+                raise AssertionError(
+                    "%s was called unexpectedly with keyword args %s" % (
+                                self, ", ".join(fmt_dict_vals(kwargs))))
+        elif len(kwargs.keys()) != self.expected_kwarg_count:
+            raise AssertionError(
+                "%s was called with %s keyword arg(s) but expected %s" % (
+                    self, len(kwargs.keys()), self.expected_kwarg_count))
+        
         self.was_called = True
         return self.return_val
+    
+    def __repr__(self):
+        call = "%s.%s(" % (self.fake.__class__.__name__, self.call_name)
+        args = []
+        if self.expected_args:
+            args.extend([fmt_val(a) for a in self.expected_args])
+        if self.expected_kwargs:
+            args.extend(fmt_dict_vals(self.expected_kwargs))
+        if args:
+            call = "%s%s" % (call, ", ".join(args))
+        call = "%s)" % call
+        return call
     
     def __init__(self, fake, call_name):
         self.fake = fake
         self.was_called = False
         self.call_name = call_name
         self.expected_arg_count = 0
+        self.expected_kwarg_count = 0
         self.expected_args = None
         self.expected_kwargs = None
         self.return_val = None
-        self.actual_args = []
-        self.actual_kwargs = {}
+    
+    def assert_called(self):
+        if not self.was_called:
+            raise AssertionError("%s was not called" % (self))
 
 class Fake(object):
     

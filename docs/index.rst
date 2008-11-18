@@ -149,10 +149,10 @@ This is how to set this up with Fudge:
 
     >>> import fudge
     >>> client = fudge.Fake().expects('GetCampaignService').with_args('https://sandbox.google.com')
-    >>> service = client.returns_fake() # set the return to a new fake object
-    >>> service = service.expects('AddCampaign').with_args(name="Thanksgiving Day Sale",
-    ...                                                    dailyBudget=10000,
-    ...                                                    status='Paused')
+    >>> service = client.returns_fake() # returns a new fake object
+    >>> service = service.expects('AddCampaign').with_args({'name': "Thanksgiving Day Sale",
+    ...                                                     'dailyBudget': 10000,
+    ...                                                     'status': 'Paused'})
     >>> service = service.returns([{'id':12345}])
 
 Since the method doesn't import anything you don't 

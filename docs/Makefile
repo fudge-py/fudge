@@ -34,8 +34,6 @@ html:
 doctest:
 	mkdir -p _build/html _build/doctrees
 	PYTHONPATH=../:./_doctest_support $(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) _build/html
-	@echo
-	@echo "Doctest finished."
 
 pickle:
 	mkdir -p _build/pickle _build/doctrees
