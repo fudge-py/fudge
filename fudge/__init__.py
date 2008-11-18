@@ -5,10 +5,9 @@ class Registry(object):
     
     def __init__(self):
         self.expected_calls = []
-        self.clear()
         
     def clear(self):
-        self.calls_made = {}
+        self.expected_calls[:] = []
         
     def start(self):
         self.clear()
@@ -17,7 +16,11 @@ class Registry(object):
         """ensure all expected calls were called, 
         raise AssertionError otherwise
         """
-        self.expected_calls[:] = []
+        try:
+            for exp in self.expected_calls:
+                exp.assert_called()
+        finally:
+            self.clear()
         
     def expect_call(self, expected_call):
         self.expected_calls.append(expected_call)
@@ -52,6 +55,10 @@ def fmt_dict_vals(dict_vals):
     return ["%s=%s" % (k, fmt_val(v)) for k,v in items]
     
 class ExpectedCall(object):
+    """An expectation that a call will be made on a Fake object.
+    
+    You do not need to use this directly, use Fake.expects(...), etc
+    """
     
     def __call__(self, *args, **kwargs):
         if self.expected_args:

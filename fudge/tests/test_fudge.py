@@ -1,9 +1,10 @@
 
+import unittest
 import fudge
 from nose.tools import eq_, raises
 from fudge import ExpectedCall
 
-class TestExpectedCall(object):
+class TestExpectedCall(unittest.TestCase):
     
     def setUp(self):
         self.fake = fudge.Fake()
@@ -36,4 +37,46 @@ class TestExpectedCall(object):
         exp = ExpectedCall(self.fake, '__init__')
         exp.expected_kwarg_count = 2
         exp(maybe="yes, maybe")
+
+class TestRegistry(unittest.TestCase):
+    
+    def setUp(self):
+        self.fake = fudge.Fake()
+        self.reg = fudge.registry
+        self.reg.start()
+    
+    @raises(AssertionError)
+    def test_expected_calls(self):
+        self.reg.expect_call(ExpectedCall(self.fake, 'nothing'))
+        self.reg.stop()
+        
+    @raises(AssertionError)
+    def test_more_expected_calls(self):
+        exp = ExpectedCall(self.fake, 'elsewhere')
+        self.reg.expect_call(exp)
+        exp()
+        self.reg.expect_call(ExpectedCall(self.fake, 'nothing'))
+        self.reg.stop()
+    
+    def test_stop(self):
+        exp = ExpectedCall(self.fake, 'callMe')
+        self.reg.expect_call(exp)
+        exp()
+        eq_(len(self.reg.expected_calls), 1)
+        self.reg.stop()
+        eq_(len(self.reg.expected_calls), 0)
+    
+    def test_global_stop(self):
+        exp = ExpectedCall(self.fake, 'callMe')
+        exp()
+        self.reg.expect_call(exp)
+        eq_(len(self.reg.expected_calls), 1)
+        fudge.start()
+        eq_(len(self.reg.expected_calls), 0)
+        self.reg.expect_call(exp)
+        eq_(len(self.reg.expected_calls), 1)
+        fudge.stop()
+        eq_(len(self.reg.expected_calls), 0)
+        
+        
         
