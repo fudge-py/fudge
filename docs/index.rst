@@ -129,7 +129,7 @@ Fudging An Object That Returns an Object
 
 Next, consider this method to create a campaign.  Because SOAP is so amazing, you 
 have to first obtain the campaign_service object from the client object then you can 
-make a call on the campaign_service to create a simple campaign:
+make a call on the campaign_service to create a new campaign:
 
 .. doctest::
     
@@ -138,23 +138,22 @@ make a call on the campaign_service to create a simple campaign:
     ...     campaign = dict(name=name, 
     ...                     dailyBudget=dailyBudget, 
     ...                     status=status)
-    ...     return campaign_service.AddCampaign(campaign)
+    ...     result = campaign_service.AddCampaign(campaign)
+    ...     print "Created new campaign with ID %s" % result[0]['id']
     ... 
     >>> 
 
-This is how to set this with Fudge:
+This is how to set this up with Fudge:
 
 .. doctest::
 
     >>> import fudge
-    >>> client = fudge.Fake().expects('GetCampaignService').with_args(
-    ...                                             'https://sandbox.google.com')
+    >>> client = fudge.Fake().expects('GetCampaignService').with_args('https://sandbox.google.com')
     >>> service = client.returns_fake() # set the return to a new fake object
-    >>> service = service.expects('AddCampaign').with_args(
-    ...                     name="Thanksgiving Day Sale",
-    ...                     dailyBudget=10000,
-    ...                     status='Paused')
-    >>> service = service.returns("Campaign created successfully")
+    >>> service = service.expects('AddCampaign').with_args(name="Thanksgiving Day Sale",
+    ...                                                    dailyBudget=10000,
+    ...                                                    status='Paused')
+    >>> service = service.returns([{'id':12345}])
 
 Since the method doesn't import anything you don't 
 have to use a patcher, just start testing:
@@ -162,13 +161,15 @@ have to use a patcher, just start testing:
 .. doctest::
     
     >>> fudge.start()
-    >>> result = create_campaign( client,
-    ...                     name="Thanksgiving Day Sale", 
-    ...                     dailyBudget=10000, 
-    ...                     status='Paused')
+    >>> create_campaign( client,
+    ...                 name="Thanksgiving Day Sale", 
+    ...                 dailyBudget=10000, 
+    ...                 status='Paused')
     ... 
-    >>> result
-    'Campaign created successfully'
+    Created new campaign with ID 12345
+    >>> fudge.stop()
+
+
 
 
 
