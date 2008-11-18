@@ -1,13 +1,23 @@
 
+import thread
 from fudge.util import *
 
 class Registry(object):
+    """An internal, thread-safe registry of expected calls.
+    
+    You do not need to use this directly, use Fake.expects(...), etc
+    """
     
     def __init__(self):
-        self.expected_calls = []
+        self.expected_calls = {}
         
     def clear(self):
-        self.expected_calls[:] = []
+        c = self.get_expected_calls()
+        c[:] = []
+    
+    def get_expected_calls(self):
+        self.expected_calls.setdefault(thread.get_ident(), [])
+        return self.expected_calls[thread.get_ident()]
         
     def start(self):
         self.clear()
@@ -17,13 +27,14 @@ class Registry(object):
         raise AssertionError otherwise
         """
         try:
-            for exp in self.expected_calls:
+            for exp in self.get_expected_calls():
                 exp.assert_called()
         finally:
             self.clear()
         
     def expect_call(self, expected_call):
-        self.expected_calls.append(expected_call)
+        c = self.get_expected_calls()
+        c.append(expected_call)
         
 registry = Registry()
 

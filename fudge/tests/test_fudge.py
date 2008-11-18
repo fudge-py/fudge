@@ -1,4 +1,5 @@
 
+import thread
 import unittest
 import fudge
 from nose.tools import eq_, raises
@@ -62,21 +63,66 @@ class TestRegistry(unittest.TestCase):
         exp = ExpectedCall(self.fake, 'callMe')
         self.reg.expect_call(exp)
         exp()
-        eq_(len(self.reg.expected_calls), 1)
+        eq_(len(self.reg.get_expected_calls()), 1)
         self.reg.stop()
-        eq_(len(self.reg.expected_calls), 0)
+        eq_(len(self.reg.get_expected_calls()), 0)
     
     def test_global_stop(self):
         exp = ExpectedCall(self.fake, 'callMe')
         exp()
         self.reg.expect_call(exp)
-        eq_(len(self.reg.expected_calls), 1)
+        eq_(len(self.reg.get_expected_calls()), 1)
         fudge.start()
-        eq_(len(self.reg.expected_calls), 0)
+        eq_(len(self.reg.get_expected_calls()), 0)
         self.reg.expect_call(exp)
-        eq_(len(self.reg.expected_calls), 1)
+        eq_(len(self.reg.get_expected_calls()), 1)
         fudge.stop()
-        eq_(len(self.reg.expected_calls), 0)
+        eq_(len(self.reg.get_expected_calls()), 0)
+    
+    def test_multithreading(self):
         
+        reg = fudge.registry
+        
+        class thread_run:
+            waiting = 5
+            errors = []
+        
+        # while this barely catches collisions
+        # it ensures that each thread can use the registry ok
+        def registry(num):
+            try:
+                try:
+                    fudge.start()
+                    exp = ExpectedCall(self.fake, 'callMe')
+                    exp()
+                    reg.expect_call(exp)
+                    reg.expect_call(exp)
+                    reg.expect_call(exp)
+                    reg.expect_call(exp)
+                    eq_(len(reg.get_expected_calls()), 4)
+                    fudge.stop()
+                except Exception, er:
+                    thread_run.errors.append(er)
+                    raise
+            finally:
+                thread_run.waiting -= 1
+                
+        thread.start_new_thread(registry, (1,))
+        thread.start_new_thread(registry, (2,))
+        thread.start_new_thread(registry, (3,))
+        thread.start_new_thread(registry, (4,))
+        thread.start_new_thread(registry, (5,))
+
+        count = 0
+        while thread_run.waiting > 0:
+            count += 1
+            import time
+            time.sleep(0.25)
+            if count == 60:
+                raise RuntimeError("timed out waiting for thread")
+        if len(thread_run.errors):
+            raise RuntimeError(
+                "Error(s) in thread: %s" % ["%s: %s" % (
+                    e.__class__.__name__, e) for e in thread_run.errors])
         
         
