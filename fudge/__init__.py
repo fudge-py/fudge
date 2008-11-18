@@ -42,6 +42,7 @@ class ExpectedCall(object):
         self.fake = fake
         self.was_called = False
         self.call_name = call_name
+        self.expected_arg_count = 0
         self.expected_args = None
         self.expected_kwargs = None
         self.return_val = None
@@ -81,6 +82,12 @@ class Fake(object):
             exp.expected_args = args
         if kwargs:
             exp.expected_kwargs = kwargs
+        return self
+    
+    def with_arg_count(self, count):
+        assert self.last_expected_call_name
+        exp = self.calls[self.last_expected_call_name]
+        exp.expected_arg_count = count
         return self
     
     def returns_fake(self):
