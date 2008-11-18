@@ -44,12 +44,15 @@ class TestRegistry(unittest.TestCase):
     def setUp(self):
         self.fake = fudge.Fake()
         self.reg = fudge.registry
-        self.reg.start()
+    
+    def tearDown(self):
+        # in case of error, clear this out:
+        self.reg.finish()
     
     @raises(AssertionError)
     def test_expected_calls(self):
         self.reg.expect_call(ExpectedCall(self.fake, 'nothing'))
-        self.reg.stop()
+        self.reg.finish()
         
     @raises(AssertionError)
     def test_more_expected_calls(self):
@@ -57,26 +60,22 @@ class TestRegistry(unittest.TestCase):
         self.reg.expect_call(exp)
         exp()
         self.reg.expect_call(ExpectedCall(self.fake, 'nothing'))
-        self.reg.stop()
+        self.reg.finish()
     
-    def test_stop(self):
+    def test_finish(self):
         exp = ExpectedCall(self.fake, 'callMe')
         self.reg.expect_call(exp)
         exp()
         eq_(len(self.reg.get_expected_calls()), 1)
-        self.reg.stop()
+        self.reg.finish()
         eq_(len(self.reg.get_expected_calls()), 0)
     
-    def test_global_stop(self):
+    def test_global_finish(self):
         exp = ExpectedCall(self.fake, 'callMe')
         exp()
         self.reg.expect_call(exp)
         eq_(len(self.reg.get_expected_calls()), 1)
-        fudge.start()
-        eq_(len(self.reg.get_expected_calls()), 0)
-        self.reg.expect_call(exp)
-        eq_(len(self.reg.get_expected_calls()), 1)
-        fudge.stop()
+        fudge.finish()
         eq_(len(self.reg.get_expected_calls()), 0)
     
     def test_multithreading(self):
@@ -92,7 +91,6 @@ class TestRegistry(unittest.TestCase):
         def registry(num):
             try:
                 try:
-                    fudge.start()
                     exp = ExpectedCall(self.fake, 'callMe')
                     exp()
                     reg.expect_call(exp)
@@ -100,7 +98,7 @@ class TestRegistry(unittest.TestCase):
                     reg.expect_call(exp)
                     reg.expect_call(exp)
                     eq_(len(reg.get_expected_calls()), 4)
-                    fudge.stop()
+                    fudge.finish()
                 except Exception, er:
                     thread_run.errors.append(er)
                     raise

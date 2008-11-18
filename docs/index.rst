@@ -4,8 +4,8 @@ Fudge Documentation
 
 Fudge is a Python module for mocks, stubs, and fakes.
 
-A Quick Example: Testing Something That Sends Email
-===================================================
+Example: Fudging Email
+======================
 
 Say you have a method that uses Python's standard `smtplib <http://docs.python.org/library/smtplib.html#module-smtplib>`_ module 
 to send email:
@@ -25,10 +25,8 @@ to send email:
     >>> 
 
 You can use Fudge to test this method without actually executing the email 
-sending code.  Instead, since you trust that smtplib works, you can expect 
-that it is used according to its interface.  
-
-First set up a fake expectation of how the SMTP class should be used:
+sending code.  Since you trust that the SMTP class works, you can expect that 
+your code uses it properly:
 
 .. doctest::
     
@@ -39,7 +37,7 @@ First set up a fake expectation of how the SMTP class should be used:
     >>> SMTP = SMTP.expects('sendmail').with_arg_count(3) # s.sendmail(sender, recipient, msg)
     >>> SMTP = SMTP.expects('close') # s.close()
 
-Next, patch the module temporarily while you test:
+Next, patch the module temporarily with your fake:
     
 .. doctest::
 
@@ -50,18 +48,17 @@ Now you can run the code with the fake object:
 
 .. doctest::
     
-    >>> fudge.start()
     >>> send_email( "kumar.mcmillan@gmail.com", "you@yourhouse.com", 
     ...                                 "hi, I'm reading about Fudge!")
     ... 
     Sent an email to kumar.mcmillan@gmail.com
-    >>> fudge.stop()
+    >>> fudge.finish()
     >>> patched_smtplib.restore()
 
 Instead of using ``with_arg_count()`` you'd probably want to check that the first argument is the intended sender and the second is the intended recipient (important to not to mix these up).  I'll show you how to do something like that in the next example.
     
-Another Example: Fudging The Google AdWords API
-===============================================
+Example: Fudging An API
+=======================
 
 Let's say you have some code that interacts with `Google's AdWords API <http://code.google.com/apis/adwords/>`_, a SOAP web service for managing search engine ad campaigns.  If your automated tests run code that use this API, you have a couple options:
 
@@ -112,11 +109,10 @@ Now, run the get_client() method against your fake objects:
 
 .. doctest::
 
-    >>> fudge.start()
     >>> client = get_client(email="some-google-id@wherever.com", password="xxxxxx")
     >>> client # doctest: +ELLIPSIS
     <fudge.Fake object at ...>
-    >>> fudge.stop()
+    >>> fudge.finish()
 
 Finally, restore the real Client object:
 
@@ -124,10 +120,10 @@ Finally, restore the real Client object:
 
     >>> patched_awapi.restore()
 
-Fudging An Object That Returns an Object
-----------------------------------------
+Example: Fudging Chained Objects
+================================
 
-Next, consider this method to create a campaign.  Because SOAP is so amazing, you 
+Consider this method to create a campaign.  Because SOAP is so amazing, you 
 have to first obtain the campaign_service object from the client object then you can 
 make a call on the campaign_service to create a new campaign:
 
@@ -143,31 +139,30 @@ make a call on the campaign_service to create a new campaign:
     ... 
     >>> 
 
-This is how to set this up with Fudge:
+This is how to set it up with Fudge:
 
 .. doctest::
 
     >>> import fudge
     >>> client = fudge.Fake().expects('GetCampaignService').with_args('https://sandbox.google.com')
-    >>> service = client.returns_fake() # returns a new fake object
+    >>> service = client.returns_fake()
     >>> service = service.expects('AddCampaign').with_args({'name': "Thanksgiving Day Sale",
     ...                                                     'dailyBudget': 10000,
     ...                                                     'status': 'Paused'})
     >>> service = service.returns([{'id':12345}])
 
 Since the method doesn't import anything you don't 
-have to use a patcher, just start testing:
+have to use a patcher, just pass in the fake instance while testing:
 
 .. doctest::
     
-    >>> fudge.start()
     >>> create_campaign( client,
     ...                 name="Thanksgiving Day Sale", 
     ...                 dailyBudget=10000, 
     ...                 status='Paused')
     ... 
     Created new campaign with ID 12345
-    >>> fudge.stop()
+    >>> fudge.finish()
 
 
 

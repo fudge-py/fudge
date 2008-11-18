@@ -18,11 +18,8 @@ class Registry(object):
     def get_expected_calls(self):
         self.expected_calls.setdefault(thread.get_ident(), [])
         return self.expected_calls[thread.get_ident()]
-        
-    def start(self):
-        self.clear()
     
-    def stop(self):
+    def finish(self):
         """ensure all expected calls were called, 
         raise AssertionError otherwise
         """
@@ -37,12 +34,9 @@ class Registry(object):
         c.append(expected_call)
         
 registry = Registry()
-
-def start():
-    registry.start()
     
-def stop():
-    registry.stop()
+def finish():
+    registry.finish()
 
 def fmt_val(val):
     """format a value for inclusion in an 
