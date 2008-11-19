@@ -13,10 +13,10 @@ to send email:
 .. doctest::
 
     >>> def send_email(recipient, sender, msg):
-    ...     from smtplib import SMTP
+    ...     import smtplib
     ...     msg = ("From: %s\r\nTo: %s\r\n\r\n%s" % (
     ...             sender, ", ".join(recipient), msg))
-    ...     s = SMTP()
+    ...     s = smtplib.SMTP()
     ...     s.connect()
     ...     s.sendmail(sender, recipient, msg)
     ...     s.close()
