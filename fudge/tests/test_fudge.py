@@ -66,8 +66,10 @@ class TestRegistry(unittest.TestCase):
         exp = ExpectedCall(self.fake, 'callMe')
         self.reg.expect_call(exp)
         exp()
+        eq_(exp.was_called, True)
         eq_(len(self.reg.get_expected_calls()), 1)
         self.reg.finish()
+        eq_(exp.was_called, False, "expected call was not reset by finish()")
         eq_(len(self.reg.get_expected_calls()), 0)
     
     def test_global_finish(self):

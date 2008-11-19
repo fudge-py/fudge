@@ -27,6 +27,9 @@ class Registry(object):
             for exp in self.get_expected_calls():
                 exp.assert_called()
         finally:
+            # reset all calls
+            for exp in self.get_expected_calls():
+                exp.was_called = False
             self.clear()
         
     def expect_call(self, expected_call):
