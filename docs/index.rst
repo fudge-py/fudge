@@ -41,8 +41,7 @@ Next, patch the module temporarily with your fake:
     
 .. doctest::
 
-    >>> import smtplib
-    >>> patched_smtplib = fudge.patch_object(smtplib, "SMTP", SMTP)
+    >>> patched_smtplib = fudge.patch_object("smtplib", "SMTP", SMTP)
 
 Now you can run the code with the fake object:
 
@@ -102,8 +101,7 @@ Next, replace the real ``awapi.lib.Client.Client`` object temporarily during you
 
 .. doctest::
 
-    >>> import awapi.lib.Client
-    >>> patched_awapi = fudge.patch_object(awapi.lib.Client, "Client", Client)
+    >>> patched_awapi = fudge.patch_object("awapi.lib.Client", "Client", Client)
 
 Now, run the get_client() method against your fake objects:
 

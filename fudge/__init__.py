@@ -1,6 +1,6 @@
 
 import thread
-from fudge.util import *
+from fudge.patcher import *
 
 class Registry(object):
     """An internal, thread-safe registry of expected calls.

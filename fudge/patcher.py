@@ -2,6 +2,12 @@
 __all__ = ['patch_object']
 
 def patch_object(obj, attr_name, patched_value):
+    if isinstance(obj, (str, unicode)):
+        obj_path = obj
+        obj = __import__(obj_path)
+        for part in obj_path.split('.')[1:]:
+            obj = getattr(obj, part)
+
     handle = PatchHandler(obj, attr_name)
     handle.patch(patched_value)
     return handle
