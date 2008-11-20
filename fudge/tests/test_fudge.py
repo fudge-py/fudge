@@ -44,41 +44,45 @@ class TestRegistry(unittest.TestCase):
     def setUp(self):
         self.fake = fudge.Fake()
         self.reg = fudge.registry
+        # in case of error, clear out everything:
+        self.reg.clear_all()
     
     def tearDown(self):
-        # in case of error, clear this out:
-        self.reg.finish()
+        pass
     
     @raises(AssertionError)
-    def test_expected_calls(self):
+    def test_expected_call_not_called(self):
+        self.reg.start()
         self.reg.expect_call(ExpectedCall(self.fake, 'nothing'))
-        self.reg.finish()
+        self.reg.stop()
         
-    @raises(AssertionError)
-    def test_more_expected_calls(self):
-        exp = ExpectedCall(self.fake, 'elsewhere')
+    def test_start_resets_calls(self):
+        exp = ExpectedCall(self.fake, 'callMe')
         self.reg.expect_call(exp)
         exp()
-        self.reg.expect_call(ExpectedCall(self.fake, 'nothing'))
-        self.reg.finish()
+        eq_(exp.was_called, True)
+        
+        self.reg.start()
+        eq_(exp.was_called, False, "call was not reset by start()")
     
-    def test_finish(self):
+    def test_stop_resets_calls_and_expectations(self):
         exp = ExpectedCall(self.fake, 'callMe')
         self.reg.expect_call(exp)
         exp()
         eq_(exp.was_called, True)
         eq_(len(self.reg.get_expected_calls()), 1)
-        self.reg.finish()
-        eq_(exp.was_called, False, "expected call was not reset by finish()")
-        eq_(len(self.reg.get_expected_calls()), 0)
+        
+        self.reg.stop()
+        eq_(exp.was_called, False, "call was not reset by stop()")
+        eq_(len(self.reg.get_expected_calls()), 0, "expected call was not reset by stop()")
     
-    def test_global_finish(self):
+    def test_global_stop(self):
         exp = ExpectedCall(self.fake, 'callMe')
         exp()
         self.reg.expect_call(exp)
         eq_(len(self.reg.get_expected_calls()), 1)
-        fudge.finish()
-        eq_(len(self.reg.get_expected_calls()), 0)
+        fudge.stop()
+        eq_(len(self.reg.get_expected_calls()), 0, "fudge.stop() did not stop calls")
     
     def test_multithreading(self):
         
@@ -93,6 +97,7 @@ class TestRegistry(unittest.TestCase):
         def registry(num):
             try:
                 try:
+                    fudge.start()
                     exp = ExpectedCall(self.fake, 'callMe')
                     exp()
                     reg.expect_call(exp)
@@ -100,7 +105,7 @@ class TestRegistry(unittest.TestCase):
                     reg.expect_call(exp)
                     reg.expect_call(exp)
                     eq_(len(reg.get_expected_calls()), 4)
-                    fudge.finish()
+                    fudge.stop()
                 except Exception, er:
                     thread_run.errors.append(er)
                     raise

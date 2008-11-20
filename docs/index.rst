@@ -47,11 +47,12 @@ Now you can run the code with the fake object:
 
 .. doctest::
     
+    >>> fudge.start()
     >>> send_email( "kumar.mcmillan@gmail.com", "you@yourhouse.com", 
     ...                                 "hi, I'm reading about Fudge!")
     ... 
     Sent an email to kumar.mcmillan@gmail.com
-    >>> fudge.finish()
+    >>> fudge.stop()
     >>> patched_smtplib.restore()
 
 Instead of using ``with_arg_count()`` you'd probably want to check that the first argument is the intended sender and the second is the intended recipient (important to not to mix these up).  I'll show you how to do something like that in the next example.
@@ -106,11 +107,12 @@ Next, replace the real ``awapi.lib.Client.Client`` object temporarily during you
 Now, run the get_client() method against your fake objects:
 
 .. doctest::
-
+    
+    >>> fudge.start()
     >>> client = get_client(email="some-google-id@wherever.com", password="xxxxxx")
     >>> client # doctest: +ELLIPSIS
     <fudge.Fake object at ...>
-    >>> fudge.finish()
+    >>> fudge.stop()
 
 Finally, restore the real Client object:
 
@@ -154,13 +156,14 @@ have to use a patcher, just pass in the fake instance while testing:
 
 .. doctest::
     
+    >>> fudge.start()
     >>> create_campaign( client,
     ...                 name="Thanksgiving Day Sale", 
     ...                 dailyBudget=10000, 
     ...                 status='Paused')
     ... 
     Created new campaign with ID 12345
-    >>> fudge.finish()
+    >>> fudge.stop()
 
 
 

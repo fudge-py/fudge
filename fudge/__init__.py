@@ -10,8 +10,16 @@ class Registry(object):
     
     def __init__(self):
         self.expected_calls = {}
+    
+    def clear_actual_calls(self):
+        for exp in self.get_expected_calls():
+            exp.was_called = False
+    
+    def clear_all(self):
+        self.clear_actual_calls()
+        self.clear_expectations()
         
-    def clear(self):
+    def clear_expectations(self):
         c = self.get_expected_calls()
         c[:] = []
     
@@ -19,31 +27,56 @@ class Registry(object):
         self.expected_calls.setdefault(thread.get_ident(), [])
         return self.expected_calls[thread.get_ident()]
     
-    def finish(self):
-        """ensure all expected calls were called, 
-        raise AssertionError otherwise
+    def start(self):
+        """Clears out any calls that were made on previously 
+        registered fake objects.
+        
+        You do not need to use this directly.  Use fudge.start()
+        """
+        self.clear_actual_calls()
+    
+    def stop(self):
+        """Ensure all expected calls were called, 
+        raise AssertionError otherwise.
+        
+        You do not need to use this directly.  Use fudge.stop()
         """
         try:
             for exp in self.get_expected_calls():
                 exp.assert_called()
         finally:
-            # reset all calls
-            for exp in self.get_expected_calls():
-                exp.was_called = False
-            self.clear()
+            self.clear_all()
         
     def expect_call(self, expected_call):
         c = self.get_expected_calls()
         c.append(expected_call)
         
 registry = Registry()
+
+def start():
+    """Start testing with fake objects.
     
-def finish():
-    registry.finish()
+    Specifically, clear out any calls that 
+    were made on previously registered fake 
+    objects.  You don't really need to call 
+    this but it's safer since an exception 
+    might bubble up from a previous test.
+    """
+    registry.start()
+    
+def stop():
+    """Stop testing with fake objects.
+    
+    Specifically, analyze all registered fake 
+    objects and raise an AssertionError if an 
+    expected call was never made to one or more 
+    objects.
+    """
+    registry.stop()
 
 def fmt_val(val):
-    """format a value for inclusion in an 
-    informative text string
+    """Format a value for inclusion in an 
+    informative text string.
     """
     val = repr(val)
     if len(val) > 10:
@@ -54,8 +87,8 @@ def fmt_val(val):
     return val
 
 def fmt_dict_vals(dict_vals):
-    """returns list of key=val pairs formatted
-    for inclusion in an informative text string
+    """Returns list of key=val pairs formatted
+    for inclusion in an informative text string.
     """
     items = dict_vals.items()
     if not items:
