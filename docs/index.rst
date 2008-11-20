@@ -25,17 +25,19 @@ to send email:
     >>> 
 
 You can use Fudge to test this method without actually executing the email 
-sending code.  Since you trust that the SMTP class works, you can expect that 
-your code uses it properly:
+sending code.  Since you trust that the SMTP class works, a good test would be 
+to expect that your code uses it properly:
 
 .. doctest::
     
     >>> import fudge
     >>> SMTP = fudge.Fake()
-    >>> SMTP = SMTP.expects('__init__') # s = SMTP()
-    >>> SMTP = SMTP.expects('connect') # s.connect()
-    >>> SMTP = SMTP.expects('sendmail').with_arg_count(3) # s.sendmail(sender, recipient, msg)
-    >>> SMTP = SMTP.expects('close') # s.close()
+    >>> SMTP = SMTP.expects('__init__')
+    >>> SMTP = SMTP.expects('connect')
+    >>> SMTP = SMTP.expects('sendmail').with_arg_count(3)
+    >>> SMTP = SMTP.expects('close')
+
+Instead of using ``with_arg_count()`` you'd probably want to check that the first argument is the intended sender and the second is the intended recipient (important to not to mix these up).  I'll show you how to do something like that in an upcoming example.
 
 Next, patch the module temporarily with your fake:
     
@@ -55,7 +57,25 @@ Now you can run the code with the fake object:
     >>> fudge.stop()
     >>> patched_smtplib.restore()
 
-Instead of using ``with_arg_count()`` you'd probably want to check that the first argument is the intended sender and the second is the intended recipient (important to not to mix these up).  I'll show you how to do something like that in the next example.
+Example: A Simple Test Case
+===========================
+
+The above code could also be written as a test case:
+
+.. doctest::
+    
+    >>> @fudge.with_fakes
+    ... @fudge.with_patched_object("smtplib", "SMTP", SMTP)
+    ... def test_email():
+    ...     send_email( "kumar.mcmillan@gmail.com", 
+    ...                 "you@yourhouse.com", 
+    ...                 "Mmmm, fudge")
+    ... 
+    >>> test_email()
+    Sent an email to kumar.mcmillan@gmail.com
+
+You could also apply these decorators to a method on a class 
+descending from ``unittest.TestCase``
     
 Example: Fudging An API
 =======================

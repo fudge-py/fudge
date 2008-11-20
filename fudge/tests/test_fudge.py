@@ -129,5 +129,21 @@ class TestRegistry(unittest.TestCase):
             raise RuntimeError(
                 "Error(s) in thread: %s" % ["%s: %s" % (
                     e.__class__.__name__, e) for e in thread_run.errors])
-        
+
+def test_decorator_on_def():
+    class holder:
+        test_called = False
+    
+    bobby = fudge.Fake()
+    bobby.expects("suzie_called")
+    
+    @raises(AssertionError)
+    @fudge.with_fakes
+    def some_test():
+        holder.test_called = True
+    
+    eq_(some_test.__name__, 'some_test')
+    some_test()
+    
+    eq_(holder.test_called, True)
         

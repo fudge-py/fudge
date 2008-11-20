@@ -1,6 +1,7 @@
 
 import thread
 from fudge.patcher import *
+from fudge.util import wraps
 
 class Registry(object):
     """An internal, thread-safe registry of expected calls.
@@ -73,6 +74,14 @@ def stop():
     objects.
     """
     registry.stop()
+
+def with_fakes(method):
+    @wraps(method)
+    def apply_start_stop(*args, **kw):
+        start()
+        method(*args, **kw)
+        stop()
+    return apply_start_stop
 
 def fmt_val(val):
     """Format a value for inclusion in an 

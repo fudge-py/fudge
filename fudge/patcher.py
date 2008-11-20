@@ -1,5 +1,7 @@
 
-__all__ = ['patch_object']
+__all__ = ['patch_object', 'with_patched_object']
+
+from fudge.util import wraps
 
 def patch_object(obj, attr_name, patched_value):
     if isinstance(obj, (str, unicode)):
@@ -11,6 +13,18 @@ def patch_object(obj, attr_name, patched_value):
     handle = PatchHandler(obj, attr_name)
     handle.patch(patched_value)
     return handle
+
+def with_patched_object(*p_args, **p_kw):
+    def patcher(method):
+        @wraps(method)
+        def method_call(*m_args, **m_kw):
+            patched_obj = patch_object(*p_args, **p_kw)
+            try:
+                return method(*m_args, **m_kw)
+            finally:
+                patched_obj.restore()
+        return method_call
+    return patcher
 
 class PatchHandler(object):
     def __init__(self, orig_object, attr_name):
