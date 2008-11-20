@@ -46,7 +46,7 @@ class Registry(object):
             for exp in self.get_expected_calls():
                 exp.assert_called()
         finally:
-            self.clear_all()
+            self.clear_actual_calls()
         
     def expect_call(self, expected_call):
         c = self.get_expected_calls()
@@ -74,6 +74,9 @@ def stop():
     objects.
     """
     registry.stop()
+
+def clear_expectations():
+    registry.clear_expectations()
 
 def with_fakes(method):
     @wraps(method)

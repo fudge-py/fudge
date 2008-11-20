@@ -65,7 +65,7 @@ class TestRegistry(unittest.TestCase):
         self.reg.start()
         eq_(exp.was_called, False, "call was not reset by start()")
     
-    def test_stop_resets_calls_and_expectations(self):
+    def test_stop_resets_calls(self):
         exp = ExpectedCall(self.fake, 'callMe')
         self.reg.expect_call(exp)
         exp()
@@ -74,15 +74,30 @@ class TestRegistry(unittest.TestCase):
         
         self.reg.stop()
         eq_(exp.was_called, False, "call was not reset by stop()")
-        eq_(len(self.reg.get_expected_calls()), 0, "expected call was not reset by stop()")
+        eq_(len(self.reg.get_expected_calls()), 1, "stop() should not reset expectations")
     
     def test_global_stop(self):
         exp = ExpectedCall(self.fake, 'callMe')
         exp()
         self.reg.expect_call(exp)
+        eq_(exp.was_called, True)
         eq_(len(self.reg.get_expected_calls()), 1)
+        
         fudge.stop()
-        eq_(len(self.reg.get_expected_calls()), 0, "fudge.stop() did not stop calls")
+        
+        eq_(exp.was_called, False, "call was not reset by stop()")
+        eq_(len(self.reg.get_expected_calls()), 1, "stop() should not reset expectations")
+    
+    def test_global_clear_expectations(self):
+        exp = ExpectedCall(self.fake, 'callMe')
+        exp()
+        self.reg.expect_call(exp)
+        eq_(len(self.reg.get_expected_calls()), 1)
+        
+        fudge.clear_expectations()
+        
+        eq_(len(self.reg.get_expected_calls()), 0, 
+            "clear_expectations() should reset expectations")
     
     def test_multithreading(self):
         

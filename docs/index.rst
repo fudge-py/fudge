@@ -76,6 +76,17 @@ The above code could also be written as a test case:
 
 You could also apply these decorators to a method on a class 
 descending from ``unittest.TestCase``
+
+Clearing Expectations
+=====================
+
+Fudge assumes that when you declare expectations on a Fake, 
+you will use the Fake in more than one test.  For this reason, 
+you'll need to tear down queued up expectations explicitly like so:
+
+.. doctest::
+
+    >>> fudge.clear_expectations()
     
 Example: Fudging An API
 =======================
@@ -139,6 +150,13 @@ Finally, restore the real Client object:
 .. doctest::
 
     >>> patched_awapi.restore()
+
+Because we are done testing with the Fake object above, 
+clear all its expectations:
+
+.. doctest::
+    
+    >>> fudge.clear_expectations()
 
 Example: Fudging Chained Objects
 ================================
