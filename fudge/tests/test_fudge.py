@@ -121,6 +121,7 @@ class TestRegistry(unittest.TestCase):
                     reg.expect_call(exp)
                     eq_(len(reg.get_expected_calls()), 4)
                     fudge.stop()
+                    fudge.clear_expectations()
                 except Exception, er:
                     thread_run.errors.append(er)
                     raise
@@ -161,4 +162,23 @@ def test_decorator_on_def():
     some_test()
     
     eq_(holder.test_called, True)
+
+# for a test below
+_some_fake = fudge.Fake()
+
+class TestFake(unittest.TestCase):
+    
+    def test_guess_name(self):
+        my_obj = fudge.Fake()
+        eq_(repr(my_obj), "fake:my_obj")
+        
+    def test_guess_name_globals(self):
+        # eq_(repr(_some_fake), "fake:_some_fake")
+        eq_(repr(_some_fake), "fake:unnamed")
+        
+    def test_guess_name_deref(self):
+        my_obj = 44
+        my_obj = fudge.Fake()
+        # eq_(repr(my_obj), "fake:my_obj")
+        eq_(repr(my_obj), "fake:unnamed")
         

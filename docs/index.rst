@@ -136,7 +136,7 @@ How would you unit test this methods without touching the real server?  Here's h
 .. doctest::
 
     >>> import fudge
-    >>> Client = fudge.Fake()
+    >>> Client = fudge.Fake('Client')
     >>> Client = Client.expects('__init__').with_args(headers=dict(email="some-google-id@wherever.com",
     ...                                                            password="xxxxxx"))
     ... 
@@ -153,8 +153,8 @@ Now, run the get_client() method against your fake objects:
     
     >>> fudge.start()
     >>> client = get_client(email="some-google-id@wherever.com", password="xxxxxx")
-    >>> client # doctest: +ELLIPSIS
-    <fudge.Fake object at ...>
+    >>> repr(client)
+    'fake:Client'
     >>> fudge.stop()
 
 Finally, restore the real Client object:

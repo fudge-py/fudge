@@ -1,4 +1,5 @@
 
+import sys
 import thread
 from fudge.patcher import *
 from fudge.util import wraps
@@ -164,7 +165,8 @@ class ExpectedCall(object):
 
 class Fake(object):
     
-    def __init__(self):
+    def __init__(self, name=None):
+        self.name = (name or self._guess_name())
         self.calls = {}
         self.last_expected_call_name = None
     
@@ -180,6 +182,44 @@ class Fake(object):
         expected_call = self.calls['__init__']
         expected_call(*args, **kwargs)
         return self
+    
+    def __repr__(self):
+        return "fake:%s" % (self.name or "unnamed")
+    
+    def _guess_name(self):
+        if not hasattr(sys, '_getframe'):
+            # Stackless, Jython?
+            return None
+        
+        # get frame where class was instantiated,
+        #   my_obj = Fake()
+        #   ^
+        #   we want to set self.name = 'my_obj'
+        frame = sys._getframe(2)
+        if len(frame.f_code.co_varnames):
+            # at the top-most frame:
+            co_names = frame.f_code.co_varnames
+        else:
+            # any other frame:
+            co_names = frame.f_code.co_names
+        
+        # find names that are not locals.
+        # this probably indicates my_obj = ...
+        
+        # print co_names
+        # print frame.f_locals
+        candidates = [n for n in co_names if n not in frame.f_locals]
+        # print candidates
+        if len(candidates)==0:
+            # the value was possibly queued for deref
+            #   foo = 44
+            #   foo = Fake()
+            return None
+        elif len(candidates)==1:
+            return candidates[0]
+        else:
+            # print frame.f_locals
+            return None
     
     def expects(self, call_name):
         self.last_expected_call_name = call_name
