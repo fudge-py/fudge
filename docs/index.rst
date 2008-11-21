@@ -2,7 +2,19 @@
 Fudge Documentation
 ===================
 
-Fudge is a Python module for mocks, stubs, and fakes.
+Fudge is a Python module for using fake objects (mocks, stubs, etc) to test real ones.
+
+The module is designed for two specific situations:
+
+- Replace an object
+  
+  - Temporarily return a canned value for a 
+    method or call a method without executing real code.
+
+- Make sure your code uses an object correctly
+
+  - Declare expectations about what methods should be 
+    called and what arguments should be sent.
 
 Example: Fudging Email
 ======================
@@ -57,8 +69,8 @@ Now you can run the code with the fake object:
     >>> fudge.stop()
     >>> patched_smtplib.restore()
 
-Example: A Simple Test Case
-===========================
+A Simple Test Case
+==================
 
 The above code could also be written as a test case:
 
