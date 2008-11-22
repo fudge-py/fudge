@@ -173,12 +173,10 @@ class TestFake(unittest.TestCase):
         eq_(repr(my_obj), "fake:my_obj")
         
     def test_guess_name_globals(self):
-        # eq_(repr(_some_fake), "fake:_some_fake")
-        eq_(repr(_some_fake), "fake:unnamed")
+        eq_(repr(_some_fake), "fake:_some_fake")
         
     def test_guess_name_deref(self):
         my_obj = 44
         my_obj = fudge.Fake()
-        # eq_(repr(my_obj), "fake:my_obj")
-        eq_(repr(my_obj), "fake:unnamed")
+        eq_(repr(my_obj), "fake:my_obj")
         

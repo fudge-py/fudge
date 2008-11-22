@@ -1,4 +1,6 @@
 
+import os
+import re
 import sys
 import thread
 from fudge.patcher import *
@@ -186,6 +188,16 @@ class Fake(object):
     def __repr__(self):
         return "fake:%s" % (self.name or "unnamed")
     
+    _assignment = re.compile(r"\s*(?P<name>[a-zA-Z0-9_]+)\s*=\s*(fudge\.)?Fake\(.*")    
+    def _guess_asn_from_file(self, frame):
+        if frame.f_code.co_filename:
+            if os.path.exists(frame.f_code.co_filename):
+                f = open(frame.f_code.co_filename,'r')
+                possible_asn = f.readlines()[frame.f_lineno-1]
+                m = self._assignment.match(possible_asn)
+                if m:
+                    return m.group('name')
+    
     def _guess_name(self):
         if not hasattr(sys, '_getframe'):
             # Stackless, Jython?
@@ -214,12 +226,13 @@ class Fake(object):
             # the value was possibly queued for deref
             #   foo = 44
             #   foo = Fake()
-            return None
+            return self._guess_asn_from_file(frame)
         elif len(candidates)==1:
             return candidates[0]
         else:
-            # print frame.f_locals
-            return None
+            # we are possibly halfway through a module
+            # where not all names have been compiled
+            return self._guess_asn_from_file(frame)
     
     def expects(self, call_name):
         self.last_expected_call_name = call_name
