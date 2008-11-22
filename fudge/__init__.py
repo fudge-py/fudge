@@ -192,11 +192,17 @@ class Fake(object):
     def _guess_asn_from_file(self, frame):
         if frame.f_code.co_filename:
             if os.path.exists(frame.f_code.co_filename):
-                f = open(frame.f_code.co_filename,'r')
-                possible_asn = f.readlines()[frame.f_lineno-1]
-                m = self._assignment.match(possible_asn)
-                if m:
-                    return m.group('name')
+                cofile = open(frame.f_code.co_filename,'r')
+                try:
+                    for ln, line in enumerate(cofile):
+                        # I'm not sure why -1 is needed
+                        if ln==frame.f_lineno-1:
+                            possible_asn = line
+                            m = self._assignment.match(possible_asn)
+                            if m:
+                                return m.group('name')
+                finally:
+                    cofile.close()
     
     def _guess_name(self):
         if not hasattr(sys, '_getframe'):
