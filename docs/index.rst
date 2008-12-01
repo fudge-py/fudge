@@ -89,16 +89,71 @@ The above code could also be written as a test case:
 You could also apply these decorators to a method on a class 
 descending from ``unittest.TestCase``
 
+Failed Expectations
+===================
+
+Since the previous code declared expectations for how the 
+sendmail() method should be called, your test will raise an 
+AssertionError when those expectations are not met.  For example:
+
+.. doctest::
+
+    >>> s = SMTP()
+    >>> s.connect()
+    >>> s.sendmail("whoops")
+    Traceback (most recent call last):
+    ...
+    AssertionError: Fake.sendmail() was called with 1 arg(s) but expected 3
+
 Clearing Expectations
 =====================
 
 Fudge assumes that when you declare expectations on a Fake, 
 you will use the Fake in more than one test.  For this reason, 
-you'll need to tear down queued up expectations explicitly like so:
+you'll need to tear down queued up expectations explicitly if you 
+want to start testing with new fake objects:
 
 .. doctest::
 
     >>> fudge.clear_expectations()
+
+A Complete Test Module Using Nose
+=================================
+
+If you're using a test framework like Nose that supports module level 
+setup / teardown hooks, one strategy is to declare all Fake objects at the 
+top of your test module and clear expectations after all tests are run on 
+your Fake objects.  Here is an example of how you could lay out your test 
+module:
+
+.. doctest::
+    
+    >>> import fudge
+    
+    >>> SMTP = fudge.Fake()
+    >>> SMTP = SMTP.expects('__init__')
+    >>> SMTP = SMTP.expects('connect')
+    >>> SMTP = SMTP.expects('sendmail').with_arg_count(3)
+    >>> SMTP = SMTP.expects('close')
+    
+    >>> def teardown():
+    ...     fudge.clear_expectations()
+    ... 
+    >>> @fudge.with_fakes
+    ... @fudge.with_patched_object("smtplib", "SMTP", SMTP)
+    ... def test_email():
+    ...     send_email( "kumar.mcmillan@gmail.com", 
+    ...                 "you@yourhouse.com", 
+    ...                 "Mmmm, fudge")
+    ... 
+
+The Nose framework executes the above test module as follows:
+    
+    >>> try:
+    ...     test_email()
+    ... finally:
+    ...     teardown()
+    Sent an email to kumar.mcmillan@gmail.com
     
 Example: Fudging An API
 =======================
@@ -119,7 +174,7 @@ Let's say you have some code that interacts with `Google's AdWords API <http://c
    - Downsides: In case the AdWords API ever changes, your code would still work in your test environment giving you false positives.  
    - Upsides: You no longer depend on the Internet or the AdWords sandbox service and your tests will run a lot faster.
 
-As you can see, there are pros and cons to using fake objects in place of real ones.  As a general rule of thumb you should use fake objects sparingly.  First and foremost, ask yourself, *what* am I testing?  If you're using something like the `awapi <http://code.google.com/p/google-api-adwords-python-lib>`_ Python module to connect to the AdWords API then you do not need to test awapi itself; it already has unit tests of its own.  Plus, it calls an external web service.  What if the service is down?  What if it doesn't have the data you're expecting?  Fudge eliminates the Internet from this problem entirely.
+As you can see, there are pros and cons to using fake objects in place of real ones.  As a general rule of thumb you should use fake objects sparingly.  First and foremost, ask yourself, *what* am I testing?  If you're using something like the `awapi <http://code.google.com/p/google-api-adwords-python-lib>`_ Python module to connect to the AdWords API then you do not need to test awapi itself; it already has unit tests of its own.  Plus, it calls an external web service.  What if the service is down?  What if it doesn't have the data you're expecting?  Fudge eliminates these problem entirely.
 
 Here's some code you might want to test.  This method creates and returns a new AdWords client:
 
