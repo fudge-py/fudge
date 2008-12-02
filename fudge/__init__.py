@@ -182,12 +182,13 @@ class ExpectedCall(Call):
 
 class Fake(object):
     
-    def __init__(self, name=None, allows_any_call=False):
+    def __init__(self, name=None, allows_any_call=False, callable=False):
         self.name = (name or self._guess_name())
         self.calls = {}
         self.last_declared_call_name = None
         self._allows_any_call = allows_any_call
         self._stub = None
+        self._callable = callable
     
     def __getattr__(self, name):
         if name in self.calls:
@@ -196,16 +197,21 @@ class Fake(object):
             if self._allows_any_call:
                 return Call(self, call_name=name)
             raise AttributeError("%s object does not allow call or attribute '%s'" % (
-                                    self.__class__, name))
+                                    self, name))
     
     def __call__(self, *args, **kwargs):
         if '__init__' in self.calls:
             # special case, simulation of __init__():
-            expector = self.calls['__init__']
+            call = self.calls['__init__']
+        elif self._callable:
+            # go into stub mode:
+            if not self._stub:
+                self._stub = Call(self)
+            call = self._stub
         else:
-            # nothing has been defined, go into stub mode:
-            expector = self._get_current_call()
-        expector(*args, **kwargs)
+            raise RuntimeError("%s object cannot be called (maybe you want %s(callable=True) ?)" % (
+                                                                        self, self.__class__.__name__))
+        call(*args, **kwargs)
         return self
     
     def __repr__(self):

@@ -196,7 +196,7 @@ class TestCall(unittest.TestCase):
         s.expected_args = [1,"bad"]
         eq_(repr(s), "Fake(1, 'bad')")
         
-class TestFakeStubs(unittest.TestCase):
+class TestFakeCallable(unittest.TestCase):
     
     def setUp(self):
         self.fake = fudge.Fake()
@@ -204,7 +204,8 @@ class TestFakeStubs(unittest.TestCase):
     def tearDown(self):
         fudge.clear_expectations()
     
-    def test_stub_by_default(self):
+    def test_callable(self):
+        self.fake = fudge.Fake(callable=True)
         self.fake() # allow the call
         fudge.stop() # no error
     
@@ -224,12 +225,12 @@ class TestFakeStubs(unittest.TestCase):
     
     @raises(AssertionError)
     def test_stub_with_arg_count(self):
-        self.fake = fudge.Fake().with_arg_count(3)
+        self.fake = fudge.Fake(callable=True).with_arg_count(3)
         self.fake('bah')
     
     @raises(AssertionError)
     def test_stub_with_kwarg_count(self):
-        self.fake = fudge.Fake().with_kwarg_count(3)
+        self.fake = fudge.Fake(callable=True).with_kwarg_count(3)
         self.fake(two=1)
     
     def test_explicit_stub_with_provides(self):

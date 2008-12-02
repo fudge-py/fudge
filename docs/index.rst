@@ -36,9 +36,9 @@ to send email:
     ... 
     >>> 
 
-You can use Fudge to test this method without actually executing the email 
-sending code.  Since you trust that the SMTP class works, a good test would be 
-to expect that your code uses it properly:
+You can use Fudge to test this method without sending an email each time you run 
+your test.  Since you trust that the SMTP class works, you can write a test that 
+ensures your code uses it properly.  Declare how you expect it to be used as follows:
 
 .. doctest::
     
@@ -149,11 +149,68 @@ module:
 
 The Nose framework executes the above test module as follows:
     
+.. doctest::
+
     >>> try:
     ...     test_email()
     ... finally:
     ...     teardown()
     Sent an email to kumar.mcmillan@gmail.com
+
+Example: Stubs Without Expectations
+===================================
+
+If you want a fake object where the methods can be called but are not 
+expected to be called, the code is just the same but instead of 
+expects() you use provides().  Here is an example of always returning True 
+for the method is_logged_in():
+
+.. doctest::
+    
+    >>> auth = fudge.Fake()
+    >>> user = auth.provides('current_user').returns_fake()
+    >>> user = user.provides('is_logged_in').returns(True)
+    
+    >>> def show_secret_word(auth):
+    ...     user = auth.current_user()
+    ...     if user.is_logged_in():
+    ...         print "Bird is the word"
+    ...     else:
+    ...         print "Access denied"
+    ... 
+    
+    >>> fudge.start()
+    >>> show_secret_word(auth)
+    Bird is the word
+    >>> fudge.stop()
+
+Note that if user.is_logged_in() is not called then no error will be raised.
+
+Example: Fudging A Callable
+===========================
+
+Sometimes you might only need to replace a single function, not an entire object.  
+You can do this with the keyword argument callable=True.  For example:
+
+.. doctest::
+    
+    >>> login = fudge.Fake(callable=True).with_args("eziekel", "pazzword").returns(True)
+    
+    >>> def show_secret_word(username, password):
+    ...     import auth
+    ...     logged_in = auth.login(username, password)
+    ...     if logged_in:
+    ...         print "Bird is the word"
+    ...     else:
+    ...         print "Access Denied"
+    ... 
+    >>> @fudge.with_fakes
+    ... @fudge.with_patched_object("auth", "login", login)
+    ... def test_show_secret_word():
+    ...     show_secret_word("eziekel", "pazzword")
+    ... 
+    >>> test_show_secret_word()
+    Bird is the word
     
 Example: Fudging An API
 =======================
