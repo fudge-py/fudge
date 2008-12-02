@@ -331,7 +331,13 @@ have to use a patcher, just pass in the fake instance while testing:
     >>> fudge.stop()
 
 
+API Reference
+=============
 
+.. toctree::
+    :glob:
+    
+    api/*
 
 
 

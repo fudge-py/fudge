@@ -14,11 +14,12 @@ def patch_object(obj, attr_name, patched_value):
     handle.patch(patched_value)
     return handle
 
-def with_patched_object(*p_args, **p_kw):
+def with_patched_object(obj, attr_name, patched_value):
+    """Decorator that patches an object before method() and restores it afterwards."""
     def patcher(method):
         @wraps(method)
         def method_call(*m_args, **m_kw):
-            patched_obj = patch_object(*p_args, **p_kw)
+            patched_obj = patch_object(obj, attr_name, patched_value)
             try:
                 return method(*m_args, **m_kw)
             finally:

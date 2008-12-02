@@ -7,4 +7,4 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 popd
-nosetests $@
+nosetests --with-doctest $@

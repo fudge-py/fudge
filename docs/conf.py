@@ -13,6 +13,9 @@
 
 import sys, os
 
+# put fudge on the path for automodule:
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 # If your extensions are in another directory, add it here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it
 # absolute, like shown here.

@@ -1,4 +1,7 @@
 
+"""Fudge is a Python module for using fake objects (mocks, stubs, etc) to test real ones.
+"""
+
 import os
 import re
 import sys
@@ -68,6 +71,8 @@ def start():
     objects.  You don't really need to call 
     this but it's safer since an exception 
     might bubble up from a previous test.
+    
+    This is also available as a decorator: :func:`fudge.with_fakes`
     """
     registry.start()
     
@@ -78,6 +83,8 @@ def stop():
     objects and raise an AssertionError if an 
     expected call was never made to one or more 
     objects.
+    
+    This is also available as a decorator: :func:`fudge.with_fakes`
     """
     registry.stop()
 
@@ -85,6 +92,8 @@ def clear_expectations():
     registry.clear_expectations()
 
 def with_fakes(method):
+    """Decorator that calls :func:`fudge.start` before method() and :func:`fudge.stop` afterwards.
+    """
     @wraps(method)
     def apply_start_stop(*args, **kw):
         start()
@@ -185,6 +194,32 @@ class ExpectedCall(Call):
             raise AssertionError("%s was not called" % (self))
 
 class Fake(object):
+    """A fake object to replace a real one while testing.
+    
+    All calls return ``self`` so that you can chain them together to 
+    create readable code.
+    
+    Keyword arguments:
+    
+    **name=None**
+        Name of the class, module, or function you mean to replace. If not specified, 
+        Fake() will try to guess the name by inspecting the calling frame (if possible).
+    
+    **allows_any_call=False**
+        When True, any method is allowed to be called on the Fake() instance.  Each method 
+        will be a stub that does nothing if it has not been defined.
+    
+    **callable=False**
+        When True, the Fake() acts like a callable.  Use this if you are replacing a single 
+        method.
+    
+    Short example::
+    
+        >>> import fudge
+        >>> auth = fudge.Fake('auth').expects('login').with_args('joe_username', 'joes_password')
+        >>> fudge.clear_expectations()
+        
+    """
     
     def __init__(self, name=None, allows_any_call=False, callable=False):
         self.name = (name or self._guess_name())
@@ -279,11 +314,13 @@ class Fake(object):
         return exp
     
     def calls(self, call):
+        """Redefine a call."""
         exp = self._get_current_call()
         exp.call_replacement = call
         return self
     
     def expects(self, call_name):
+        """Expect a call."""
         self._last_declared_call_name = call_name
         c = ExpectedCall(self, call_name)
         self._declared_calls[call_name] = c
@@ -291,23 +328,27 @@ class Fake(object):
         return self
     
     def provides(self, call_name):
+        """Provide a call."""
         self._last_declared_call_name = call_name
         c = Call(self, call_name)
         self._declared_calls[call_name] = c
         return self
     
     def returns(self, val):
+        """Return a value."""
         exp = self._get_current_call()
         exp.return_val = val
         return self
     
     def returns_fake(self):
+        """Return a fake."""
         exp = self._get_current_call()
         fake = self.__class__()
         exp.return_val = fake
         return fake
     
     def with_args(self, *args, **kwargs):
+        """Expect specific arguments."""
         exp = self._get_current_call()
         if args:
             exp.expected_args = args
@@ -316,11 +357,13 @@ class Fake(object):
         return self
     
     def with_arg_count(self, count):
+        """Expect an exact argument count."""
         exp = self._get_current_call()
         exp.expected_arg_count = count
         return self
     
     def with_kwarg_count(self, count):
+        """Expect an exact count of keyword arguments."""
         exp = self._get_current_call()
         exp.expected_kwarg_count = count
         return self
