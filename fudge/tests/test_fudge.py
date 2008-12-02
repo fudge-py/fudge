@@ -185,16 +185,21 @@ class TestFakeExpectations(unittest.TestCase):
 class TestCall(unittest.TestCase):
     
     def setUp(self):
-        self.fake = fudge.Fake()
+        self.fake = fudge.Fake('SMTP')
     
     def test_repr(self):
         s = Call(self.fake)
-        eq_(repr(s), "Fake()")
+        eq_(repr(s), "fake:SMTP()")
     
     def test_repr_with_args(self):
         s = Call(self.fake)
         s.expected_args = [1,"bad"]
-        eq_(repr(s), "Fake(1, 'bad')")
+        eq_(repr(s), "fake:SMTP(1, 'bad')")
+    
+    def test_named_repr_with_args(self):
+        s = Call(self.fake, call_name='connect')
+        s.expected_args = [1,"bad"]
+        eq_(repr(s), "fake:SMTP.connect(1, 'bad')")
         
 class TestFakeCallables(unittest.TestCase):
     

@@ -159,7 +159,7 @@ class Call(object):
         return self.return_val
     
     def __repr__(self):
-        cls_name = self.fake.__class__.__name__
+        cls_name = repr(self.fake)
         if self.call_name:
             call = "%s.%s(" % (cls_name, self.call_name)
         else:
