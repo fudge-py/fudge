@@ -106,7 +106,7 @@ AssertionError when those expectations are not met.  For example:
     >>> s.sendmail("whoops")
     Traceback (most recent call last):
     ...
-    AssertionError: Fake.sendmail() was called with 1 arg(s) but expected 3
+    AssertionError: fake:unnamed.sendmail() was called with 1 arg(s) but expected 3
 
 Clearing Expectations
 =====================
