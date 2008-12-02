@@ -3,41 +3,7 @@ import thread
 import unittest
 import fudge
 from nose.tools import eq_, raises
-from fudge import ExpectedCall
-
-class TestExpectedCall(unittest.TestCase):
-    
-    def setUp(self):
-        self.fake = fudge.Fake()
-    
-    @raises(AssertionError)
-    def test_nocall(self):
-        exp = ExpectedCall(self.fake, 'something')
-        exp.assert_called()
-    
-    @raises(AssertionError)
-    def test_wrong_args(self):
-        exp = ExpectedCall(self.fake, 'theCall')
-        exp.expected_args = [1, "ho ho ho ho ho ho ho, it's Santa", {'ditto':False}]
-        exp()
-        
-    @raises(AssertionError)
-    def test_wrong_kwargs(self):
-        exp = ExpectedCall(self.fake, 'other')
-        exp.expected_kwargs = dict(one="twozy", items=[1,2,3,4])
-        exp(nice="NOT NICE")
-        
-    @raises(AssertionError)
-    def test_arg_count(self):
-        exp = ExpectedCall(self.fake, 'one')
-        exp.expected_arg_count = 3
-        exp('no', 'maybe')
-        
-    @raises(AssertionError)
-    def test_kwarg_count(self):
-        exp = ExpectedCall(self.fake, '__init__')
-        exp.expected_kwarg_count = 2
-        exp(maybe="yes, maybe")
+from fudge import ExpectedCall, Call
 
 class TestRegistry(unittest.TestCase):
     
@@ -179,4 +145,105 @@ class TestFake(unittest.TestCase):
         my_obj = 44
         my_obj = fudge.Fake()
         eq_(repr(my_obj), "fake:my_obj")
+
+class TestFakeExpectations(unittest.TestCase):
+    
+    def setUp(self):
+        self.fake = fudge.Fake()
+    
+    def tearDown(self):
+        fudge.clear_expectations()
+    
+    @raises(AssertionError)
+    def test_nocall(self):
+        exp = self.fake.expects('something')
+        fudge.stop()
+    
+    @raises(AssertionError)
+    def test_wrong_args(self):
+        exp = self.fake.expects('theCall').with_args(
+                        1, 
+                        "ho ho ho ho ho ho ho, it's Santa", 
+                        {'ditto':False})
+        exp.theCall()
         
+    @raises(AssertionError)
+    def test_wrong_kwargs(self):
+        exp = self.fake.expects('other').with_args(one="twozy", items=[1,2,3,4])
+        exp.other(nice="NOT NICE")
+        
+    @raises(AssertionError)
+    def test_arg_count(self):
+        exp = self.fake.expects('one').with_arg_count(3)
+        exp.one('no', 'maybe')
+        
+    @raises(AssertionError)
+    def test_kwarg_count(self):
+        exp = self.fake.expects('__init__').with_kwarg_count(2)
+        exp(maybe="yes, maybe")
+
+class TestCall(unittest.TestCase):
+    
+    def setUp(self):
+        self.fake = fudge.Fake()
+    
+    def test_repr(self):
+        s = Call(self.fake)
+        eq_(repr(s), "Fake()")
+    
+    def test_repr_with_args(self):
+        s = Call(self.fake)
+        s.expected_args = [1,"bad"]
+        eq_(repr(s), "Fake(1, 'bad')")
+        
+class TestFakeStubs(unittest.TestCase):
+    
+    def setUp(self):
+        self.fake = fudge.Fake()
+    
+    def tearDown(self):
+        fudge.clear_expectations()
+    
+    def test_stub_by_default(self):
+        self.fake() # allow the call
+        fudge.stop() # no error
+    
+    @raises(AttributeError)
+    def test_cannot_stub_any_call_by_default(self):
+        self.fake.Anything() # must define this first
+    
+    def test_can_stub_any_call(self):
+        self.fake = fudge.Fake(allows_any_call=True)
+        self.fake.Anything()
+        self.fake.something_else(blazz='Blaz', kudoz='Klazzed')
+    
+    @raises(AssertionError)
+    def test_stub_with_args(self):
+        self.fake = fudge.Fake().with_args(1,2)
+        self.fake(1)
+    
+    @raises(AssertionError)
+    def test_stub_with_arg_count(self):
+        self.fake = fudge.Fake().with_arg_count(3)
+        self.fake('bah')
+    
+    @raises(AssertionError)
+    def test_stub_with_kwarg_count(self):
+        self.fake = fudge.Fake().with_kwarg_count(3)
+        self.fake(two=1)
+    
+    def test_explicit_stub_with_provides(self):
+        self.fake = fudge.Fake().provides("something")
+        self.fake.something()
+    
+    @raises(AssertionError)
+    def test_stub_with_args(self):
+        self.fake = fudge.Fake().provides("something").with_args(1,2)
+        self.fake.something()
+    
+    def test_stub_is_not_registered(self):
+        self.fake = fudge.Fake().provides("something")
+        exp = self.fake._get_current_call()
+        eq_(exp.call_name, "something")
+        assert exp not in fudge.registry
+    

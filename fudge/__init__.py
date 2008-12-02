@@ -15,6 +15,9 @@ class Registry(object):
     def __init__(self):
         self.expected_calls = {}
     
+    def __contains__(self, obj):
+        return obj in self.get_expected_calls()
+    
     def clear_actual_calls(self):
         for exp in self.get_expected_calls():
             exp.was_called = False
@@ -109,38 +112,54 @@ def fmt_dict_vals(dict_vals):
     if not items:
         return [fmt_val(None)]
     return ["%s=%s" % (k, fmt_val(v)) for k,v in items]
+
+class Call(object):
+    """A call that can be made on a Fake object.
     
-class ExpectedCall(object):
-    """An expectation that a call will be made on a Fake object.
-    
-    You do not need to use this directly, use Fake.expects(...), etc
+    You do not need to use this directly, use Fake.provides(...), etc
     """
     
+    def __init__(self, fake, call_name=None):
+        self.fake = fake
+        self.call_name = call_name
+        self.expected_arg_count = None
+        self.expected_kwarg_count = None
+        self.expected_args = None
+        self.expected_kwargs = None
+        self.return_val = None
+        self.was_called = False
+        
     def __call__(self, *args, **kwargs):
         if self.expected_args:
             if args != self.expected_args:
                 raise AssertionError(
                     "%s was called unexpectedly with args %s" % (self, args))
-        elif len(args) != self.expected_arg_count:
-            raise AssertionError(
-                "%s was called with %s arg(s) but expected %s" % (
-                    self, len(args), self.expected_arg_count))
+        elif self.expected_arg_count is not None:
+            if len(args) != self.expected_arg_count:
+                raise AssertionError(
+                    "%s was called with %s arg(s) but expected %s" % (
+                        self, len(args), self.expected_arg_count))
                     
         if self.expected_kwargs:
             if kwargs != self.expected_kwargs:
                 raise AssertionError(
                     "%s was called unexpectedly with keyword args %s" % (
                                 self, ", ".join(fmt_dict_vals(kwargs))))
-        elif len(kwargs.keys()) != self.expected_kwarg_count:
-            raise AssertionError(
-                "%s was called with %s keyword arg(s) but expected %s" % (
-                    self, len(kwargs.keys()), self.expected_kwarg_count))
+        elif self.expected_kwarg_count is not None:
+            if len(kwargs.keys()) != self.expected_kwarg_count:
+                raise AssertionError(
+                    "%s was called with %s keyword arg(s) but expected %s" % (
+                        self, len(kwargs.keys()), self.expected_kwarg_count))
         
         self.was_called = True
         return self.return_val
     
     def __repr__(self):
-        call = "%s.%s(" % (self.fake.__class__.__name__, self.call_name)
+        cls_name = self.fake.__class__.__name__
+        if self.call_name:
+            call = "%s.%s(" % (cls_name, self.call_name)
+        else:
+            call = "%s(" % cls_name
         args = []
         if self.expected_args:
             args.extend([fmt_val(a) for a in self.expected_args])
@@ -151,15 +170,11 @@ class ExpectedCall(object):
         call = "%s)" % call
         return call
     
-    def __init__(self, fake, call_name):
-        self.fake = fake
-        self.was_called = False
-        self.call_name = call_name
-        self.expected_arg_count = 0
-        self.expected_kwarg_count = 0
-        self.expected_args = None
-        self.expected_kwargs = None
-        self.return_val = None
+class ExpectedCall(Call):
+    """An expectation that a call will be made on a Fake object.
+    
+    You do not need to use this directly, use Fake.expects(...), etc
+    """
     
     def assert_called(self):
         if not self.was_called:
@@ -167,22 +182,30 @@ class ExpectedCall(object):
 
 class Fake(object):
     
-    def __init__(self, name=None):
+    def __init__(self, name=None, allows_any_call=False):
         self.name = (name or self._guess_name())
         self.calls = {}
-        self.last_expected_call_name = None
+        self.last_declared_call_name = None
+        self._allows_any_call = allows_any_call
+        self._stub = None
     
     def __getattr__(self, name):
         if name in self.calls:
             return self.calls[name]
         else:
-            raise AttributeError("%s object has no attribute '%s'" % (
+            if self._allows_any_call:
+                return Call(self, call_name=name)
+            raise AttributeError("%s object does not allow call or attribute '%s'" % (
                                     self.__class__, name))
     
     def __call__(self, *args, **kwargs):
-        # special case, simulation of __init__():
-        expected_call = self.calls['__init__']
-        expected_call(*args, **kwargs)
+        if '__init__' in self.calls:
+            # special case, simulation of __init__():
+            expector = self.calls['__init__']
+        else:
+            # nothing has been defined, go into stub mode:
+            expector = self._get_current_call()
+        expector(*args, **kwargs)
         return self
     
     def __repr__(self):
@@ -224,10 +247,7 @@ class Fake(object):
         # find names that are not locals.
         # this probably indicates my_obj = ...
         
-        # print co_names
-        # print frame.f_locals
         candidates = [n for n in co_names if n not in frame.f_locals]
-        # print candidates
         if len(candidates)==0:
             # the value was possibly queued for deref
             #   foo = 44
@@ -240,16 +260,40 @@ class Fake(object):
             # where not all names have been compiled
             return self._guess_asn_from_file(frame)
     
+    def _get_current_call(self):
+        if not self.last_declared_call_name:
+            if not self._stub:
+                self._stub = Call(self)
+            return self._stub
+        exp = self.calls[self.last_declared_call_name]
+        return exp
+    
     def expects(self, call_name):
-        self.last_expected_call_name = call_name
-        exp = ExpectedCall(self, call_name)
-        self.calls[call_name] = exp
-        registry.expect_call(exp)
+        self.last_declared_call_name = call_name
+        c = ExpectedCall(self, call_name)
+        self.calls[call_name] = c
+        registry.expect_call(c)
         return self
     
+    def provides(self, call_name):
+        self.last_declared_call_name = call_name
+        c = Call(self, call_name)
+        self.calls[call_name] = c
+        return self
+    
+    def returns(self, val):
+        exp = self._get_current_call()
+        exp.return_val = val
+        return self
+    
+    def returns_fake(self):
+        exp = self._get_current_call()
+        fake = self.__class__()
+        exp.return_val = fake
+        return fake
+    
     def with_args(self, *args, **kwargs):
-        assert self.last_expected_call_name
-        exp = self.calls[self.last_expected_call_name]
+        exp = self._get_current_call()
         if args:
             exp.expected_args = args
         if kwargs:
@@ -257,21 +301,12 @@ class Fake(object):
         return self
     
     def with_arg_count(self, count):
-        assert self.last_expected_call_name
-        exp = self.calls[self.last_expected_call_name]
+        exp = self._get_current_call()
         exp.expected_arg_count = count
         return self
     
-    def returns_fake(self):
-        assert self.last_expected_call_name
-        exp = self.calls[self.last_expected_call_name]
-        fake = self.__class__()
-        exp.return_val = fake
-        return fake
-    
-    def returns(self, val):
-        assert self.last_expected_call_name
-        exp = self.calls[self.last_expected_call_name]
-        exp.return_val = val
+    def with_kwarg_count(self, count):
+        exp = self._get_current_call()
+        exp.expected_kwarg_count = count
         return self
         
