@@ -36,9 +36,12 @@ to send email:
     ... 
     >>> 
 
-You can use Fudge to test this method without sending an email each time you run 
-your test.  Since you trust that the SMTP class works, you can write a test that 
-ensures your code uses it properly.  Declare how you expect it to be used as follows:
+You don't want to send an email each time you run a test but you want to be 
+sure that your code is able to send email.  Fudge recommends this strategy: 
+Since you trust that the SMTP class works, expect that your application 
+under test uses the SMTP class correctly.  If the application calls the wrong 
+method or forgets to call a method then your test should fail.  Here's how to set 
+it up:
 
 .. doctest::
     
