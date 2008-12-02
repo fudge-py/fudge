@@ -122,6 +122,7 @@ class Call(object):
     def __init__(self, fake, call_name=None):
         self.fake = fake
         self.call_name = call_name
+        self.call_replacement = None
         self.expected_arg_count = None
         self.expected_kwarg_count = None
         self.expected_args = None
@@ -130,6 +131,10 @@ class Call(object):
         self.was_called = False
         
     def __call__(self, *args, **kwargs):
+        self.was_called = True
+        if self.call_replacement:
+            return self.call_replacement(*args, **kwargs)
+            
         if self.expected_args:
             if args != self.expected_args:
                 raise AssertionError(
@@ -151,7 +156,6 @@ class Call(object):
                     "%s was called with %s keyword arg(s) but expected %s" % (
                         self, len(kwargs.keys()), self.expected_kwarg_count))
         
-        self.was_called = True
         return self.return_val
     
     def __repr__(self):
@@ -184,15 +188,15 @@ class Fake(object):
     
     def __init__(self, name=None, allows_any_call=False, callable=False):
         self.name = (name or self._guess_name())
-        self.calls = {}
-        self.last_declared_call_name = None
+        self._declared_calls = {}
+        self._last_declared_call_name = None
         self._allows_any_call = allows_any_call
         self._stub = None
         self._callable = callable
     
     def __getattr__(self, name):
-        if name in self.calls:
-            return self.calls[name]
+        if name in self._declared_calls:
+            return self._declared_calls[name]
         else:
             if self._allows_any_call:
                 return Call(self, call_name=name)
@@ -200,9 +204,9 @@ class Fake(object):
                                     self, name))
     
     def __call__(self, *args, **kwargs):
-        if '__init__' in self.calls:
+        if '__init__' in self._declared_calls:
             # special case, simulation of __init__():
-            call = self.calls['__init__']
+            call = self._declared_calls['__init__']
         elif self._callable:
             # go into stub mode:
             if not self._stub:
@@ -267,24 +271,29 @@ class Fake(object):
             return self._guess_asn_from_file(frame)
     
     def _get_current_call(self):
-        if not self.last_declared_call_name:
+        if not self._last_declared_call_name:
             if not self._stub:
                 self._stub = Call(self)
             return self._stub
-        exp = self.calls[self.last_declared_call_name]
+        exp = self._declared_calls[self._last_declared_call_name]
         return exp
     
+    def calls(self, call):
+        exp = self._get_current_call()
+        exp.call_replacement = call
+        return self
+    
     def expects(self, call_name):
-        self.last_declared_call_name = call_name
+        self._last_declared_call_name = call_name
         c = ExpectedCall(self, call_name)
-        self.calls[call_name] = c
+        self._declared_calls[call_name] = c
         registry.expect_call(c)
         return self
     
     def provides(self, call_name):
-        self.last_declared_call_name = call_name
+        self._last_declared_call_name = call_name
         c = Call(self, call_name)
-        self.calls[call_name] = c
+        self._declared_calls[call_name] = c
         return self
     
     def returns(self, val):

@@ -196,7 +196,7 @@ class TestCall(unittest.TestCase):
         s.expected_args = [1,"bad"]
         eq_(repr(s), "Fake(1, 'bad')")
         
-class TestFakeCallable(unittest.TestCase):
+class TestFakeCallables(unittest.TestCase):
     
     def setUp(self):
         self.fake = fudge.Fake()
@@ -220,7 +220,7 @@ class TestFakeCallable(unittest.TestCase):
     
     @raises(AssertionError)
     def test_stub_with_args(self):
-        self.fake = fudge.Fake().with_args(1,2)
+        self.fake = fudge.Fake(callable=True).with_args(1,2)
         self.fake(1)
     
     @raises(AssertionError)
@@ -233,12 +233,12 @@ class TestFakeCallable(unittest.TestCase):
         self.fake = fudge.Fake(callable=True).with_kwarg_count(3)
         self.fake(two=1)
     
-    def test_explicit_stub_with_provides(self):
+    def test_stub_with_provides(self):
         self.fake = fudge.Fake().provides("something")
         self.fake.something()
     
     @raises(AssertionError)
-    def test_stub_with_args(self):
+    def test_stub_with_provides_and_args(self):
         self.fake = fudge.Fake().provides("something").with_args(1,2)
         self.fake.something()
     
@@ -248,3 +248,14 @@ class TestFakeCallable(unittest.TestCase):
         eq_(exp.call_name, "something")
         assert exp not in fudge.registry
     
+    def test_replace_call(self):
+        class holder:
+            called = False
+            
+        def something():
+            holder.called = True
+            return "hijacked"
+            
+        self.fake = fudge.Fake().provides("something").calls(something)
+        eq_(self.fake.something(), "hijacked")
+        
