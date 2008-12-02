@@ -209,6 +209,11 @@ class TestFakeCallables(unittest.TestCase):
     def tearDown(self):
         fudge.clear_expectations()
     
+    @raises(RuntimeError)
+    def test_not_callable_by_default(self):
+        self.fake = fudge.Fake()
+        self.fake()
+    
     def test_callable(self):
         self.fake = fudge.Fake(callable=True)
         self.fake() # allow the call
