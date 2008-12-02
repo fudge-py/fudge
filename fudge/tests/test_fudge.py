@@ -227,6 +227,7 @@ class TestFakeCallables(unittest.TestCase):
         self.fake = fudge.Fake(allows_any_call=True)
         self.fake.Anything()
         self.fake.something_else(blazz='Blaz', kudoz='Klazzed')
+        self.fake()
     
     @raises(AssertionError)
     def test_stub_with_args(self):

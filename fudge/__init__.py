@@ -207,7 +207,7 @@ class Fake(object):
     
     **allows_any_call=False**
         When True, any method is allowed to be called on the Fake() instance.  Each method 
-        will be a stub that does nothing if it has not been defined.
+        will be a stub that does nothing if it has not been defined.  Implies callable=True.
     
     **callable=False**
         When True, the Fake() acts like a callable.  Use this if you are replacing a single 
@@ -227,7 +227,7 @@ class Fake(object):
         self._last_declared_call_name = None
         self._allows_any_call = allows_any_call
         self._stub = None
-        self._callable = callable
+        self._callable = callable or allows_any_call
     
     def __getattr__(self, name):
         if name in self._declared_calls:
