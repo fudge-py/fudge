@@ -242,16 +242,17 @@ class Fake(object):
         if '__init__' in self._declared_calls:
             # special case, simulation of __init__():
             call = self._declared_calls['__init__']
+            call(*args, **kwargs)
+            return self
         elif self._callable:
             # go into stub mode:
             if not self._stub:
                 self._stub = Call(self)
             call = self._stub
+            return call(*args, **kwargs)
         else:
             raise RuntimeError("%s object cannot be called (maybe you want %s(callable=True) ?)" % (
                                                                         self, self.__class__.__name__))
-        call(*args, **kwargs)
-        return self
     
     def __repr__(self):
         return "fake:%s" % (self.name or "unnamed")
