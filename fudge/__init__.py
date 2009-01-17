@@ -222,7 +222,7 @@ class Fake(object):
     """
     
     def __init__(self, name=None, allows_any_call=False, callable=False):
-        self.name = (name or self._guess_name())
+        self._name = (name or self._guess_name())
         self._declared_calls = {}
         self._last_declared_call_name = None
         self._allows_any_call = allows_any_call
@@ -255,7 +255,7 @@ class Fake(object):
                                                                         self, self.__class__.__name__))
     
     def __repr__(self):
-        return "fake:%s" % (self.name or "unnamed")
+        return "fake:%s" % (self._name or "unnamed")
     
     _assignment = re.compile(r"\s*(?P<name>[a-zA-Z0-9_]+)\s*=\s*(fudge\.)?Fake\(.*")    
     def _guess_asn_from_file(self, frame):
@@ -281,7 +281,7 @@ class Fake(object):
         # get frame where class was instantiated,
         #   my_obj = Fake()
         #   ^
-        #   we want to set self.name = 'my_obj'
+        #   we want to set self._name = 'my_obj'
         frame = sys._getframe(2)
         if len(frame.f_code.co_varnames):
             # at the top-most frame:
