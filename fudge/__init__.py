@@ -218,24 +218,44 @@ class Fake(object):
     
         >>> import fudge
         >>> auth = fudge.Fake('auth').expects('login').with_args('joe_username', 'joes_password')
+        >>> auth.login("joe_username", "joes_password") # now works
         >>> fudge.clear_expectations()
         
     """
     
     def __init__(self, name=None, allows_any_call=False, callable=False):
-        self._name = (name or self._guess_name())
         self._declared_calls = {}
+        self._name = (name or self._guess_name())
         self._last_declared_call_name = None
         self._allows_any_call = allows_any_call
         self._stub = None
         self._callable = callable or allows_any_call
     
-    def __getattr__(self, name):
-        if name in self._declared_calls:
-            return self._declared_calls[name]
+    def __getattribute__(self, name):
+        """Favors stubbed out attributes, falls back to real attributes
+        
+        """
+        # this getter circumvents infinite loops:
+        def g(n):
+            return object.__getattribute__(self, n)
+            
+        if name in g('_declared_calls'):
+            # if it's a call that has been declared
+            # as that of the real object then hand it over:
+            return g('_declared_calls')[name]
         else:
-            if self._allows_any_call:
+            # otherwise, first check if it's a call
+            # of Fake itself (i.e. returns(),  with_args(), etc)
+            try:
+                self_call = g(name)
+            except AttributeError:
+                pass
+            else:
+                return self_call
+            
+            if g('_allows_any_call'):
                 return Call(self, call_name=name)
+            
             raise AttributeError("%s object does not allow call or attribute '%s'" % (
                                     self, name))
     

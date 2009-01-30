@@ -248,6 +248,25 @@ class TestFakeCallables(unittest.TestCase):
         self.fake = fudge.Fake().provides("something")
         self.fake.something()
     
+    def test_fake_can_sabotage_itself(self):
+        # I'm not sure if there should be a warning 
+        # for this but it seems that it should be 
+        # possible for maximum flexibility:
+        
+        # replace Fake.with_args()
+        self.fake = fudge.Fake().provides("with_args").returns(1)
+        eq_(self.fake.with_args(), 1)
+        
+    
+    # def test_sequenced_returns(self):
+    #     self.fake = fudge.Fake().provides("something")\
+    #                                 .returns(1)\
+    #                                 .next_call()\
+    #                                 .returns(2)
+    #     
+    #     eq_(self.fake.something(), 1)
+    #     eq_(self.fake.something(), 2)
+    
     def test_returns_are_infinite(self):
         self.fake = fudge.Fake().provides("something").returns(1)
         
