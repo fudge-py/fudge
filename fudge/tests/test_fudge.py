@@ -260,11 +260,8 @@ class TestFakeCallables(unittest.TestCase):
         assert exp not in fudge.registry
     
     def test_replace_call(self):
-        class holder:
-            called = False
-            
+        
         def something():
-            holder.called = True
             return "hijacked"
             
         self.fake = fudge.Fake().provides("something").calls(something)
