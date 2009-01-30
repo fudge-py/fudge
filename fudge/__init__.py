@@ -2,6 +2,7 @@
 """Fudge is a Python module for using fake objects (mocks, stubs, etc) to test real ones.
 """
 
+__version__ = '0.9.0'
 import os
 import re
 import sys

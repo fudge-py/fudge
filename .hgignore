@@ -4,3 +4,4 @@ syntax: glob
 _build
 _env
 .DS_Store
+*.egg-info
