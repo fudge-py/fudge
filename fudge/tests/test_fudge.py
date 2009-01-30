@@ -248,6 +248,18 @@ class TestFakeCallables(unittest.TestCase):
         self.fake = fudge.Fake().provides("something")
         self.fake.something()
     
+    def test_returns_are_infinite(self):
+        self.fake = fudge.Fake().provides("something").returns(1)
+        
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 1)
+    
     @raises(AssertionError)
     def test_stub_with_provides_and_args(self):
         self.fake = fudge.Fake().provides("something").with_args(1,2)
