@@ -3,7 +3,7 @@ import thread
 import unittest
 import fudge
 from nose.tools import eq_, raises
-from fudge import ExpectedCall, Call
+from fudge import ExpectedCall, Call, CallStack
 
 class TestRegistry(unittest.TestCase):
     
@@ -200,11 +200,102 @@ class TestCall(unittest.TestCase):
         s = Call(self.fake, call_name='connect')
         s.expected_args = [1,"bad"]
         eq_(repr(s), "fake:SMTP.connect(1, 'bad')")
+    
+    def test_copy(self):
+        c = Call(self.fake, call_name="login")
+        c.call_replacement = lambda: 'replaced'
+        c.expected_arg_count = 2
+        c.expected_kwarg_count = 3
+        c.expected_args = [1,2,3]
+        c.expected_kwargs = {'one':1}
+        c.return_val = 'return val'
+        c.was_called = True
         
-class TestFakeCallables(unittest.TestCase):
+        new_c = c.copy()
+        eq_(new_c.call_name, "login")
+        eq_(new_c.call_replacement(), 'replaced')
+        eq_(new_c.expected_arg_count, 2)
+        eq_(new_c.expected_kwarg_count, 3)
+        eq_(new_c.expected_args, [1,2,3])
+        eq_(new_c.return_val, 'return val')
+        eq_(new_c.was_called, True)
+        
+
+class TestCallStack(unittest.TestCase):
     
     def setUp(self):
-        self.fake = fudge.Fake()
+        self.fake = fudge.Fake('SMTP')
+    
+    def test_calls(self):
+        call_stack = CallStack(self.fake)
+        
+        c = Call(self.fake)
+        c.return_val = 1
+        call_stack.add_call(c)
+        
+        c = Call(self.fake)
+        c.return_val = 2
+        call_stack.add_call(c)
+        
+        eq_(call_stack(), 1)
+        eq_(call_stack(), 2)
+    
+    @raises(AssertionError)
+    def test_no_calls(self):
+        call_stack = CallStack(self.fake)
+        call_stack()
+    
+    @raises(AssertionError)
+    def test_end_of_calls(self):
+        call_stack = CallStack(self.fake)
+        
+        c = Call(self.fake)
+        c.return_val = 1
+        call_stack.add_call(c)
+        
+        eq_(call_stack(), 1)
+        call_stack()
+    
+    def test_get_call_object(self):
+        call_stack = CallStack(self.fake)
+        
+        c = Call(self.fake)
+        call_stack.add_call(c)
+        
+        assert call_stack.get_call_object() is c
+        
+        d = Call(self.fake)
+        call_stack.add_call(d)
+        
+        assert call_stack.get_call_object() is d
+    
+    def test_with_initial_calls(self):
+        c = Call(self.fake)
+        c.return_val = 1
+        call_stack = CallStack(self.fake, initial_calls=[c])
+        
+        eq_(call_stack(), 1)
+    
+    def test_reset(self):
+        call_stack = CallStack(self.fake)
+        
+        c = Call(self.fake)
+        c.return_val = 1
+        call_stack.add_call(c)
+        
+        c = Call(self.fake)
+        c.return_val = 2
+        call_stack.add_call(c)
+        
+        eq_(call_stack(), 1)
+        eq_(call_stack(), 2)
+        
+        call_stack.reset()
+        
+        eq_(call_stack(), 1)
+        eq_(call_stack(), 2)
+        
+class TestFakeCallables(unittest.TestCase):
     
     def tearDown(self):
         fudge.clear_expectations()
@@ -256,28 +347,6 @@ class TestFakeCallables(unittest.TestCase):
         # replace Fake.with_args()
         self.fake = fudge.Fake().provides("with_args").returns(1)
         eq_(self.fake.with_args(), 1)
-        
-    
-    # def test_sequenced_returns(self):
-    #     self.fake = fudge.Fake().provides("something")\
-    #                                 .returns(1)\
-    #                                 .next_call()\
-    #                                 .returns(2)
-    #     
-    #     eq_(self.fake.something(), 1)
-    #     eq_(self.fake.something(), 2)
-    
-    def test_returns_are_infinite(self):
-        self.fake = fudge.Fake().provides("something").returns(1)
-        
-        eq_(self.fake.something(), 1)
-        eq_(self.fake.something(), 1)
-        eq_(self.fake.something(), 1)
-        eq_(self.fake.something(), 1)
-        eq_(self.fake.something(), 1)
-        eq_(self.fake.something(), 1)
-        eq_(self.fake.something(), 1)
-        eq_(self.fake.something(), 1)
     
     @raises(AssertionError)
     def test_stub_with_provides_and_args(self):
@@ -297,4 +366,84 @@ class TestFakeCallables(unittest.TestCase):
             
         self.fake = fudge.Fake().provides("something").calls(something)
         eq_(self.fake.something(), "hijacked")
+
+class TestStackedCallables(unittest.TestCase):
+            
+    def test_stacked_returns(self):
+        self.fake = fudge.Fake().provides("something")
+        self.fake = self.fake.returns(1)
+        self.fake = self.fake.next_call()
+        self.fake = self.fake.returns(2)
+        
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 2)
+    
+    @raises(AssertionError)
+    def test_stacked_calls_are_finite(self):
+        self.fake = fudge.Fake().provides("something")
+        self.fake = self.fake.returns(1)
+        self.fake = self.fake.next_call()
+        self.fake = self.fake.returns(2)
+        
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 2)
+        self.fake.something()
+        
+    def test_stack_is_reset_when_name_changes(self):
+        self.fake = fudge.Fake().provides("something")
+        self.fake = self.fake.returns(1)
+        self.fake = self.fake.next_call()
+        self.fake = self.fake.returns(2)
+        self.fake = self.fake.provides("other")
+        self.fake = self.fake.returns(3)
+        
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 2)
+        eq_(self.fake.other(), 3)
+        eq_(self.fake.other(), 3)
+        eq_(self.fake.other(), 3)
+        eq_(self.fake.other(), 3)
+        eq_(self.fake.other(), 3)
+        
+    def test_next_call_with_multiple_returns(self):
+        self.fake = fudge.Fake().provides("something")
+        self.fake = self.fake.returns(1)
+        self.fake = self.fake.next_call()
+        self.fake = self.fake.returns(2)
+        self.fake = self.fake.provides("other")
+        self.fake = self.fake.returns(3)
+        self.fake = self.fake.next_call()
+        self.fake = self.fake.returns(4)
+        
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 2)
+        eq_(self.fake.other(), 3)
+        eq_(self.fake.other(), 4)
+        
+    def test_stacked_calls_do_not_collide(self):
+        self.fake = fudge.Fake().provides("something")
+        self.fake = self.fake.returns(1)
+        self.fake = self.fake.next_call()
+        self.fake = self.fake.returns(2)
+        self.fake = self.fake.provides("other")
+        self.fake = self.fake.returns(3)
+        self.fake = self.fake.next_call()
+        self.fake = self.fake.returns(4)
+        
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.other(), 3)
+        eq_(self.fake.something(), 2)
+        eq_(self.fake.other(), 4)
+    
+    def test_returns_are_infinite(self):
+        self.fake = fudge.Fake().provides("something").returns(1)
+        
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 1)
         

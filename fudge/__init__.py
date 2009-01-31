@@ -184,6 +184,24 @@ class Call(object):
         call = "%s)" % call
         return call
     
+    def copy(self):
+        new_c = self.__class__(self.fake, call_name=self.call_name)
+        new_c.call_replacement = self.call_replacement
+        new_c.expected_arg_count = self.expected_arg_count
+        new_c.expected_kwarg_count = self.expected_kwarg_count
+        new_c.expected_args = self.expected_args
+        new_c.expected_kwargs = self.expected_kwargs
+        new_c.return_val = self.return_val
+        new_c.was_called = self.was_called
+        return new_c
+    
+    def get_call_object(self):
+        """return self.
+        
+        this exists for compatibility with :class:`CallStack`
+        """
+        return self
+    
 class ExpectedCall(Call):
     """An expectation that a call will be made on a Fake object.
     
@@ -193,6 +211,43 @@ class ExpectedCall(Call):
     def assert_called(self):
         if not self.was_called:
             raise AssertionError("%s was not called" % (self))
+
+class CallStack(object):
+    """A stack of :class:`Call` objects
+    
+    Calling this object behaves just like Call except 
+    the Call instance you operate on gets changed each time __call__() is made
+    """
+    def __init__(self, fake, initial_calls=None):
+        self.fake = fake
+        self._pointer = 0
+        if initial_calls is not None:
+            self._calls = initial_calls
+        else:
+            self._calls = []
+            
+    def add_call(self, call):
+        self._calls.append(call)
+    
+    def get_call_object(self):
+        """returns the last *added* call object.
+        
+        this is so Fake knows which one to alter
+        """
+        return self._calls[len(self._calls)-1]
+    
+    def reset(self):
+        self._pointer = 0
+    
+    def __call__(self, *args, **kw):
+        try:
+            current_call = self._calls[self._pointer]
+        except IndexError:
+            raise AssertionError(
+                "This attribute of %s can only be called %s time(s).  "
+                "Call reset() if necessary." % (self.fake, len(self._calls)))
+        self._pointer += 1
+        return current_call(*args, **kw)
 
 class Fake(object):
     """A fake object to replace a real one while testing.
@@ -229,6 +284,7 @@ class Fake(object):
         self._last_declared_call_name = None
         self._allows_any_call = allows_any_call
         self._stub = None
+        self._call_stack = None
         self._callable = callable or allows_any_call
     
     def __getattribute__(self, name):
@@ -277,6 +333,9 @@ class Fake(object):
     
     def __repr__(self):
         return "fake:%s" % (self._name or "unnamed")
+    
+    def _declare_call(self, call_name, call):
+        self._declared_calls[call_name] = call
     
     _assignment = re.compile(r"\s*(?P<name>[a-zA-Z0-9_]+)\s*=\s*(fudge\.)?Fake\(.*")    
     def _guess_asn_from_file(self, frame):
@@ -332,7 +391,7 @@ class Fake(object):
             if not self._stub:
                 self._stub = Call(self)
             return self._stub
-        exp = self._declared_calls[self._last_declared_call_name]
+        exp = self._declared_calls[self._last_declared_call_name].get_call_object()
         return exp
     
     def calls(self, call):
@@ -345,15 +404,33 @@ class Fake(object):
         """Expect a call."""
         self._last_declared_call_name = call_name
         c = ExpectedCall(self, call_name)
-        self._declared_calls[call_name] = c
+        self._declare_call(call_name, c)
         registry.expect_call(c)
+        return self
+    
+    def next_call(self):
+        exp = self._get_current_call()
+        if not isinstance(exp, CallStack):
+            # lazily create a stack with the last defined 
+            # expected call as the first on the stack:
+            stack = CallStack(self, initial_calls=[exp])
+        
+            # replace the old call obj using the same name:
+            self._declare_call(exp.call_name, stack)
+        else:
+            stack = exp
+        
+        # hmm, we need a copy here so that the last call 
+        # falls off the stack.  But ... should it be an 
+        # exact copy?
+        stack.add_call(exp.copy())
         return self
     
     def provides(self, call_name):
         """Provide a call."""
         self._last_declared_call_name = call_name
         c = Call(self, call_name)
-        self._declared_calls[call_name] = c
+        self._declare_call(call_name, c)
         return self
     
     def returns(self, val):
