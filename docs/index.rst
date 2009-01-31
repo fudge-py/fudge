@@ -285,8 +285,8 @@ clear all its expectations:
     
     >>> fudge.clear_expectations()
 
-Example: Fudging Chained Objects
-================================
+Example: Cascading Objects
+==========================
 
 Consider this method to create a campaign.  Because SOAP is so amazing, you 
 have to first obtain the campaign_service object from the client object then you can 
@@ -330,6 +330,25 @@ have to use a patcher, just pass in the fake instance while testing:
     Created new campaign with ID 12345
     >>> fudge.stop()
 
+Example: Specifying Multiple Return Values
+==========================================
+
+Let's say you want to test code that needs to call a function multiple times.  You can do that by repeatedly calling ``next_call()`` to operate on the next call.  Here is an example using a shopping cart scenario:
+
+.. doctest::
+    
+    >>> cart = fudge.Fake('cart').provides('add').with_args('book')
+    >>> cart = cart.returns({'contents': ['book']})
+    >>> cart = cart.next_call().with_args('dvd').returns({'contents': ['book','dvd']})
+    >>> fudge.start()
+    >>> cart.add('book')
+    {'contents': ['book']}
+    >>> cart.add('dvd')
+    {'contents': ['book', 'dvd']}
+    >>> cart.add('monkeys')
+    Traceback (most recent call last):
+    ...
+    AssertionError: This attribute of fake:cart can only be called 2 time(s).
 
 API Reference
 =============

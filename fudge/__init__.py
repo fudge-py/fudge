@@ -409,6 +409,10 @@ class Fake(object):
         return self
     
     def next_call(self):
+        """Start expecting multiple calls on your object.
+        
+        Up until calling this method, calls are infinite.
+        """
         exp = self._get_current_call()
         if not isinstance(exp, CallStack):
             # lazily create a stack with the last defined 
