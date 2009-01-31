@@ -200,25 +200,6 @@ class TestCall(unittest.TestCase):
         s = Call(self.fake, call_name='connect')
         s.expected_args = [1,"bad"]
         eq_(repr(s), "fake:SMTP.connect(1, 'bad')")
-    
-    def test_copy(self):
-        c = Call(self.fake, call_name="login")
-        c.call_replacement = lambda: 'replaced'
-        c.expected_arg_count = 2
-        c.expected_kwarg_count = 3
-        c.expected_args = [1,2,3]
-        c.expected_kwargs = {'one':1}
-        c.return_val = 'return val'
-        c.was_called = True
-        
-        new_c = c.copy()
-        eq_(new_c.call_name, "login")
-        eq_(new_c.call_replacement(), 'replaced')
-        eq_(new_c.expected_arg_count, 2)
-        eq_(new_c.expected_kwarg_count, 3)
-        eq_(new_c.expected_args, [1,2,3])
-        eq_(new_c.return_val, 'return val')
-        eq_(new_c.was_called, True)
         
 
 class TestCallStack(unittest.TestCase):
@@ -446,4 +427,15 @@ class TestStackedCallables(unittest.TestCase):
         eq_(self.fake.something(), 1)
         eq_(self.fake.something(), 1)
         eq_(self.fake.something(), 1)
+        
+    def test_stacked_does_not_copy_expectations(self):
+        
+        fake = fudge.Fake().expects("add")
+        fake = fake.with_args(1,2).returns(3)
+        
+        fake = fake.next_call()
+        fake = fake.returns(-1)
+        
+        eq_(fake.add(1,2), 3)
+        eq_(fake.add(), -1)
         

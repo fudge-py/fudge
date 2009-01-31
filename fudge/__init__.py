@@ -184,17 +184,6 @@ class Call(object):
         call = "%s)" % call
         return call
     
-    def copy(self):
-        new_c = self.__class__(self.fake, call_name=self.call_name)
-        new_c.call_replacement = self.call_replacement
-        new_c.expected_arg_count = self.expected_arg_count
-        new_c.expected_kwarg_count = self.expected_kwarg_count
-        new_c.expected_args = self.expected_args
-        new_c.expected_kwargs = self.expected_kwargs
-        new_c.return_val = self.return_val
-        new_c.was_called = self.was_called
-        return new_c
-    
     def get_call_object(self):
         """return self.
         
@@ -425,9 +414,8 @@ class Fake(object):
             stack = exp
         
         # hmm, we need a copy here so that the last call 
-        # falls off the stack.  But ... should it be an 
-        # exact copy?
-        stack.add_call(exp.copy())
+        # falls off the stack.
+        stack.add_call(Call(self, call_name=exp.call_name))
         return self
     
     def provides(self, call_name):
