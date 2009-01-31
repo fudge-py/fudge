@@ -11,7 +11,7 @@
 # All configuration values have a default value; values that are commented out
 # serve to show the default value.
 
-import sys, os
+import sys, os, re
 
 # put fudge on the path for automodule:
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -41,13 +41,23 @@ master_doc = 'index'
 project = 'Fudge'
 copyright = '2008, Kumar McMillan'
 
+version = None
+for line in open(os.path.join(os.path.dirname(__file__), 
+                    "../fudge/__init__.py")):
+    m = re.search("__version__\s+=\s+(.*)", line)
+    if m:
+        version = m.group(1).strip()
+        version = version[1:-1] # quotes
+        break
+assert version
+
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.8'
+version = version
 # The full version, including alpha/beta/rc tags.
-release = '0.8'
+release = version
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
