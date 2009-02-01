@@ -8,7 +8,7 @@ Although `Ersatz <http://github.com/centro/ersatz/tree/master>`_ is a port of `M
 Install
 =======
 
-Download the Fudge source distribution and copy ``javascript/fudge/`` to your webroot.  To use it in your tests all you need is a script tag like this:
+Download the :ref:`Fudge source distribution <fudge-source>` and copy ``javascript/fudge/`` to your webroot.  To use it in your tests all you need is a script tag like this:
 
 .. code-block:: html
     

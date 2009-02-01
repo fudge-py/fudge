@@ -28,6 +28,13 @@ If you don't have ``easy_install`` for Python you can get it like this::
     $ wget http://peak.telecommunity.com/dist/ez_setup.py
     $ sudo python ez_setup.py
 
+.. _fudge-source:
+
+Source
+======
+
+The Fudge source can be downloaded as a tar.gz file from http://pypi.python.org/pypi/fudge
+
 Contents
 ========
 
