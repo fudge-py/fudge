@@ -360,13 +360,16 @@ class TestFakeCallables(unittest.TestCase):
 class TestStackedCallables(unittest.TestCase):
             
     def test_stacked_returns(self):
-        self.fake = fudge.Fake().provides("something")
-        self.fake = self.fake.returns(1)
-        self.fake = self.fake.next_call()
-        self.fake = self.fake.returns(2)
+        fake = fudge.Fake().provides("something")
+        fake = fake.returns(1)
+        fake = fake.next_call()
+        fake = fake.returns(2)
+        fake = fake.next_call()
+        fake = fake.returns(3)
         
-        eq_(self.fake.something(), 1)
-        eq_(self.fake.something(), 2)
+        eq_(fake.something(), 1)
+        eq_(fake.something(), 2)
+        eq_(fake.something(), 3)
     
     @raises(AssertionError)
     def test_stacked_calls_are_finite(self):

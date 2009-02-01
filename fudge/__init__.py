@@ -465,20 +465,20 @@ class Fake(object):
             AssertionError: This attribute of fake:unnamed can only be called 2 time(s).  Call reset() if necessary.
             
         """
-        exp = self._get_current_call()
+        exp = self._declared_calls[self._last_declared_call_name]
         if not isinstance(exp, CallStack):
             # lazily create a stack with the last defined 
             # expected call as the first on the stack:
             stack = CallStack(self, initial_calls=[exp])
         
             # replace the old call obj using the same name:
-            self._declare_call(exp.call_name, stack)
+            self._declare_call(self._last_declared_call_name, stack)
         else:
             stack = exp
         
         # hmm, we need a copy here so that the last call 
         # falls off the stack.
-        stack.add_call(Call(self, call_name=exp.call_name))
+        stack.add_call(Call(self, call_name=self._last_declared_call_name))
         return self
     
     def provides(self, call_name):
