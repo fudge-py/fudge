@@ -8,6 +8,8 @@ def fileapp(environ, start_response):
     if path_info.startswith('/'):
         path_info = path_info[1:] # make relative
     full_path = os.path.join(document_root, path_info)
+    if full_path == '':
+        full_path = '.' # must be working dir
     if path_info=="" or path_info.endswith('/') or os.path.isdir(full_path):
         # directory listing:
         out = ['<html><head></head><body><ul>']
