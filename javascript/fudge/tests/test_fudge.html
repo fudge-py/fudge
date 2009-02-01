@@ -35,10 +35,10 @@ test("can find objects", function() {
     dot = {};
     dot.sep = {iam: function() { return "dot.sep" }};
     
-    var fake = new Fake("simple");
+    var fake = new fudge.Fake("simple");
     equals(fake._object.iam(), "simple");
     
-    var fake = new Fake("dot.sep");
+    var fake = new fudge.Fake("dot.sep");
     equals(fake._object.iam(), "dot.sep");
 });
 
@@ -48,14 +48,14 @@ test("cannot send bad JavaScript as name", function() {
     init_test();
     expect(1);
     raises("TypeError", function() {
-        var fake = new Fake("length()"); // TypeError: length is not a function
+        var fake = new fudge.Fake("length()"); // TypeError: length is not a function
     });
 });
 */
 
 test("can create objects", function() {
     init_test();
-    var fake = new Fake("_non_existant_.someCall");
+    var fake = new fudge.Fake("_non_existant_.someCall");
     ok(_non_existant_, "_non_existant_");
     ok(_non_existant_.someCall, "_non_existant_.someCall");
 });
@@ -69,7 +69,7 @@ test("expected call not called", function() {
     */
     init_test();
     expect(1);
-    var fake = new Fake("some_obj");
+    var fake = new fudge.Fake("some_obj");
     fake.expects("someCall");
     raises("AssertionError", function() { 
         fudge.stop() 
@@ -78,7 +78,7 @@ test("expected call not called", function() {
 
 test("call intercepted", function() {
     init_test();
-    var fake = new Fake("bob_loblaw");
+    var fake = new fudge.Fake("bob_loblaw");
     fake.expects("blog");
     bob_loblaw.blog();
     // stop should pass the test...
@@ -87,7 +87,7 @@ test("call intercepted", function() {
 
 test("returns value", function() {
     init_test();
-    var fake = new Fake("grocery_store");
+    var fake = new fudge.Fake("grocery_store");
     fake.expects("check_eggs").returns("eggs are good!");
     equals(grocery_store.check_eggs(), "eggs are good!");
     fudge.stop();
@@ -96,7 +96,7 @@ test("returns value", function() {
 test("returns fake", function() {
     init_test();
     expect(1);
-    var fake = new Fake("ice_skates");
+    var fake = new fudge.Fake("ice_skates");
     fake.expects("start").returns_fake().expects("not_called");
     ice_skates.start();
     raises("AssertionError", function() { 
@@ -108,15 +108,15 @@ module("Test ExpectedCall");
 
 test("ExpectedCall properties", function() {
     init_test();
-    var fake = new Fake("my_auth_mod");
-    var ec = new ExpectedCall(fake, "logout");
+    var fake = new fudge.Fake("my_auth_mod");
+    var ec = new fudge.ExpectedCall(fake, "logout");
     equals(ec.call_name, "logout");
 });
 
 test("call is logged", function() {
     init_test();
-    var fake = new Fake("aa_some_obj");
-    var ec = new ExpectedCall(fake, "watchMe");
+    var fake = new fudge.Fake("aa_some_obj");
+    var ec = new fudge.ExpectedCall(fake, "watchMe");
     aa_some_obj.watchMe();
     equals(ec.was_called, true, "aa_some_obj.watchMe() was not logged")
 });
@@ -141,8 +141,8 @@ test("expected call not called", function() {
     */
     init_test();
     expect(1);
-    var fake = new Fake("some_obj");
-    fudge.registry.expect_call(new ExpectedCall(fake, 'nothing'));
+    var fake = new fudge.Fake("some_obj");
+    fudge.registry.expect_call(new fudge.ExpectedCall(fake, 'nothing'));
     raises("AssertionError", function() { 
         fudge.registry.stop() 
     });
@@ -160,8 +160,8 @@ test("start resets calls", function() {
         eq_(exp.was_called, False, "call was not reset by start()")
     */
     init_test();
-    var fake = new Fake("yeah");
-    var exp = new ExpectedCall(fake, "sayYeah");
+    var fake = new fudge.Fake("yeah");
+    var exp = new fudge.ExpectedCall(fake, "sayYeah");
     fudge.registry.expect_call(exp);
     yeah.sayYeah();
     equals(exp.was_called, true, "call was never logged");
@@ -183,8 +183,8 @@ test("stop resets calls", function() {
         eq_(len(self.reg.get_expected_calls()), 1, "stop() should not reset expectations")
     */
     init_test();
-    var fake = new Fake("reset_yeah");
-    var exp = new ExpectedCall(fake, "sayYeah");
+    var fake = new fudge.Fake("reset_yeah");
+    var exp = new fudge.ExpectedCall(fake, "sayYeah");
     fudge.registry.expect_call(exp);
     equals(fudge.registry.expected_calls.length, 1, "registry has too many calls");
     reset_yeah.sayYeah();
@@ -210,8 +210,8 @@ test("global stop", function() {
         eq_(len(self.reg.get_expected_calls()), 1, "stop() should not reset expectations")
     */
     init_test();
-    var fake = new Fake("gstop_yeah");
-    var exp = new ExpectedCall(fake, "sayYeah");
+    var fake = new fudge.Fake("gstop_yeah");
+    var exp = new fudge.ExpectedCall(fake, "sayYeah");
     gstop_yeah.sayYeah();
     fudge.registry.expect_call(exp);
     equals(exp.was_called, true, "call was never logged");
@@ -237,8 +237,8 @@ test("global clear expectations", function() {
             "clear_expectations() should reset expectations")
     */
     init_test();
-    var fake = new Fake("gclear_yeah");
-    var exp = new ExpectedCall(fake, "sayYeah");
+    var fake = new fudge.Fake("gclear_yeah");
+    var exp = new fudge.ExpectedCall(fake, "sayYeah");
     gclear_yeah.sayYeah();
     fudge.registry.expect_call(exp);
     equals(fudge.registry.expected_calls.length, 1, "registry has wrong number of calls");
