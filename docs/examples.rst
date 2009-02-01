@@ -1,4 +1,66 @@
 
+.. _fudge-examples:
+
+==============
+Fudge Examples
+==============
+
+Fudging Email
+=============
+
+Say you have a method that uses Python's standard `smtplib <http://docs.python.org/library/smtplib.html#module-smtplib>`_ module 
+to send email:
+
+.. doctest::
+
+    >>> def send_email(recipient, sender, msg):
+    ...     import smtplib
+    ...     msg = ("From: %s\r\nTo: %s\r\n\r\n%s" % (
+    ...             sender, ", ".join(recipient), msg))
+    ...     s = smtplib.SMTP()
+    ...     s.connect()
+    ...     s.sendmail(sender, recipient, msg)
+    ...     s.close()
+    ...     print "Sent an email to %s" % recipient
+    ... 
+    >>> 
+
+You don't want to send an email each time you run a test but you want to be 
+sure that your code is able to send email.  Fudge recommends this strategy: 
+Since you trust that the SMTP class works, expect that your application 
+under test uses the SMTP class correctly.  If the application calls the wrong 
+method or forgets to call a method then your test should fail.  Here's how to set 
+it up:
+
+.. doctest::
+    
+    >>> import fudge
+    >>> SMTP = fudge.Fake('SMTP')
+    >>> SMTP = SMTP.expects('__init__')
+    >>> SMTP = SMTP.expects('connect')
+    >>> SMTP = SMTP.expects('sendmail').with_arg_count(3)
+    >>> SMTP = SMTP.expects('close')
+
+Instead of using ``with_arg_count()`` you'd probably want to check that the first argument is the intended sender and the second is the intended recipient (important to not to mix these up).  I'll show you how to do something like that in an upcoming example.
+
+Next, patch the module temporarily with your fake:
+    
+.. doctest::
+
+    >>> patched_smtplib = fudge.patch_object("smtplib", "SMTP", SMTP)
+
+Now you can run the code with the fake object:
+
+.. doctest::
+    
+    >>> fudge.start()
+    >>> send_email( "kumar@hishouse.com", "you@yourhouse.com", 
+    ...                                   "hi, I'm reading about Fudge!")
+    ... 
+    Sent an email to kumar@hishouse.com
+    >>> fudge.stop()
+    >>> patched_smtplib.restore()
+    
 A Simple Test Case
 ==================
 
@@ -85,8 +147,8 @@ to clear the SMTP expectations before testing with the fake database.
 
     >>> fudge.clear_expectations()
 
-A Complete Test Module Using Nose
-=================================
+A Complete Test Module
+======================
 
 If you're using a test framework like `Nose`_ or `py.test`_ that supports 
 module level setup / teardown hooks, one strategy is to declare all Fake 
@@ -154,8 +216,8 @@ for the method is_logged_in():
 
 Note that if user.is_logged_in() is not called then no error will be raised.
 
-Replacing A Method With Code
-============================
+Replacing A Method
+==================
 
 Sometimes returning a static value isn't good enough, you actually need to run some code.  
 You can do this using :meth:`Fake.calls() <fudge.Fake.calls>` like this:
@@ -177,8 +239,8 @@ You can do this using :meth:`Fake.calls() <fudge.Fake.calls>` like this:
     >>> auth.show_secret_word_for_user("ernie")
     Access denied
 
-Fudging A Callable (I.E. Function)
-==================================
+Fudging A Callable
+==================
 
 Sometimes you might only need to replace a single function, not an instance of a class.  
 You can do this with the keyword argument :class:`callable=True <fudge.Fake>`.  For example:
@@ -207,22 +269,20 @@ Some objects support *cascading* which means each method returns an object.  Her
 
 .. doctest::
     
-    >>> class User(object):
-    ...     id = 1
-    ... 
     >>> session = fudge.Fake('session')
     >>> query = session.provides('query').returns_fake()
     >>> query = query.provides('order_by').returns(
     ...             [fudge.Fake('User').has_attr(name='Al', lastname='Capone')]
     ...         )
     
+    >>> from models import User
     >>> for instance in session.query(User).order_by(User.id):
     ...     print instance.name, instance.lastname
     ... 
     Al Capone
 
-Specifying Multiple Return Values
-=================================
+Multiple Return Values
+======================
 
 Let's say you want to test code that needs to call a function multiple times and get back multiple values.  Up until now, you've just seen the :meth:`Fake.returns() <fudge.Fake.returns>` method which will return a value infinitely.  To change that, call ``next_call()`` to advance the call sequence.  Here is an example using a shopping cart scenario:
 
@@ -244,3 +304,5 @@ Let's say you want to test code that needs to call a function multiple times and
 
 .. _Nose: http://somethingaboutorange.com/mrl/projects/nose/
 .. _py.test: http://codespeak.net/py/dist/test.html
+
+That's it!  See the :ref:`fudge API <fudge-api>` for details.
