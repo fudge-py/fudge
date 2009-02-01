@@ -455,14 +455,17 @@ class Fake(object):
             
             >>> f = Fake().provides('status').returns('Awake!')
             >>> f = f.next_call().returns('Asleep')
+            >>> f = f.next_call().returns('Dreaming')
             >>> f.status()
             'Awake!'
             >>> f.status()
             'Asleep'
             >>> f.status()
+            'Dreaming'
+            >>> f.status()
             Traceback (most recent call last):
             ...
-            AssertionError: This attribute of fake:unnamed can only be called 2 time(s).  Call reset() if necessary.
+            AssertionError: This attribute of fake:unnamed can only be called 3 time(s).  Call reset() if necessary.
             
         """
         exp = self._declared_calls[self._last_declared_call_name]
