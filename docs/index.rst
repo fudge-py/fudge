@@ -35,6 +35,7 @@ Contents
    :maxdepth: 2
    
    examples
+   javascript
 
 API Reference
 =============

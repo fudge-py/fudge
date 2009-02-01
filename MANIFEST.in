@@ -1,0 +1,8 @@
+include *.txt
+recursive-include javascript/fudge *.js *.html *.txt *.py
+include run_tests.sh
+include javascript/README.txt
+include docs/Makefile
+recursive-include docs *.py *.rst
+include docs/_static/.hidden
+prune docs/_build

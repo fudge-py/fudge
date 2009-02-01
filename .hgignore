@@ -6,3 +6,4 @@ _env
 .DS_Store
 *.egg-info
 _tmp_src
+dist

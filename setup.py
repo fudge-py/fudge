@@ -19,7 +19,7 @@ setup(
     author_email='kumar.mcmillan@gmail.com',
     packages=find_packages(exclude=['ez_setup']),
     install_requires=[],
-    tests_require=['nose'],
-    #url='',
+    tests_require=['nose', 'Sphinx'],
+    url='http://farmdev.com/projects/fudge/',
     include_package_data=True,
     )
