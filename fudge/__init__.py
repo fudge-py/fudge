@@ -495,7 +495,7 @@ class Fake(object):
     def provides(self, call_name):
         """Provide a call.
         
-        The call acts as a stub -- no error is made if it is not called.::
+        The call acts as a stub -- no error is raised if it is not called.::
         
             >>> session = Fake('session').provides('open').provides('close')
             >>> import fudge
