@@ -205,6 +205,12 @@ class TestCall(unittest.TestCase):
         s.expected_args = [1,"bad"]
         eq_(repr(s), "fake:SMTP(1, 'bad')")
     
+    def test_repr_with_kwargs(self):
+        s = Call(self.fake)
+        s.expected_args = [1,"bad"]
+        s.expected_kwargs = {'baz':'borzo'}
+        eq_(repr(s), "fake:SMTP(1, 'bad', baz='borzo')")
+    
     def test_named_repr_with_args(self):
         s = Call(self.fake, call_name='connect')
         s.expected_args = [1,"bad"]

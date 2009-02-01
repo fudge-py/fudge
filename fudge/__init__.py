@@ -150,7 +150,7 @@ class Call(object):
         if self.expected_args:
             if args != self.expected_args:
                 raise AssertionError(
-                    "%s was called unexpectedly with args %s" % (self, args))
+                    "%s was called unexpectedly with args %s" % (self, self._repr_call(args, kwargs)))
         elif self.expected_arg_count is not None:
             if len(args) != self.expected_arg_count:
                 raise AssertionError(
@@ -170,20 +170,25 @@ class Call(object):
         
         return self.return_val
     
+    def _repr_call(self, expected_args, expected_kwargs):
+        args = []
+        if expected_args:
+            args.extend([fmt_val(a) for a in expected_args])
+        if expected_kwargs:
+            args.extend(fmt_dict_vals(expected_kwargs))
+        if args:
+            call = "(%s)" % ", ".join(args)
+        else:
+            call = "()"
+        return call
+    
     def __repr__(self):
         cls_name = repr(self.fake)
         if self.call_name:
-            call = "%s.%s(" % (cls_name, self.call_name)
+            call = "%s.%s" % (cls_name, self.call_name)
         else:
-            call = "%s(" % cls_name
-        args = []
-        if self.expected_args:
-            args.extend([fmt_val(a) for a in self.expected_args])
-        if self.expected_kwargs:
-            args.extend(fmt_dict_vals(self.expected_kwargs))
-        if args:
-            call = "%s%s" % (call, ", ".join(args))
-        call = "%s)" % call
+            call = "%s" % cls_name
+        call = "%s%s" % (call, self._repr_call(self.expected_args, self.expected_kwargs))
         return call
     
     def get_call_object(self):
@@ -537,7 +542,17 @@ class Fake(object):
         return fake
     
     def with_args(self, *args, **kwargs):
-        """Expect specific arguments."""
+        """Expect specific arguments.
+        
+        I.E.::
+            
+            >>> counter = Fake('counter').expects('increment').with_args(25, table='hits')
+            >>> counter.increment(24, table='clicks')
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:counter.increment(25, table='hits') was called unexpectedly with args (24, table='clicks')
+            
+        """
         exp = self._get_current_call()
         if args:
             exp.expected_args = args
@@ -546,13 +561,26 @@ class Fake(object):
         return self
     
     def with_arg_count(self, count):
-        """Expect an exact argument count."""
+        """Expect an exact argument count.
+        
+        I.E.::
+            
+            >>> login = Fake('login', callable=True).with_arg_count(2)
+            >>> login('joe_user') # forgot password
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:login() was called with 1 arg(s) but expected 2
+            
+        """
         exp = self._get_current_call()
         exp.expected_arg_count = count
         return self
     
     def with_kwarg_count(self, count):
-        """Expect an exact count of keyword arguments."""
+        """Expect an exact count of keyword arguments.
+        
+            
+        """
         exp = self._get_current_call()
         exp.expected_kwarg_count = count
         return self
