@@ -28,8 +28,9 @@ If you don't have ``easy_install`` for Python you can get it like this::
     $ wget http://peak.telecommunity.com/dist/ez_setup.py
     $ sudo python ez_setup.py
 
-Example: Fudging Email
-======================
+
+Fudging Email
+=============
 
 Say you have a method that uses Python's standard `smtplib <http://docs.python.org/library/smtplib.html#module-smtplib>`_ module 
 to send email:
@@ -84,247 +85,13 @@ Now you can run the code with the fake object:
     >>> fudge.stop()
     >>> patched_smtplib.restore()
 
-A Simple Test Case
-==================
+More Examples
+=============
 
-The above code could also be written as a test function, compatible with `Nose`_ or `py.test`_:
-
-.. doctest::
-    
-    >>> @fudge.with_fakes
-    ... @fudge.with_patched_object("smtplib", "SMTP", SMTP)
-    ... def test_email():
-    ...     send_email( "kumar@hishouse.com", 
-    ...                 "you@yourhouse.com", 
-    ...                 "Mmmm, fudge")
-    ... 
-    >>> test_email()
-    Sent an email to kumar@hishouse.com
-
-You could also write the same test using the stdlib ``unittest.TestCase`` like this:
-
-.. doctest::
-    
-    >>> import unittest
-    >>> class TestEmail(unittest.TestCase):
-    ...     def setUp(self):
-    ...         self.patched = fudge.patch_object("smtplib", "SMTP", SMTP)
-    ...         fudge.start()
-    ... 
-    ...     def tearDown(self):
-    ...         self.patched.restore()
-    ...     
-    ...     def test_email(self):
-    ...         send_email( "kumar@hishouse.com", 
-    ...                     "you@yourhouse.com", 
-    ...                     "Mmmm, fudge")
-    ...         fudge.stop()
-    ... 
-    >>> test = TestEmail('test_email')
-    >>> test.run()
-    Sent an email to kumar@hishouse.com
-
-Notice how :func:`fudge.stop` is called within the test itself, not in tearDown().  This is because stop() might raise errors about failed expectations, which is part of your test.
-
-Failed Expectations
-===================
-
-Since the previous code declared expectations for how the 
-sendmail() method should be called, your test will raise an 
-AssertionError when those expectations are not met.  For example:
-
-.. doctest::
-
-    >>> s = SMTP()
-    >>> s.connect()
-    >>> s.sendmail("whoops")
-    Traceback (most recent call last):
-    ...
-    AssertionError: fake:SMTP.sendmail() was called with 1 arg(s) but expected 3
-
-If your code forgets to call an important method, that would be an error too:
-
-.. doctest::
-    
-    >>> fudge.start()
-    >>> s = SMTP()
-    >>> s.connect()
-    >>> fudge.stop()
-    Traceback (most recent call last):
-    ...
-    AssertionError: fake:SMTP.sendmail() was not called
-
-Clearing Expectations
-=====================
-
-Fudge assumes that when you declare expectations on a Fake, 
-you will use the Fake object in more than one test.  For this reason, 
-you'll need to tear down queued up expectations explicitly if you 
-want to start testing with other fake objects.
-
-In other words, if one test uses a fake SMTP but some test later on 
-uses a fake database and has nothing to do with email then you'll need 
-to clear the SMTP expectations before testing with the fake database.
-
-.. doctest::
-
-    >>> fudge.clear_expectations()
-
-A Complete Test Module Using Nose
-=================================
-
-If you're using a test framework like `Nose`_ or `py.test`_ that supports 
-module level setup / teardown hooks, one strategy is to declare all Fake 
-objects at the top of your test module and clear expectations after all tests 
-are run on your Fake objects.  Here is an example of how you could lay out 
-your test module (example works for `Nose`_ only):
-
-.. doctest::
-    
-    >>> import fudge
-    
-    >>> SMTP = fudge.Fake()
-    >>> SMTP = SMTP.expects('__init__')
-    >>> SMTP = SMTP.expects('connect')
-    >>> SMTP = SMTP.expects('sendmail').with_arg_count(3)
-    >>> SMTP = SMTP.expects('close')
-    
-    >>> def teardown():
-    ...     fudge.clear_expectations()
-    ... 
-    >>> @fudge.with_fakes
-    ... @fudge.with_patched_object("smtplib", "SMTP", SMTP)
-    ... def test_email():
-    ...     send_email( "kumar.mcmillan@gmail.com", 
-    ...                 "you@yourhouse.com", 
-    ...                 "Mmmm, fudge")
-    ... 
-
-The `Nose`_ framework executes the above test module as follows:
-    
-.. doctest::
-
-    >>> try:
-    ...     test_email()
-    ... finally:
-    ...     teardown()
-    Sent an email to kumar.mcmillan@gmail.com
-
-Example: Stubs Without Expectations
-===================================
-
-If you want a fake object where the methods can be called but are not 
-expected to be called, the code is just the same but instead of 
-:meth:`Fake.expects() <fudge.Fake.expects>` you use :meth:`Fake.provides() <fudge.Fake.provides>`.  Here is an example of always returning True 
-for the method is_logged_in():
-
-.. doctest::
-    
-    >>> auth = fudge.Fake()
-    >>> user = auth.provides('current_user').returns_fake()
-    >>> user = user.provides('is_logged_in').returns(True)
-    
-    >>> def show_secret_word(auth):
-    ...     user = auth.current_user()
-    ...     if user.is_logged_in():
-    ...         print "Bird is the word"
-    ...     else:
-    ...         print "Access denied"
-    ... 
-    
-    >>> fudge.start()
-    >>> show_secret_word(auth)
-    Bird is the word
-    >>> fudge.stop()
-
-Note that if user.is_logged_in() is not called then no error will be raised.
-
-Example: Replacing A Method With Code
-=====================================
-
-Sometimes returning a static value isn't good enough, you actually need to run some code.  
-You can do this using :meth:`Fake.calls() <fudge.Fake.calls>` like this:
-
-.. doctest::
-    
-    >>> auth = fudge.Fake()
-    
-    >>> def check_user(username):
-    ...     if username=='bert':
-    ...         print "Bird is the word"
-    ...     else:
-    ...         print "Access denied"
-    ... 
-    >>> auth = auth.provides('show_secret_word_for_user').calls(check_user)
-    
-    >>> auth.show_secret_word_for_user("bert")
-    Bird is the word
-    >>> auth.show_secret_word_for_user("ernie")
-    Access denied
-
-Example: Fudging A Callable (I.E. Function)
-===========================================
-
-Sometimes you might only need to replace a single function, not an instance of a class.  
-You can do this with the keyword argument :class:`callable=True <fudge.Fake>`.  For example:
-
-.. doctest::
-    
-    >>> login = fudge.Fake(callable=True).with_args("eziekel", "pazzword").returns(True)
-    
-    >>> @fudge.with_fakes
-    ... @fudge.with_patched_object("auth", "login", login)
-    ... def test_login():
-    ...     import auth
-    ...     logged_in = auth.login("eziekel", "pazzword")
-    ...     if logged_in:
-    ...         print "Welcome!"
-    ...     else:
-    ...         print "Access Denied"
-    ... 
-    >>> test_login()
-    Welcome!
-
-Example: Cascading Objects
-==========================
-
-Some objects support *cascading* which means each method returns an object.  Here is an example of fudging a cascading `SQLAlchemy query <http://www.sqlalchemy.org/docs/05/ormtutorial.html#querying>`_.  Notice that :meth:`Fake.returns_fake() <fudge.Fake.returns_fake>` is used to specify that ``session.query(User)`` should return a new object.  Notice also that because query() should be iterable, it is set to return a list of fake User objects.
-
-.. doctest::
-    
-    >>> class User(object):
-    ...     id = 1
-    ... 
-    >>> session = fudge.Fake('session')
-    >>> query = session.provides('query').returns_fake()
-    >>> query = query.provides('order_by').returns(
-    ...             [fudge.Fake('User').has_attr(name='Al', lastname='Capone')]
-    ...         )
-    
-    >>> for instance in session.query(User).order_by(User.id):
-    ...     print instance.name, instance.lastname
-    ... 
-    Al Capone
-
-Example: Specifying Multiple Return Values
-==========================================
-
-Let's say you want to test code that needs to call a function multiple times and get back multiple values.  Up until now, you've just seen the :meth:`Fake.returns() <fudge.Fake.returns>` method which will return a value infinitely.  To change that, call ``next_call()`` to advance the call sequence.  Here is an example using a shopping cart scenario:
-
-.. doctest::
-    
-    >>> cart = fudge.Fake('cart').provides('add').with_args('book')
-    >>> cart = cart.returns({'contents': ['book']})
-    >>> cart = cart.next_call().with_args('dvd').returns({'contents': ['book','dvd']})
-    
-    >>> cart.add('book')
-    {'contents': ['book']}
-    >>> cart.add('dvd')
-    {'contents': ['book', 'dvd']}
-    >>> cart.add('monkey')
-    Traceback (most recent call last):
-    ...
-    AssertionError: This attribute of fake:cart can only be called 2 time(s).
+.. toctree::
+   :maxdepth: 2
+   
+   examples
 
 API Reference
 =============
@@ -333,7 +100,3 @@ API Reference
     :glob:
     
     api/*
-
-
-.. _Nose: http://somethingaboutorange.com/mrl/projects/nose/
-.. _py.test: http://codespeak.net/py/dist/test.html
