@@ -1,4 +1,29 @@
 
+/**
+ * Fudge is a JavaScript module for using fake objects (mocks, stubs, etc) to test real ones.
+ * <p>
+ * The module is designed for two specific situations:
+ * </p>
+ * <ul>
+ * <li>Replace an object
+ *   <ul>
+ *   <li>
+ *   Temporarily return a canned value for a 
+ *     method or allow a method to be called without affect.
+ *   </li>
+ *   </ul>
+ * </li>
+ * <li>Ensure an object is used correctly
+ *   <ul>
+ *   <li>
+ *     Declare expectations about what methods should be 
+ *     called and what arguments should be sent.
+ *   </li>
+ *   </ul>
+ * </li>
+ * </ul>
+ * @module fudge
+ */
 
 fudge = function() {
     
@@ -43,7 +68,7 @@ fudge = function() {
             */
             this.expected_calls = [];
         };
-    
+        
         this.start = function() {
             /*
             def start(self):
@@ -168,35 +193,52 @@ fudge = function() {
         }
     }
 
+    /**
+     * <p>
+       A fake object to replace a real one while testing.
+       </p>
+       <p>
+       All calls return ``this`` so that you can chain them together to 
+       create readable code.
+       </p>
+       <p>
+       Arguments:
+       </p>
+       <ul>
+       <li>name
+       <ul><li>
+            Name of the JavaScript global to replace.
+            </li></ul>
+       </li>
+       <li>config.allows_any_call = false
+       <ul><li>
+            When True, any method is allowed to be called on the Fake() instance.  Each method 
+            will be a stub that does nothing if it has not been defined.  Implies callable=True.
+           </li></ul>
+       </li>
+       <li>config.callable = false
+       <ul><li>
+            When True, the Fake() acts like a callable.  Use this if you are replacing a single 
+            method.
+            </li></ul>
+       </li>
+       </ul>
+       <p>
+       Short example:
+       </p>
+       <pre><code>
+       var auth = new fudge.Fake('auth')
+                                .expects('login')
+                                .with_args('joe_username', 'joes_password');
+       fudge.start();
+       auth.login();
+       fudge.stop();
+       </code></pre>
+     * 
+     * @class Fake
+     * @namespace fudge
+     */
     var Fake = function(name, config) {
-        /*
-        class Fake(object):
-            """A fake object to replace a real one while testing.
-    
-            All calls return ``this`` so that you can chain them together to 
-            create readable code.
-    
-            Arguments:
-    
-            name
-                Name of the JavaScript global to replace.
-    
-            config.allows_any_call = false
-                When True, any method is allowed to be called on the Fake() instance.  Each method 
-                will be a stub that does nothing if it has not been defined.  Implies callable=True.
-
-            config.callable = false
-                When True, the Fake() acts like a callable.  Use this if you are replacing a single 
-                method.
-    
-            Short example::
-    
-                >>> import fudge
-                >>> auth = Fake('auth').expects('login').with_args('joe_username', 'joes_password')
-                >>> fudge.clear_expectations()
-        
-            """
-        */
         if (!config) {
             config = {};
         }
@@ -303,24 +345,31 @@ fudge = function() {
             return self
         */
     }
-
+    
+    /**
+     * Expect a call.
+       <br /><br /> 
+       If the method *call_name* is never called, then raise an error.
+        
+     * @method expects
+     * @return Object
+     */
     Fake.prototype.expects = function(call_name) {
-        /*
-        def expects(self, call_name):
-            """Expect a call."""
-            self._last_declared_call_name = call_name
-            c = ExpectedCall(self, call_name)
-            self._declared_calls[call_name] = c
-            registry.expect_call(c)
-            return self
-        */
         this._last_declared_call_name = call_name;
         var c = new ExpectedCall(this, call_name);
         this._declared_calls[call_name] = c;
         registry.expect_call(c);
         return this;
     }
-
+    
+    /**
+     * Provide a call.
+       <br /><br /> 
+       The call acts as a stub -- no error is raised if it is not called.
+     *
+     * @method provides
+     * @return Object
+     */
     Fake.prototype.provides = function(call_name) {
         /*
         def provides(self, call_name):
@@ -331,32 +380,45 @@ fudge = function() {
             return self
         */
     }
-
+    
+    /**
+     * Set the last call to return a value.
+        <br /> <br />
+        Set a static value to return when a method is called.
+     *
+     * @method returns
+     * @return Object
+     */
     Fake.prototype.returns = function(val) {
-        /*
-        def returns(self, val):
-            """Return a value."""
-            exp = self._get_current_call()
-            exp.return_val = val
-            return self
-        */
         var exp = this._get_current_call();
         exp.return_val = val;
         return this;
     }
-
+    
+    /**
+     * <p>Set the last call to return a new :class:`fudge.Fake`.</p>
+        <p>
+        Any given arguments are passed to the :class:`fudge.Fake` constructor
+        </p>
+        <p>
+        Take note that this is different from the cascading nature of 
+        other methods.  This will return an instance of the *new* Fake, 
+        not self, so you should be careful to store its return value in a new variable.
+        </p>
+     *
+     * @method returns_fake
+     * @return Object
+     */
     Fake.prototype.returns_fake = function() {
-        /*
-        def returns_fake(self):
-            """Return a fake."""
-            exp = self._get_current_call()
-            fake = self.__class__()
-            exp.return_val = fake
-            return fake
-        */
         return this.returns(new Fake());
     }
-
+    
+    /**
+     * Set the last call to expect specific arguments.
+     *
+     * @method with_args
+     * @return Object
+     */
     Fake.prototype.with_args = function() {
         /*
         def with_args(self, *args, **kwargs):
@@ -369,7 +431,13 @@ fudge = function() {
             return self
         */
     }
-
+    
+    /**
+     * Set the last call to expect an exact argument count.
+     *
+     * @method with_arg_count
+     * @return Object
+     */
     Fake.prototype.with_arg_count = function(count) {
         /*
         def with_arg_count(self, count):
@@ -380,6 +448,12 @@ fudge = function() {
         */
     }
 
+    /**
+     * Set the last call to expect an exact count of keyword arguments.
+     *
+     * @method with_kwarg_count
+     * @return Object
+     */
     Fake.prototype.with_kwarg_count = function(count) {  
         /*
         def with_kwarg_count(self, count):
