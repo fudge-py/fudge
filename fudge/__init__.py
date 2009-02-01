@@ -413,8 +413,8 @@ class Fake(object):
         
         If the method *call_name* is never called, then raise an error.  I.E.::
             
-            >>> import fudge
             >>> session = Fake('session').expects('open').expects('close')
+            >>> import fudge
             >>> fudge.start()
             >>> session.open()
             >>> fudge.stop()
@@ -444,11 +444,11 @@ class Fake(object):
         return self
     
     def next_call(self):
-        """Start expecting multiple calls on your object.
+        """Start expecting or providing multiple calls.
         
         Up until calling this method, calls are infinite.
         
-        For example, before next_call() ::
+        For example, before next_call() ... ::
         
             >>> f = Fake().provides('status').returns('Awake!')
             >>> f.status()
@@ -456,7 +456,7 @@ class Fake(object):
             >>> f.status()
             'Awake!'
         
-        After next_call() ::
+        After next_call() ... ::
             
             >>> f = Fake().provides('status').returns('Awake!')
             >>> f = f.next_call().returns('Asleep')
@@ -492,10 +492,14 @@ class Fake(object):
     def provides(self, call_name):
         """Provide a call.
         
-        If the call is never made, no error is raised.  I.E.::
+        The call acts as a stub -- no error is made if it is not called.::
         
-            >>> session = Fake('session').provides('open')
+            >>> session = Fake('session').provides('open').provides('close')
+            >>> import fudge
+            >>> fudge.clear_expectations() # from any previously declared fakes
+            >>> fudge.start()
             >>> session.open()
+            >>> fudge.stop() # close() not called but no error
             
         """
         self._last_declared_call_name = call_name
@@ -504,7 +508,7 @@ class Fake(object):
         return self
     
     def returns(self, val):
-        """Return a value.
+        """Set the last call to return a value.
         
         Set a static value to return when a method is called.  I.E.::
         
@@ -518,18 +522,19 @@ class Fake(object):
         return self
     
     def returns_fake(self, *args, **kwargs):
-        """Return a fake.
+        """Set the last call to return a new :class:`fudge.Fake`.
         
-        Any arguments are passed to the :class:`fudge.Fake` constructor
+        Any given arguments are passed to the :class:`fudge.Fake` constructor
         
         Take note that this is different from the cascading nature of 
-        other methods.  This will return an instance to the *new* fake object 
-        so you should be careful to store its return value in a new variable.
+        other methods.  This will return an instance of the *new* Fake, 
+        not self, so you should be careful to store its return value in a new variable.
         
         I.E.::
             
             >>> session = Fake('session')
             >>> query = session.provides('query').returns_fake()
+            >>> assert query is not session
             >>> query = query.provides('one').returns(['object'])
             
             >>> session.query().one()
@@ -542,7 +547,7 @@ class Fake(object):
         return fake
     
     def with_args(self, *args, **kwargs):
-        """Expect specific arguments.
+        """Set the last call to expect specific arguments.
         
         I.E.::
             
@@ -561,15 +566,15 @@ class Fake(object):
         return self
     
     def with_arg_count(self, count):
-        """Expect an exact argument count.
+        """Set the last call to expect an exact argument count.
         
         I.E.::
             
-            >>> login = Fake('login', callable=True).with_arg_count(2)
-            >>> login('joe_user') # forgot password
+            >>> auth = Fake('auth').provides('login').with_arg_count(2)
+            >>> auth.login('joe_user') # forgot password
             Traceback (most recent call last):
             ...
-            AssertionError: fake:login() was called with 1 arg(s) but expected 2
+            AssertionError: fake:auth.login() was called with 1 arg(s) but expected 2
             
         """
         exp = self._get_current_call()
@@ -577,8 +582,15 @@ class Fake(object):
         return self
     
     def with_kwarg_count(self, count):
-        """Expect an exact count of keyword arguments.
+        """Set the last call to expect an exact count of keyword arguments.
         
+        I.E.::
+            
+            >>> auth = Fake('auth').provides('login').with_kwarg_count(2)
+            >>> auth.login(username='joe') # forgot password=
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:auth.login() was called with 1 keyword arg(s) but expected 2
             
         """
         exp = self._get_current_call()
