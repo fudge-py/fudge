@@ -23,4 +23,4 @@ and open http://localhost:8000/tests/test_fudge.html  Take note that while Fudge
 Usage
 =====
 
-As of right now, refer to the :ref:`fudge-examples` in Python.  As mentioned before, the JavaScript port is not yet fully implemented.
+Refer to the :ref:`fudge-examples` in Python to get an idea for how to use the JavaScript version.  As mentioned before, the JavaScript port is not yet fully implemented.
