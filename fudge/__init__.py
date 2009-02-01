@@ -1,5 +1,5 @@
 
-"""Fudge is a Python module for using fake objects (mocks, stubs, etc) to test real ones.
+"""Fudge is a module for replacing real objects with fakes (mocks, stubs, etc) while testing.
 """
 
 __version__ = '0.9.0'
@@ -9,6 +9,8 @@ import sys
 import thread
 from fudge.patcher import *
 from fudge.util import wraps
+
+__all__ = ['start', 'stop', 'clear_expectations', 'Fake']
 
 class Registry(object):
     """An internal, thread-safe registry of expected calls.
@@ -239,9 +241,9 @@ class CallStack(object):
         return current_call(*args, **kw)
 
 class Fake(object):
-    """A fake object to replace a real one while testing.
+    """A fake object that replaces a real one while testing.
     
-    All calls return ``self`` so that you can chain them together to 
+    Most calls with a few exceptions return ``self`` so that you can chain them together to 
     create readable code.
     
     Keyword arguments:
@@ -268,6 +270,7 @@ class Fake(object):
     """
     
     def __init__(self, name=None, allows_any_call=False, callable=False):
+        self._attributes = {}
         self._declared_calls = {}
         self._name = (name or self._guess_name())
         self._last_declared_call_name = None
@@ -288,6 +291,9 @@ class Fake(object):
             # if it's a call that has been declared
             # as that of the real object then hand it over:
             return g('_declared_calls')[name]
+        elif name in g('_attributes'):
+            # return attribute declared on real object
+            return g('_attributes')[name]
         else:
             # otherwise, first check if it's a call
             # of Fake itself (i.e. returns(),  with_args(), etc)
@@ -397,6 +403,10 @@ class Fake(object):
         registry.expect_call(c)
         return self
     
+    def has_attr(self, **attributes):
+        self._attributes.update(attributes)
+        return self
+    
     def next_call(self):
         """Start expecting multiple calls on your object.
         
@@ -431,10 +441,17 @@ class Fake(object):
         exp.return_val = val
         return self
     
-    def returns_fake(self):
-        """Return a fake."""
+    def returns_fake(self, *args, **kwargs):
+        """Return a fake.
+        
+        Any arguments are passed to the :class:`fudge.Fake` constructor
+        
+        Take note that this is different from the cascading nature of 
+        other methods.  This will return an instance to the *new* fake object 
+        so you should be careful to store its return value in a new variable.
+        """
         exp = self._get_current_call()
-        fake = self.__class__()
+        fake = self.__class__(*args, **kwargs)
         exp.return_val = fake
         return fake
     
