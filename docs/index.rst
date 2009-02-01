@@ -9,9 +9,9 @@ The module is designed for two specific situations:
 - Replace an object
   
   - Temporarily return a canned value for a 
-    method or call a method without executing real code.
+    method or allow a method to be called without affect.
 
-- Make sure your code uses an object correctly
+- Ensure an object is used correctly
 
   - Declare expectations about what methods should be 
     called and what arguments should be sent.
