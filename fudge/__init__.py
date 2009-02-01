@@ -485,14 +485,29 @@ class Fake(object):
         return self
     
     def provides(self, call_name):
-        """Provide a call."""
+        """Provide a call.
+        
+        If the call is never made, no error is raised.  I.E.::
+        
+            >>> session = Fake('session').provides('open')
+            >>> session.open()
+            
+        """
         self._last_declared_call_name = call_name
         c = Call(self, call_name)
         self._declare_call(call_name, c)
         return self
     
     def returns(self, val):
-        """Return a value."""
+        """Return a value.
+        
+        Set a static value to return when a method is called.  I.E.::
+        
+            >>> f = Fake().provides('get_number').returns(64)
+            >>> f.get_number()
+            64
+            
+        """
         exp = self._get_current_call()
         exp.return_val = val
         return self
@@ -505,6 +520,16 @@ class Fake(object):
         Take note that this is different from the cascading nature of 
         other methods.  This will return an instance to the *new* fake object 
         so you should be careful to store its return value in a new variable.
+        
+        I.E.::
+            
+            >>> session = Fake('session')
+            >>> query = session.provides('query').returns_fake()
+            >>> query = query.provides('one').returns(['object'])
+            
+            >>> session.query().one()
+            ['object']
+            
         """
         exp = self._get_current_call()
         fake = self.__class__(*args, **kwargs)
