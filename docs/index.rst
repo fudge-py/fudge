@@ -28,7 +28,7 @@ If you don't have ``easy_install`` for Python you can get it like this::
     $ wget http://peak.telecommunity.com/dist/ez_setup.py
     $ sudo python ez_setup.py
 
-Examples
+Contents
 ========
 
 .. toctree::
