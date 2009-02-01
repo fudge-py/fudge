@@ -390,13 +390,34 @@ class Fake(object):
         return exp
     
     def calls(self, call):
-        """Redefine a call."""
+        """Redefine a call.
+        
+        The fake method will execute your function.  I.E.::
+            
+            >>> f = Fake().provides('hello').calls(lambda: 'Why, hello there')
+            >>> f.hello()
+            'Why, hello there'
+            
+        """
         exp = self._get_current_call()
         exp.call_replacement = call
         return self
     
     def expects(self, call_name):
-        """Expect a call."""
+        """Expect a call.
+        
+        If the method *call_name* is never called, then raise an error.  I.E.::
+            
+            >>> import fudge
+            >>> session = Fake('session').expects('open').expects('close')
+            >>> fudge.start()
+            >>> session.open()
+            >>> fudge.stop()
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:session.close() was not called
+            
+        """
         self._last_declared_call_name = call_name
         c = ExpectedCall(self, call_name)
         self._declare_call(call_name, c)
@@ -404,6 +425,16 @@ class Fake(object):
         return self
     
     def has_attr(self, **attributes):
+        """Sets available attributes.
+        
+        I.E.::
+            
+            >>> User = Fake('User').provides('__init__').has_attr(name='Harry')
+            >>> user = User()
+            >>> user.name
+            'Harry'
+            
+        """
         self._attributes.update(attributes)
         return self
     
@@ -411,6 +442,28 @@ class Fake(object):
         """Start expecting multiple calls on your object.
         
         Up until calling this method, calls are infinite.
+        
+        For example, before next_call() ::
+        
+            >>> f = Fake().provides('status').returns('Awake!')
+            >>> f.status()
+            'Awake!'
+            >>> f.status()
+            'Awake!'
+        
+        After next_call() ::
+            
+            >>> f = Fake().provides('status').returns('Awake!')
+            >>> f = f.next_call().returns('Asleep')
+            >>> f.status()
+            'Awake!'
+            >>> f.status()
+            'Asleep'
+            >>> f.status()
+            Traceback (most recent call last):
+            ...
+            AssertionError: This attribute of fake:unnamed can only be called 2 time(s).  Call reset() if necessary.
+            
         """
         exp = self._get_current_call()
         if not isinstance(exp, CallStack):
