@@ -41,24 +41,37 @@ it up:
     >>> SMTP = SMTP.expects('sendmail').with_arg_count(3)
     >>> SMTP = SMTP.expects('close')
 
-Instead of using ``with_arg_count()`` you'd probably want to check that the first argument is the intended sender and the second is the intended recipient (important to not to mix these up).  I'll show you how to do something like that in an upcoming example.
-
 Next, patch the module temporarily with your fake:
     
 .. doctest::
 
     >>> patched_smtplib = fudge.patch_object("smtplib", "SMTP", SMTP)
 
-Now you can run the code with the fake object:
+Now you can run the code with the fake object.  Begin each test with :func:`fudge.start` so that call history is reset:
 
 .. doctest::
     
     >>> fudge.start()
+
+Run the code you want to test:
+
+.. doctest::
+
     >>> send_email( "kumar@hishouse.com", "you@yourhouse.com", 
     ...                                   "hi, I'm reading about Fudge!")
     ... 
     Sent an email to kumar@hishouse.com
+
+Call :func:`fudge.stop` to make sure all expectations were met:
+
+.. doctest::
+
     >>> fudge.stop()
+
+And, finally, restore your patches:
+
+.. doctest::
+
     >>> patched_smtplib.restore()
     
 A Simple Test Case
