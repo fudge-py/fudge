@@ -43,6 +43,7 @@ Contents
    
    examples
    javascript
+   why-fudge
 
 API Reference
 =============
