@@ -492,4 +492,26 @@ class TestStackedCallables(unittest.TestCase):
         eq_(calls[1].index, 1)
         eq_(calls[2].index, 2)
         eq_(calls[3].index, 3)
+    
+    def test_start_stop_resets_stack(self):
+        fudge.clear_expectations()
+        fake = fudge.Fake().provides("something")
+        fake = fake.returns(1)
+        fake = fake.next_call()
+        fake = fake.returns(2)
+        
+        eq_(fake.something(), 1)
+        eq_(fake.something(), 2)
+        
+        fudge.start()
+        
+        eq_(fake.something(), 1)
+        eq_(fake.something(), 2)
+        
+        fudge.stop()
+        
+        eq_(fake.something(), 1)
+        eq_(fake.something(), 2)
+        
+        
         

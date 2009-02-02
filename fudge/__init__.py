@@ -23,6 +23,7 @@ class Registry(object):
     
     def __init__(self):
         self.expected_calls = {}
+        self.call_stacks = []
     
     def __contains__(self, obj):
         return obj in self.get_expected_calls()
@@ -43,13 +44,18 @@ class Registry(object):
         self.expected_calls.setdefault(thread.get_ident(), [])
         return self.expected_calls[thread.get_ident()]
     
+    def register_call_stack(self, call_stack):
+        self.call_stacks.append(call_stack)
+    
     def start(self):
         """Clears out any calls that were made on previously 
-        registered fake objects.
+        registered fake objects and resets all call stacks.
         
         You do not need to use this directly.  Use fudge.start()
         """
         self.clear_actual_calls()
+        for stack in self.call_stacks:
+            stack.reset()
     
     def stop(self):
         """Ensure all expected calls were called, 
@@ -61,7 +67,7 @@ class Registry(object):
             for exp in self.get_expected_calls():
                 exp.assert_called()
         finally:
-            self.clear_actual_calls()
+            self.start()
         
     def expect_call(self, expected_call):
         c = self.get_expected_calls()
@@ -74,9 +80,10 @@ def start():
     
     Specifically, clear out any calls that 
     were made on previously registered fake 
-    objects.  You don't really need to call 
-    this but it's safer since an exception 
-    might bubble up from a previous test.
+    objects and resets all call stacks.  
+    You don't really need to call this but 
+    it's safer since an exception might bubble 
+    up from a previous test.
     
     This is also available as a decorator: :func:`fudge.with_fakes`
     """
@@ -230,6 +237,7 @@ class CallStack(object):
         each call on the stack.
         
     """
+    
     def __init__(self, fake, initial_calls=None, expected=False):
         self.fake = fake
         self._pointer = 0 # position of next call to be made (can be reset)
@@ -238,6 +246,7 @@ class CallStack(object):
             for c in initial_calls:
                 self.add_call(c)
         self.expected = expected
+        registry.register_call_stack(self)
     
     def __iter__(self):
         for c in self._calls:
