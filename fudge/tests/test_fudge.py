@@ -457,3 +457,17 @@ class TestStackedCallables(unittest.TestCase):
         eq_(fake.add(1,2), 3)
         eq_(fake.add(), -1)
         
+    def test_stacked_calls_are_in_registry(self):
+        fake = fudge.Fake().expects("count").with_args(1)
+        fake = fake.next_call().with_args(2)
+        fake = fake.next_call().with_args(3)
+        fake = fake.next_call().with_args(4)
+        
+        # hmm
+        call_stack = fake._declared_calls[fake._last_declared_call_name]
+        calls = [c for c in call_stack]
+        assert calls[0] in fudge.registry
+        assert calls[1] in fudge.registry
+        assert calls[2] in fudge.registry
+        assert calls[3] in fudge.registry
+        

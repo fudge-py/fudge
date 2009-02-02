@@ -216,14 +216,25 @@ class CallStack(object):
     
     Calling this object behaves just like Call except 
     the Call instance you operate on gets changed each time __call__() is made
+    
+    expected=False
+        When True, this indicates that the call stack was derived 
+        from an expected call.  This is used by Fake to register 
+        each call on the stack.
+        
     """
-    def __init__(self, fake, initial_calls=None):
+    def __init__(self, fake, initial_calls=None, expected=False):
         self.fake = fake
         self._pointer = 0
         if initial_calls is not None:
             self._calls = initial_calls
         else:
             self._calls = []
+        self.expected = expected
+    
+    def __iter__(self):
+        for c in self._calls:
+            yield c
             
     def add_call(self, call):
         self._calls.append(call)
@@ -480,7 +491,8 @@ class Fake(object):
         if not isinstance(exp, CallStack):
             # lazily create a stack with the last defined 
             # expected call as the first on the stack:
-            stack = CallStack(self, initial_calls=[exp])
+            stack = CallStack(self, initial_calls=[exp], 
+                                    expected=isinstance(exp, ExpectedCall))
         
             # replace the old call obj using the same name:
             self._declare_call(self._last_declared_call_name, stack)
@@ -489,7 +501,10 @@ class Fake(object):
         
         # hmm, we need a copy here so that the last call 
         # falls off the stack.
-        stack.add_call(Call(self, call_name=self._last_declared_call_name))
+        next_call = Call(self, call_name=self._last_declared_call_name)
+        stack.add_call(next_call)
+        if stack.expected:
+            registry.expect_call(next_call)
         return self
     
     def provides(self, call_name):
