@@ -215,6 +215,14 @@ class TestCall(unittest.TestCase):
         s = Call(self.fake, call_name='connect')
         s.expected_args = [1,"bad"]
         eq_(repr(s), "fake:SMTP.connect(1, 'bad')")
+    
+    def test_named_repr_with_index(self):
+        s = Call(self.fake, call_name='connect')
+        s.expected_args = [1,"bad"]
+        s.index = 0
+        eq_(repr(s), "fake:SMTP.connect(1, 'bad')[0]")
+        s.index = 1
+        eq_(repr(s), "fake:SMTP.connect(1, 'bad')[1]")
         
 
 class TestCallStack(unittest.TestCase):
@@ -470,4 +478,18 @@ class TestStackedCallables(unittest.TestCase):
         assert calls[1] in fudge.registry
         assert calls[2] in fudge.registry
         assert calls[3] in fudge.registry
+        
+    def test_stacked_calls_are_indexed(self):
+        fake = fudge.Fake().expects("count").with_args(1)
+        fake = fake.next_call().with_args(2)
+        fake = fake.next_call().with_args(3)
+        fake = fake.next_call().with_args(4)
+        
+        # hmm
+        call_stack = fake._declared_calls[fake._last_declared_call_name]
+        calls = [c for c in call_stack]
+        eq_(calls[0].index, 0)
+        eq_(calls[1].index, 1)
+        eq_(calls[2].index, 2)
+        eq_(calls[3].index, 3)
         

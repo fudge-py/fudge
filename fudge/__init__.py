@@ -132,9 +132,13 @@ class Call(object):
     """A call that can be made on a Fake object.
     
     You do not need to use this directly, use Fake.provides(...), etc
+    
+    index=None
+        When numerical, this indicates the position of the call 
+        (as in, a CallStack)
     """
     
-    def __init__(self, fake, call_name=None):
+    def __init__(self, fake, call_name=None, index=None):
         self.fake = fake
         self.call_name = call_name
         self.call_replacement = None
@@ -142,6 +146,7 @@ class Call(object):
         self.expected_kwarg_count = None
         self.expected_args = None
         self.expected_kwargs = None
+        self.index = index
         self.return_val = None
         self.was_called = False
         
@@ -192,6 +197,8 @@ class Call(object):
         else:
             call = "%s" % cls_name
         call = "%s%s" % (call, self._repr_call(self.expected_args, self.expected_kwargs))
+        if self.index is not None:
+            call = "%s[%s]" % (call, self.index)
         return call
     
     def get_call_object(self):
@@ -225,11 +232,11 @@ class CallStack(object):
     """
     def __init__(self, fake, initial_calls=None, expected=False):
         self.fake = fake
-        self._pointer = 0
+        self._pointer = 0 # position of next call to be made (can be reset)
+        self._calls = []
         if initial_calls is not None:
-            self._calls = initial_calls
-        else:
-            self._calls = []
+            for c in initial_calls:
+                self.add_call(c)
         self.expected = expected
     
     def __iter__(self):
@@ -238,6 +245,7 @@ class CallStack(object):
             
     def add_call(self, call):
         self._calls.append(call)
+        call.index = len(self._calls)-1
     
     def get_call_object(self):
         """returns the last *added* call object.
