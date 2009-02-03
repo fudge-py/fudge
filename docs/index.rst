@@ -39,7 +39,7 @@ The Fudge source can be downloaded as a tar.gz file from http://pypi.python.org/
 
 To checkout the Fudge source, install `Mercurial <http://www.selenic.com/mercurial/wiki/>`_ and type::
     
-    $ hg clone http://hg.farmdev.com/fudge/
+    $ hg clone http://bitbucket.org/kumar303/fudge/
 
 You can get updates with::
     
