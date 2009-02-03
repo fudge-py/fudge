@@ -66,4 +66,4 @@ API Reference
 Contributing
 ============
 
-Please submit bugs and patches, preferably with tests.  All contributors will be acknowledged.  Thanks!
+Please submit `bugs and patches <http://bitbucket.org/kumar303/fudge/issues/>`_, preferably with tests.  All contributors will be acknowledged.  Thanks!
