@@ -35,6 +35,14 @@ Source
 
 The Fudge source can be downloaded as a tar.gz file from http://pypi.python.org/pypi/fudge
 
+To checkout the Fudge source, install Mercurial and type::
+    
+    $ hg clone http://hg.farmdev.com/fudge/
+
+You can get updates with::
+    
+    $ hg pull --update
+
 Contents
 ========
 
@@ -52,3 +60,8 @@ API Reference
     :glob:
     
     api/*
+
+Contributing
+============
+
+Please submit bugs and patches, preferably with tests.  All contributors will be acknowledged.  Thanks!
