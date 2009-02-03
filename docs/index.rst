@@ -4,7 +4,7 @@ Fudge Documentation
 
 Fudge is a Python module for using fake objects (mocks, stubs, etc) to test real ones.
 
-The module is designed for two specific situations:
+This module is designed for two specific situations:
 
 - Replace an object
   
@@ -15,6 +15,8 @@ The module is designed for two specific situations:
 
   - Declare expectations about what methods should be 
     called and what arguments should be sent.
+
+Fudge was inspired by `Mocha <http://mocha.rubyforge.org/>`_ (Ruby) which is a simpler version of `jMock <http://www.jmock.org/>`_ (Java).
 
 Download / Install
 ==================
@@ -35,6 +37,14 @@ Source
 
 The Fudge source can be downloaded as a tar.gz file from http://pypi.python.org/pypi/fudge
 
+To checkout the Fudge source, install `Mercurial <http://www.selenic.com/mercurial/wiki/>`_ and type::
+    
+    $ hg clone http://bitbucket.org/kumar303/fudge/
+
+You can get updates with::
+    
+    $ hg pull --update
+
 Contents
 ========
 
@@ -52,3 +62,8 @@ API Reference
     :glob:
     
     api/*
+
+Contributing
+============
+
+Please submit `bugs and patches <http://bitbucket.org/kumar303/fudge/issues/>`_, preferably with tests.  All contributors will be acknowledged.  Thanks!

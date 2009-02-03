@@ -31,6 +31,11 @@ html:
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
 
+docslive:
+	cd _build/; tar -czf fudge-docs.tar.gz html
+	scp _build/fudge-docs.tar.gz $(FD_PROJECTS)/fudge/
+	@echo "Docs sent to $(FD_PROJECTS)/fudge/"
+
 doctest:
 	mkdir -p _build/html _build/doctrees
 	PYTHONPATH=../:./_doctest_support $(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) _build/html
