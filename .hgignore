@@ -1,6 +1,7 @@
 syntax: glob
 *.pyc
 *.pyo
+build
 _build
 _env
 .DS_Store

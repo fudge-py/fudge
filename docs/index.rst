@@ -4,7 +4,7 @@ Fudge Documentation
 
 Fudge is a Python module for using fake objects (mocks, stubs, etc) to test real ones.
 
-The module is designed for two specific situations:
+This module is designed for two specific situations:
 
 - Replace an object
   

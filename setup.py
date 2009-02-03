@@ -17,7 +17,7 @@ setup(
     long_description="""
 Complete documentation is available at http://farmdev.com/projects/fudge/
 
-The module is designed for two specific situations:
+This module is designed for two specific situations:
 
 - Replace an object
   
@@ -41,7 +41,7 @@ Here is a quick preview of how you can test code that sends email without actual
 """,
     author='Kumar McMillan',
     author_email='kumar.mcmillan@gmail.com',
-    license=open("./LICENSE.txt").read(),
+    license="The MIT License",
     packages=find_packages(exclude=['ez_setup']),
     install_requires=[],
     tests_require=['nose', 'Sphinx'],
