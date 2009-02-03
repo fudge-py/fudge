@@ -16,6 +16,8 @@ The module is designed for two specific situations:
   - Declare expectations about what methods should be 
     called and what arguments should be sent.
 
+Fudge was inspired by `Mocha <http://mocha.rubyforge.org/>`_ (Ruby) which is a simpler version of `jMock <http://www.jmock.org/>`_ (Java).
+
 Download / Install
 ==================
 
@@ -35,7 +37,7 @@ Source
 
 The Fudge source can be downloaded as a tar.gz file from http://pypi.python.org/pypi/fudge
 
-To checkout the Fudge source, install Mercurial and type::
+To checkout the Fudge source, install `Mercurial <http://www.selenic.com/mercurial/wiki/>`_ and type::
     
     $ hg clone http://hg.farmdev.com/fudge/
 
