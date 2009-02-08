@@ -24,6 +24,6 @@ What about all the other mock frameworks for Python?  I *really* didn't want to 
 
 - `pyMock <http://theblobshop.com/pymock/>`_ (based on `EasyMock <http://www.easymock.org/>`_)
 
-   - This uses a record / playback technique whereby you act upon your real objects then flip a switch and they become fake.  This seems like it has some benefits for maintenance but I'm not sure that the overhead of recording with real objects is worth it.  I suppose you'd need a real database, a real web service, etc.
+  - This uses a record / playback technique whereby you act upon your real objects then flip a switch and they become fake.  This seems like it has some benefits for maintenance but I'm not sure that the overhead of recording with real objects is worth it.  I suppose you'd need a real database, a real web service, etc.
 
 .. _jMock: http://www.jmock.org/
