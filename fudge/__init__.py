@@ -119,10 +119,11 @@ def fmt_val(val):
     informative text string.
     """
     val = repr(val)
-    if len(val) > 10:
+    max = 50
+    if len(val) > max:
         close = val[-1]
-        val = val[0:7] + "..."
-        if close in ("'", '"', ']', '}', ')'):
+        val = val[0:max-4] + "..."
+        if close in (">", "'", '"', ']', '}', ')'):
             val = val + close
     return val
 
