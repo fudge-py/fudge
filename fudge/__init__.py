@@ -157,6 +157,8 @@ class Call(object):
         self.index = index
         self.return_val = None
         self.was_called = False
+        self.expected_call_count = None
+        self.actual_call_count = 0
         
     def __call__(self, *args, **kwargs):
         self.was_called = True
@@ -315,6 +317,8 @@ class Fake(object):
         self._stub = None
         self._call_stack = None
         self._callable = callable or allows_any_call
+        self._expected_call_count = None
+        self._actual_call_count = 0
     
     def __getattribute__(self, name):
         """Favors stubbed out attributes, falls back to real attributes
@@ -355,6 +359,10 @@ class Fake(object):
             return self
         elif self._callable:
             # go into stub mode:
+            self._actual_call_count += 1
+            if self._expected_call_count is not None \
+                    and self._actual_call_count > self._expected_call_count:
+                raise AssertionError('Callable fake called %d times. Expected %d.' % (self._actual_call_count, self._expected_call_count))
             if not self._stub:
                 self._stub = Call(self)
             call = self._stub
@@ -633,3 +641,16 @@ class Fake(object):
         exp.expected_kwarg_count = count
         return self
         
+    def times_called(self, n):
+        """Set the number of times this (callable) object is called.
+
+        e.g.::
+            >>> f = Fake(callable=True).times_called(0)
+            >>> f()
+            Traceback (most recent call last):
+            ...
+            AssertionError: Callable fake called 1 times. Expected 0.
+
+        """
+        self._expected_call_count = n
+        return self
