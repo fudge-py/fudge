@@ -24,21 +24,27 @@ class Registry(object):
     def __init__(self):
         self.expected_calls = {}
         self.call_stacks = []
+        self.all_calls = []
     
     def __contains__(self, obj):
         return obj in self.get_expected_calls()
     
+    def clear_all(self):
+        self.clear_actual_calls()
+        self.clear_expectations()
+        self.clear_all_calls()
+        
     def clear_actual_calls(self):
         for exp in self.get_expected_calls():
             exp.was_called = False
     
-    def clear_all(self):
-        self.clear_actual_calls()
-        self.clear_expectations()
-        
     def clear_expectations(self):
         c = self.get_expected_calls()
         c[:] = []
+        self.clear_all_calls()
+
+    def clear_all_calls(self):
+        self.all_calls = []
     
     def get_expected_calls(self):
         self.expected_calls.setdefault(thread.get_ident(), [])
@@ -46,6 +52,9 @@ class Registry(object):
     
     def register_call_stack(self, call_stack):
         self.call_stacks.append(call_stack)
+
+    def add_call(self, call):
+        self.all_calls.append(call)
     
     def start(self):
         """Clears out any calls that were made on previously 
@@ -66,6 +75,8 @@ class Registry(object):
         try:
             for exp in self.get_expected_calls():
                 exp.assert_called()
+            for call in self.all_calls:
+                call.assert_times_called()
         finally:
             self.start()
         
@@ -157,11 +168,18 @@ class Call(object):
         self.index = index
         self.return_val = None
         self.was_called = False
-        self.expected_call_count = None
-        self.actual_call_count = 0
+        self.expected_times_called = None
+        self.actual_times_called = 0
         
     def __call__(self, *args, **kwargs):
         self.was_called = True
+        self.actual_times_called += 1
+
+        if self.expected_times_called is not None and \
+                self.actual_times_called > self.expected_times_called:
+            raise AssertionError(
+                'Callable fake called %d times. Expected %d.' % (self.actual_times_called, self.expected_times_called))
+
         if self.call_replacement:
             return self.call_replacement(*args, **kwargs)
             
@@ -187,7 +205,7 @@ class Call(object):
                         self, len(kwargs.keys()), self.expected_kwarg_count))
         
         return self.return_val
-    
+
     def _repr_call(self, expected_args, expected_kwargs):
         args = []
         if expected_args:
@@ -217,7 +235,14 @@ class Call(object):
         this exists for compatibility with :class:`CallStack`
         """
         return self
+
+    def assert_times_called(self):
+        if self.expected_times_called is not None and \
+                self.actual_times_called != self.expected_times_called:
+            raise AssertionError("Callable fake called %d times. Expected %d." % (self.actual_times_called, self.expected_times_called))
+            
     
+
 class ExpectedCall(Call):
     """An expectation that a call will be made on a Fake object.
     
@@ -227,6 +252,7 @@ class ExpectedCall(Call):
     def assert_called(self):
         if not self.was_called:
             raise AssertionError("%s was not called" % (self))
+
 
 class CallStack(object):
     """A stack of :class:`Call` objects
@@ -314,11 +340,13 @@ class Fake(object):
         self._name = (name or self._guess_name())
         self._last_declared_call_name = None
         self._allows_any_call = allows_any_call
-        self._stub = None
         self._call_stack = None
         self._callable = callable or allows_any_call
-        self._expected_call_count = None
-        self._actual_call_count = 0
+        if self._callable:
+            self._stub = Call(self, call_name=name)
+            registry.add_call(self._stub)
+        else:
+            self._stub = None
     
     def __getattribute__(self, name):
         """Favors stubbed out attributes, falls back to real attributes
@@ -346,7 +374,7 @@ class Fake(object):
                 return self_call
             
             if g('_allows_any_call'):
-                return Call(self, call_name=name)
+                return self._stub
             
             raise AttributeError("%s object does not allow call or attribute '%s'" % (
                                     self, name))
@@ -359,12 +387,6 @@ class Fake(object):
             return self
         elif self._callable:
             # go into stub mode:
-            self._actual_call_count += 1
-            if self._expected_call_count is not None \
-                    and self._actual_call_count > self._expected_call_count:
-                raise AssertionError('Callable fake called %d times. Expected %d.' % (self._actual_call_count, self._expected_call_count))
-            if not self._stub:
-                self._stub = Call(self)
             call = self._stub
             return call(*args, **kwargs)
         else:
@@ -428,8 +450,6 @@ class Fake(object):
     
     def _get_current_call(self):
         if not self._last_declared_call_name:
-            if not self._stub:
-                self._stub = Call(self)
             return self._stub
         exp = self._declared_calls[self._last_declared_call_name].get_call_object()
         return exp
@@ -467,6 +487,7 @@ class Fake(object):
         c = ExpectedCall(self, call_name)
         self._declare_call(call_name, c)
         registry.expect_call(c)
+        registry.add_call(c)
         return self
     
     def has_attr(self, **attributes):
@@ -549,6 +570,7 @@ class Fake(object):
         self._last_declared_call_name = call_name
         c = Call(self, call_name)
         self._declare_call(call_name, c)
+        registry.add_call(c)
         return self
     
     def returns(self, val):
@@ -669,13 +691,14 @@ class Fake(object):
             >>> import fudge
             >>> fudge.clear_expectations() # from any previously declared fakes
             >>> fudge.start()
-            >>> f = fudge.Fake().provides('reset').times_called(2)
-            >>> f.reset()
-            >>> fudge.stop() # f.reset only called once
+            >>> f = fudge.Fake().provides('update').times_called(2)
+            >>> f.update()
+            >>> fudge.stop() # f.update only called once
             Traceback (most recent call last):
             ...
             AssertionError: Callable fake called 1 times. Expected 2.
 
         """
-        self._expected_call_count = n
+        exp = self._get_current_call()
+        exp.expected_times_called = n
         return self
