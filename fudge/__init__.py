@@ -651,6 +651,31 @@ class Fake(object):
             ...
             AssertionError: Callable fake called 1 times. Expected 0.
 
+            >>> import fudge
+            >>> fudge.clear_expectations() # from any previously declared fakes
+            >>> fudge.start()
+            >>> f = fudge.Fake(callable=True).times_called(1)
+            >>> fudge.stop() # f is never called
+            Traceback (most recent call last):
+            ...
+            AssertionError: Callable fake called 0 times. Expected 1.
+
+            >>> f = Fake('auth').provides('reset').times_called(0)
+            >>> f.reset()
+            Traceback (most recent call last):
+            ...
+            AssertionError: Callable fake called 1 times. Expected 0.
+
+            >>> import fudge
+            >>> fudge.clear_expectations() # from any previously declared fakes
+            >>> fudge.start()
+            >>> f = fudge.Fake().provides('reset').times_called(2)
+            >>> f.reset()
+            >>> fudge.stop() # f.reset only called once
+            Traceback (most recent call last):
+            ...
+            AssertionError: Callable fake called 1 times. Expected 2.
+
         """
         self._expected_call_count = n
         return self
