@@ -265,6 +265,10 @@ class ExpectedCall(Call):
     You do not need to use this directly, use Fake.expects(...), etc
     """
     
+    def __init__(self, *args, **kw):
+        super(ExpectedCall, self).__init__(*args, **kw)
+        registry.expect_call(self)
+    
     def assert_called(self):
         if not self.was_called:
             raise AssertionError("%s was not called" % (self))
@@ -440,7 +444,6 @@ class Fake(object):
         # uggh, _stub mode is confusing and needs a rewrite
         if self._callable_is_expected:
             c = ExpectedCall(self)
-            registry.expect_call(c)
         else:
             c = Call(self)
         return c
@@ -535,7 +538,6 @@ class Fake(object):
         self._last_declared_call_name = call_name
         c = ExpectedCall(self, call_name)
         self._declare_call(call_name, c)
-        registry.expect_call(c)
         return self
     
     def has_attr(self, **attributes):
@@ -598,7 +600,6 @@ class Fake(object):
         # falls off the stack.
         if stack.expected:
             next_call = ExpectedCall(self, call_name=self._last_declared_call_name)
-            registry.expect_call(next_call)
         else:
             next_call = Call(self, call_name=self._last_declared_call_name)
         stack.add_call(next_call)

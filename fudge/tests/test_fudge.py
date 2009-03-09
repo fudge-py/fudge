@@ -33,7 +33,6 @@ class TestRegistry(unittest.TestCase):
     
     def test_stop_resets_calls(self):
         exp = ExpectedCall(self.fake, 'callMe')
-        self.reg.expect_call(exp)
         exp()
         eq_(exp.was_called, True)
         eq_(len(self.reg.get_expected_calls()), 1)
@@ -45,7 +44,6 @@ class TestRegistry(unittest.TestCase):
     def test_global_stop(self):
         exp = ExpectedCall(self.fake, 'callMe')
         exp()
-        self.reg.expect_call(exp)
         eq_(exp.was_called, True)
         eq_(len(self.reg.get_expected_calls()), 1)
         
@@ -57,7 +55,6 @@ class TestRegistry(unittest.TestCase):
     def test_global_clear_expectations(self):
         exp = ExpectedCall(self.fake, 'callMe')
         exp()
-        self.reg.expect_call(exp)
         eq_(len(self.reg.get_expected_calls()), 1)
         
         fudge.clear_expectations()
@@ -79,9 +76,9 @@ class TestRegistry(unittest.TestCase):
             try:
                 try:
                     fudge.clear_calls()
+                    # registered first time on __init__ :
                     exp = ExpectedCall(self.fake, 'callMe')
-                    exp()
-                    reg.expect_call(exp)
+                    exp() 
                     reg.expect_call(exp)
                     reg.expect_call(exp)
                     reg.expect_call(exp)
