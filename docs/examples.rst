@@ -47,7 +47,7 @@ Next, patch the module temporarily with your fake:
 
     >>> patched_smtplib = fudge.patch_object("smtplib", "SMTP", SMTP)
 
-Now you can run the code with the fake object.  Begin each test with :func:`fudge.start` so that call history is reset:
+Now you can run the code with the fake object.  Begin each test with :func:`fudge.clear_calls` so that call history is reset:
 
 .. doctest::
     

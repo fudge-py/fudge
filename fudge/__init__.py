@@ -128,7 +128,7 @@ def clear_expectations():
     registry.clear_expectations()
 
 def with_fakes(method):
-    """Decorator that calls :func:`fudge.start` before method() and :func:`fudge.verify` afterwards.
+    """Decorator that calls :func:`fudge.clear_calls` before method() and :func:`fudge.verify` afterwards.
     """
     @wraps(method)
     def apply_clear_and_verify(*args, **kw):
