@@ -31,8 +31,8 @@ fudge = function() {
         Error.call(this, msg);
         this.name = "AssertionError";
         this.message = msg;
-    }
-    AssertionError.prototype.toString = function() { return this.message; }
+    };
+    AssertionError.prototype.toString = function() { return this.message; };
 
     var registry = new function() {
     
@@ -94,7 +94,7 @@ fudge = function() {
             */
             this.expected_calls.push(expected_call);
         };
-    }
+    };
 
     var AnyCall = function(fake, call_name) {
         /*
@@ -118,7 +118,7 @@ fudge = function() {
         this.fake._object[call_name] = function() {
             expector.was_called = true;
             return expector.return_val;
-        }
+        };
     };
 
     AnyCall.prototype.__call__ = function() {
@@ -151,14 +151,14 @@ fudge = function() {
         
             return self.return_val
         */
-    }
+    };
 
      // can be called, but doesn't do anything
     AnyCall.prototype.assert_called = function() {};
 
     var ExpectedCall = function(fake, call_name) {
         AnyCall.call(this, fake, call_name);
-    }
+    };
 
     ExpectedCall.prototype.assert_called = function() {
         /*
@@ -169,7 +169,7 @@ fudge = function() {
         if (!this.was_called) {
             throw(new AssertionError(this.fake._name + "." + this.call_name + "() was not called"));
         }
-    }
+    };
 
     /**
      * <p>
@@ -224,7 +224,7 @@ fudge = function() {
     
         if (name) {
             var parts = name.split(".");
-            if (parts.length==0) {
+            if (parts.length === 0) {
                 // empty string?
                 throw new Error("Fake('" + name + "'): invalid name");
             }   
@@ -260,7 +260,7 @@ fudge = function() {
         this._allows_any_call = config.allows_any_call;
         this._stub = null;
         this._callable = config.callable || config.allows_any_call;
-    }
+    };
 
     Fake.prototype.__getattr__ = function(name) {
         /*
@@ -273,7 +273,7 @@ fudge = function() {
                 raise AttributeError("%s object does not allow call or attribute '%s'" % (
                                         self, name))
         */
-    }
+    };
 
     Fake.prototype.__call__ = function() {
         /*
@@ -293,7 +293,7 @@ fudge = function() {
                 raise RuntimeError("%s object cannot be called (maybe you want %s(callable=True) ?)" % (
                                                                             self, self.__class__.__name__))
         */
-    }
+    };
 
     Fake.prototype._get_current_call = function() {
         /*
@@ -312,7 +312,7 @@ fudge = function() {
             return this._stub;
         }
         return this._declared_calls[this._last_declared_call_name];
-    }
+    };
 
     Fake.prototype.calls = function(call) {
         /*
@@ -322,7 +322,7 @@ fudge = function() {
             exp.call_replacement = call
             return self
         */
-    }
+    };
     
     /**
      * Expect a call.
@@ -338,7 +338,7 @@ fudge = function() {
         this._declared_calls[call_name] = c;
         registry.expect_call(c);
         return this;
-    }
+    };
     
     /**
      * Provide a call.
@@ -357,7 +357,7 @@ fudge = function() {
             self._declared_calls[call_name] = c
             return self
         */
-    }
+    };
     
     /**
      * Set the last call to return a value.
@@ -371,7 +371,7 @@ fudge = function() {
         var exp = this._get_current_call();
         exp.return_val = val;
         return this;
-    }
+    };
     
     /**
      * <p>Set the last call to return a new :class:`fudge.Fake`.</p>
@@ -389,7 +389,7 @@ fudge = function() {
      */
     Fake.prototype.returns_fake = function() {
         return this.returns(new Fake());
-    }
+    };
     
     /**
      * Set the last call to expect specific arguments.
@@ -408,7 +408,7 @@ fudge = function() {
                 exp.expected_kwargs = kwargs
             return self
         */
-    }
+    };
     
     /**
      * Set the last call to expect an exact argument count.
@@ -424,7 +424,7 @@ fudge = function() {
             exp.expected_arg_count = count
             return self
         */
-    }
+    };
 
     /**
      * Set the last call to expect an exact count of keyword arguments.
@@ -440,17 +440,17 @@ fudge = function() {
             exp.expected_kwarg_count = count
             return self
         */
-    }
+    };
     
     // fill fudge.* namespace :
     return {
         '__version__': '0.9.1',
-        clear_expectations: function() { return registry.clear_expectations() },
+        clear_expectations: function() { return registry.clear_expectations(); },
         ExpectedCall: ExpectedCall,
         Fake: Fake,
         registry: registry,
-        clear_calls: function() { return registry.clear_calls() },
-        verify: function() { return registry.verify() }
-    }
+        clear_calls: function() { return registry.clear_calls(); },
+        verify: function() { return registry.verify(); }
+    };
     
 }(); // end fudge namespace

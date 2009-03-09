@@ -26,16 +26,17 @@ module("Test Fake");
 
 test("can find objects", function() {
     
+    var fake;
     init_test();
     
-    simple = {iam: function() { return "simple" }};
+    simple = {iam: function() { return "simple"; }};
     dot = {};
-    dot.sep = {iam: function() { return "dot.sep" }};
+    dot.sep = {iam: function() { return "dot.sep"; }};
     
-    var fake = new fudge.Fake("simple");
+    fake = new fudge.Fake("simple");
     equals(fake._object.iam(), "simple");
     
-    var fake = new fudge.Fake("dot.sep");
+    fake = new fudge.Fake("dot.sep");
     equals(fake._object.iam(), "dot.sep");
 });
 
@@ -69,7 +70,7 @@ test("expected call not called", function() {
     var fake = new fudge.Fake("some_obj");
     fake.expects("someCall");
     raises("AssertionError", function() { 
-        fudge.verify() 
+        fudge.verify();
     });
 });
 
@@ -97,7 +98,7 @@ test("returns fake", function() {
     fake.expects("go").returns_fake().expects("not_called");
     ice_skates.go();
     raises("AssertionError", function() { 
-        fudge.verify() 
+        fudge.verify();
     });
 });
 
@@ -115,7 +116,7 @@ test("call is logged", function() {
     var fake = new fudge.Fake("aa_some_obj");
     var ec = new fudge.ExpectedCall(fake, "watchMe");
     aa_some_obj.watchMe();
-    equals(ec.was_called, true, "aa_some_obj.watchMe() was not logged")
+    equals(ec.was_called, true, "aa_some_obj.watchMe() was not logged");
 });
 
 module("Test fudge.registry");
@@ -141,7 +142,7 @@ test("expected call not called", function() {
     var fake = new fudge.Fake("some_obj");
     fudge.registry.expect_call(new fudge.ExpectedCall(fake, 'nothing'));
     raises("AssertionError", function() { 
-        fudge.registry.verify() 
+        fudge.registry.verify();
     });
 });
 
