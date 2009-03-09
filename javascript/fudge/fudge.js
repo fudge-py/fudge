@@ -69,33 +69,11 @@ fudge = function() {
             this.expected_calls = [];
         };
         
-        this.start = function() {
-            /*
-            def start(self):
-                """Clears out any calls that were made on previously 
-                registered fake objects.
-
-                You do not need to use this directly.  Use fudge.clear_calls()
-                """
-                self.clear_actual_calls()
-            */
+        this.clear_calls = function() {
             this.clear_actual_calls();
         };
     
-        this.stop = function() {
-            /*
-            def stop(self):
-                """Ensure all expected calls were called, 
-                raise AssertionError otherwise.
-
-                You do not need to use this directly.  Use fudge.verify()
-                """
-                try:
-                    for exp in self.get_this.expected_calls():
-                        exp.assert_called()
-                finally:
-                    self.clear_actual_calls()
-            */
+        this.verify = function() {
             for (var i=0; i<this.expected_calls.length; i++) {
                 var exp = this.expected_calls[i];
                 try {
@@ -471,8 +449,8 @@ fudge = function() {
         ExpectedCall: ExpectedCall,
         Fake: Fake,
         registry: registry,
-        start: function() { return registry.start() },
-        stop: function() { return registry.stop() }
+        clear_calls: function() { return registry.clear_calls() },
+        verify: function() { return registry.verify() }
     }
     
 }(); // end fudge namespace
