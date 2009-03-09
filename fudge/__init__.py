@@ -174,11 +174,7 @@ class Call(object):
     def __call__(self, *args, **kwargs):
         self.was_called = True
         self.actual_times_called += 1
-
-        if self.expected_times_called is not None and \
-                self.actual_times_called > self.expected_times_called:
-            raise AssertionError(
-                'Callable fake called %d times. Expected %d.' % (self.actual_times_called, self.expected_times_called))
+        self.assert_times_called()
 
         if self.call_replacement:
             return self.call_replacement(*args, **kwargs)
@@ -238,8 +234,10 @@ class Call(object):
 
     def assert_times_called(self):
         if self.expected_times_called is not None and \
-                self.actual_times_called != self.expected_times_called:
-            raise AssertionError("Callable fake called %d times. Expected %d." % (self.actual_times_called, self.expected_times_called))
+                self.actual_times_called > self.expected_times_called:
+            raise AssertionError(
+                '%s was called %d times. Expected %d.' % (
+                    self, self.actual_times_called, self.expected_times_called))
             
     
 
@@ -664,39 +662,16 @@ class Fake(object):
         return self
         
     def times_called(self, n):
-        """Set the number of times this (callable) object is called.
+        """Set the number of times an object can be called.
 
         e.g.::
-            >>> f = Fake(callable=True).times_called(0)
-            >>> f()
+        
+            >>> auth = Fake('auth').provides('login').times_called(1)
+            >>> auth.login()
+            >>> auth.login()
             Traceback (most recent call last):
             ...
-            AssertionError: Callable fake called 1 times. Expected 0.
-
-            >>> import fudge
-            >>> fudge.clear_expectations() # from any previously declared fakes
-            >>> fudge.start()
-            >>> f = fudge.Fake(callable=True).times_called(1)
-            >>> fudge.stop() # f is never called
-            Traceback (most recent call last):
-            ...
-            AssertionError: Callable fake called 0 times. Expected 1.
-
-            >>> f = Fake('auth').provides('reset').times_called(0)
-            >>> f.reset()
-            Traceback (most recent call last):
-            ...
-            AssertionError: Callable fake called 1 times. Expected 0.
-
-            >>> import fudge
-            >>> fudge.clear_expectations() # from any previously declared fakes
-            >>> fudge.start()
-            >>> f = fudge.Fake().provides('update').times_called(2)
-            >>> f.update()
-            >>> fudge.stop() # f.update only called once
-            Traceback (most recent call last):
-            ...
-            AssertionError: Callable fake called 1 times. Expected 2.
+            AssertionError: fake:auth.login() was called 2 times. Expected 1.
 
         """
         exp = self._get_current_call()
