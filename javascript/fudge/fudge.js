@@ -444,7 +444,7 @@ fudge = function() {
     
     // fill fudge.* namespace :
     return {
-        '__version__': '0.9.0',
+        '__version__': '0.9.1',
         clear_expectations: function() { return registry.clear_expectations() },
         ExpectedCall: ExpectedCall,
         Fake: Fake,
