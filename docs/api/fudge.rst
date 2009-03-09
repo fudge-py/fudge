@@ -7,9 +7,9 @@ fudge
 
 .. automodule:: fudge
 
-.. autofunction:: fudge.start
+.. autofunction:: fudge.clear_calls
 
-.. autofunction:: fudge.stop
+.. autofunction:: fudge.verify
 
 .. autofunction:: fudge.with_fakes
 

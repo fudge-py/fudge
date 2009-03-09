@@ -51,7 +51,7 @@ Now you can run the code with the fake object.  Begin each test with :func:`fudg
 
 .. doctest::
     
-    >>> fudge.start()
+    >>> fudge.clear_calls()
 
 Run the code you want to test:
 
@@ -62,11 +62,11 @@ Run the code you want to test:
     ... 
     Sent an email to kumar@hishouse.com
 
-Call :func:`fudge.stop` to make sure all expectations were met:
+Call :func:`fudge.verify` to make sure all expectations were met:
 
 .. doctest::
 
-    >>> fudge.stop()
+    >>> fudge.verify()
 
 And, finally, restore your patches:
 
@@ -99,7 +99,7 @@ You could also write the same test using the stdlib ``unittest.TestCase`` like t
     >>> class TestEmail(unittest.TestCase):
     ...     def setUp(self):
     ...         self.patched = fudge.patch_object("smtplib", "SMTP", SMTP)
-    ...         fudge.start()
+    ...         fudge.clear_calls()
     ... 
     ...     def tearDown(self):
     ...         self.patched.restore()
@@ -108,13 +108,13 @@ You could also write the same test using the stdlib ``unittest.TestCase`` like t
     ...         send_email( "kumar@hishouse.com", 
     ...                     "you@yourhouse.com", 
     ...                     "Mmmm, fudge")
-    ...         fudge.stop()
+    ...         fudge.verify()
     ... 
     >>> test = TestEmail('test_email')
     >>> test.run()
     Sent an email to kumar@hishouse.com
 
-Notice how :func:`fudge.stop` is called within the test itself, not in tearDown().  This is because stop() might raise errors about failed expectations, which is part of your test.
+Notice how :func:`fudge.verify` is called within the test itself, not in tearDown().  This is because stop() might raise errors about failed expectations, which is part of your test.
 
 Failed Expectations
 ===================
@@ -136,10 +136,10 @@ If your code forgets to call an important method, that would be an error too:
 
 .. doctest::
     
-    >>> fudge.start()
+    >>> fudge.clear_calls()
     >>> s = SMTP()
     >>> s.connect()
-    >>> fudge.stop()
+    >>> fudge.verify()
     Traceback (most recent call last):
     ...
     AssertionError: fake:SMTP.sendmail() was not called
@@ -222,10 +222,10 @@ for the method is_logged_in():
     ...         print "Access denied"
     ... 
     
-    >>> fudge.start()
+    >>> fudge.clear_calls()
     >>> show_secret_word(auth)
     Bird is the word
-    >>> fudge.stop()
+    >>> fudge.verify()
 
 Note that if user.is_logged_in() is not called then no error will be raised.
 

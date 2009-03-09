@@ -10,6 +10,7 @@ import os
 import re
 import sys
 import thread
+import warnings
 from fudge.patcher import *
 from fudge.util import wraps
 
@@ -27,18 +28,32 @@ class Registry(object):
     
     def __contains__(self, obj):
         return obj in self.get_expected_calls()
-    
-    def clear_all(self):
-        self.clear_actual_calls()
-        self.clear_expectations()
         
     def clear_actual_calls(self):
         for exp in self.get_expected_calls():
             exp.was_called = False
     
+    def clear_all(self):
+        self.clear_actual_calls()
+        self.clear_expectations()
+    
+    def clear_calls(self):
+        """Clears out any calls that were made on previously 
+        registered fake objects and resets all call stacks.
+        
+        You do not need to use this directly.  Use fudge.clear_calls()
+        """
+        self.clear_actual_calls()
+        for stack in self.call_stacks:
+            stack.reset()
+    
     def clear_expectations(self):
         c = self.get_expected_calls()
         c[:] = []
+        
+    def expect_call(self, expected_call):
+        c = self.get_expected_calls()
+        c.append(expected_call)
     
     def get_expected_calls(self):
         self.expected_calls.setdefault(thread.get_ident(), [])
@@ -47,51 +62,36 @@ class Registry(object):
     def register_call_stack(self, call_stack):
         self.call_stacks.append(call_stack)
     
-    def start(self):
-        """Clears out any calls that were made on previously 
-        registered fake objects and resets all call stacks.
-        
-        You do not need to use this directly.  Use fudge.start()
-        """
-        self.clear_actual_calls()
-        for stack in self.call_stacks:
-            stack.reset()
-    
-    def stop(self):
+    def verify(self):
         """Ensure all expected calls were called, 
         raise AssertionError otherwise.
         
-        You do not need to use this directly.  Use fudge.stop()
+        You do not need to use this directly.  Use fudge.verify()
         """
         try:
             for exp in self.get_expected_calls():
                 exp.assert_called()
                 exp.assert_times_called()
         finally:
-            self.start()
-        
-    def expect_call(self, expected_call):
-        c = self.get_expected_calls()
-        c.append(expected_call)
+            self.clear_calls()
         
 registry = Registry()
 
-def start():
-    """Start testing with fake objects.
+def clear_calls():
+    """Begin a new set of calls on fake objects.
     
     Specifically, clear out any calls that 
     were made on previously registered fake 
-    objects and resets all call stacks.  
-    You don't really need to call this but 
-    it's safer since an exception might bubble 
-    up from a previous test.
+    objects and reset all call stacks.  
+    You should call this any time you begin 
+    making calls on fake objects.
     
     This is also available as a decorator: :func:`fudge.with_fakes`
     """
-    registry.start()
-    
-def stop():
-    """Stop testing with fake objects.
+    registry.clear_calls()
+
+def verify():
+    """Verify that all methods have been called as expected.
     
     Specifically, analyze all registered fake 
     objects and raise an AssertionError if an 
@@ -100,20 +100,42 @@ def stop():
     
     This is also available as a decorator: :func:`fudge.with_fakes`
     """
-    registry.stop()
+    registry.verify()
+
+## Deprecated:
+
+def start():
+    """Start testing with fake objects.
+    
+    Deprecated.  Use :func:`fudge.clear_calls` instead.
+    """
+    warnings.warn("fudge.start() has been deprecated.  Use fudge.clear_calls() instead", 
+                    DeprecationWarning, 3)
+    clear_calls()
+    
+def stop():
+    """Stop testing with fake objects.
+    
+    Deprecated.  Use :func:`fudge.verify` instead.
+    """
+    warnings.warn("fudge.stop() has been deprecated.  Use fudge.verify() instead", 
+                    DeprecationWarning, 3)
+    verify()
+
+##
 
 def clear_expectations():
     registry.clear_expectations()
 
 def with_fakes(method):
-    """Decorator that calls :func:`fudge.start` before method() and :func:`fudge.stop` afterwards.
+    """Decorator that calls :func:`fudge.start` before method() and :func:`fudge.verify` afterwards.
     """
     @wraps(method)
-    def apply_start_stop(*args, **kw):
-        start()
+    def apply_clear_and_verify(*args, **kw):
+        clear_calls()
         method(*args, **kw)
-        stop()
-    return apply_start_stop
+        verify() # if no exceptions
+    return apply_clear_and_verify
 
 def fmt_val(val):
     """Format a value for inclusion in an 
@@ -341,7 +363,7 @@ class Fake(object):
         >>> import fudge
         >>> login = fudge.Fake('login', expect_call=True).times_called(2)
         >>> login()
-        >>> fudge.stop()
+        >>> fudge.verify()
         Traceback (most recent call last):
         ...
         AssertionError: fake:login() was called 1 time(s). Expected 2.
@@ -502,9 +524,9 @@ class Fake(object):
             
             >>> session = Fake('session').expects('open').expects('close')
             >>> import fudge
-            >>> fudge.start()
+            >>> fudge.clear_calls()
             >>> session.open()
-            >>> fudge.stop()
+            >>> fudge.verify()
             Traceback (most recent call last):
             ...
             AssertionError: fake:session.close() was not called
@@ -588,9 +610,9 @@ class Fake(object):
             >>> session = Fake('session').provides('open').provides('close')
             >>> import fudge
             >>> fudge.clear_expectations() # from any previously declared fakes
-            >>> fudge.start()
+            >>> fudge.clear_calls()
             >>> session.open()
-            >>> fudge.stop() # close() not called but no error
+            >>> fudge.verify() # close() not called but no error
             
         """
         self._last_declared_call_name = call_name
@@ -656,7 +678,7 @@ class Fake(object):
             >>> import fudge
             >>> auth = fudge.Fake('auth').expects('login').times_called(2)
             >>> auth.login()
-            >>> fudge.stop()
+            >>> fudge.verify()
             Traceback (most recent call last):
             ...
             AssertionError: fake:auth.login() was called 1 time(s). Expected 2.

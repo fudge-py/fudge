@@ -78,6 +78,8 @@ Changelog
 
 - 0.9.1
   
+  - fudge.start() has been deprecated in favor of :func:`fudge.clear_calls` which does the same thing
+  - fudge.stop() has been deprecated in favor of :func:`fudge.verify`, ditto
   - Added :func:`fudge.Fake.times_called` to expect a certain call count (contributed by Cristian Esquivias)
   - Added :class:`Fake(expect_call=True) <fudge.Fake>` to indicate an expected callable.
   

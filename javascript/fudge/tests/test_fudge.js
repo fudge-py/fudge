@@ -62,14 +62,14 @@ test("expected call not called", function() {
     @raises(AssertionError)
     def test_nocall(self):
         exp = self.fake.expects('something')
-        fudge.stop()
+        fudge.verify()
     */
     init_test();
     expect(1);
     var fake = new fudge.Fake("some_obj");
     fake.expects("someCall");
     raises("AssertionError", function() { 
-        fudge.stop() 
+        fudge.verify() 
     });
 });
 
@@ -79,7 +79,7 @@ test("call intercepted", function() {
     fake.expects("blog");
     bob_loblaw.blog();
     // stop should pass the test...
-    fudge.stop();
+    fudge.verify();
 });
 
 test("returns value", function() {
@@ -87,7 +87,7 @@ test("returns value", function() {
     var fake = new fudge.Fake("grocery_store");
     fake.expects("check_eggs").returns("eggs are good!");
     equals(grocery_store.check_eggs(), "eggs are good!");
-    fudge.stop();
+    fudge.verify();
 });
 
 test("returns fake", function() {
@@ -97,7 +97,7 @@ test("returns fake", function() {
     fake.expects("start").returns_fake().expects("not_called");
     ice_skates.start();
     raises("AssertionError", function() { 
-        fudge.stop() 
+        fudge.verify() 
     });
 });
 
@@ -132,9 +132,9 @@ test("expected call not called", function() {
     /*
     @raises(AssertionError)
     def test_expected_call_not_called(self):
-        self.reg.start()
+        self.reg.clear_calls()
         self.reg.expect_call(ExpectedCall(self.fake, 'nothing'))
-        self.reg.stop()
+        self.reg.verify()
     */
     init_test();
     expect(1);
@@ -153,7 +153,7 @@ test("start resets calls", function() {
         exp()
         eq_(exp.was_called, True)
         
-        self.reg.start()
+        self.reg.clear_calls()
         eq_(exp.was_called, False, "call was not reset by start()")
     */
     init_test();
@@ -175,7 +175,7 @@ test("stop resets calls", function() {
         eq_(exp.was_called, True)
         eq_(len(self.reg.get_expected_calls()), 1)
         
-        self.reg.stop()
+        self.reg.verify()
         eq_(exp.was_called, False, "call was not reset by stop()")
         eq_(len(self.reg.get_expected_calls()), 1, "stop() should not reset expectations")
     */
@@ -201,7 +201,7 @@ test("global stop", function() {
         eq_(exp.was_called, True)
         eq_(len(self.reg.get_expected_calls()), 1)
         
-        fudge.stop()
+        fudge.verify()
         
         eq_(exp.was_called, False, "call was not reset by stop()")
         eq_(len(self.reg.get_expected_calls()), 1, "stop() should not reset expectations")
@@ -214,7 +214,7 @@ test("global stop", function() {
     equals(exp.was_called, true, "call was never logged");
     equals(fudge.registry.expected_calls.length, 1, "registry has wrong number of calls");
     
-    fudge.stop();
+    fudge.verify();
     
     equals(exp.was_called, false, "call was not reset by stop()");
     equals(fudge.registry.expected_calls.length, 1, "stop() should not reset expectations");

@@ -75,7 +75,7 @@ fudge = function() {
                 """Clears out any calls that were made on previously 
                 registered fake objects.
 
-                You do not need to use this directly.  Use fudge.start()
+                You do not need to use this directly.  Use fudge.clear_calls()
                 """
                 self.clear_actual_calls()
             */
@@ -88,7 +88,7 @@ fudge = function() {
                 """Ensure all expected calls were called, 
                 raise AssertionError otherwise.
 
-                You do not need to use this directly.  Use fudge.stop()
+                You do not need to use this directly.  Use fudge.verify()
                 """
                 try:
                     for exp in self.get_this.expected_calls():
@@ -230,9 +230,9 @@ fudge = function() {
        var auth = new fudge.Fake('auth')
                                 .expects('login')
                                 .with_args('joe_username', 'joes_password');
-       fudge.start();
+       fudge.clear_calls();
        auth.login();
-       fudge.stop();
+       fudge.verify();
        </code></pre>
      * 
      * @class Fake

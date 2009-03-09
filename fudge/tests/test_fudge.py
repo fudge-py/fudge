@@ -18,9 +18,9 @@ class TestRegistry(unittest.TestCase):
     
     @raises(AssertionError)
     def test_expected_call_not_called(self):
-        self.reg.start()
+        self.reg.clear_calls()
         self.reg.expect_call(ExpectedCall(self.fake, 'nothing'))
-        self.reg.stop()
+        self.reg.verify()
         
     def test_start_resets_calls(self):
         exp = ExpectedCall(self.fake, 'callMe')
@@ -28,7 +28,7 @@ class TestRegistry(unittest.TestCase):
         exp()
         eq_(exp.was_called, True)
         
-        self.reg.start()
+        self.reg.clear_calls()
         eq_(exp.was_called, False, "call was not reset by start()")
     
     def test_stop_resets_calls(self):
@@ -38,7 +38,7 @@ class TestRegistry(unittest.TestCase):
         eq_(exp.was_called, True)
         eq_(len(self.reg.get_expected_calls()), 1)
         
-        self.reg.stop()
+        self.reg.verify()
         eq_(exp.was_called, False, "call was not reset by stop()")
         eq_(len(self.reg.get_expected_calls()), 1, "stop() should not reset expectations")
     
@@ -49,7 +49,7 @@ class TestRegistry(unittest.TestCase):
         eq_(exp.was_called, True)
         eq_(len(self.reg.get_expected_calls()), 1)
         
-        fudge.stop()
+        fudge.verify()
         
         eq_(exp.was_called, False, "call was not reset by stop()")
         eq_(len(self.reg.get_expected_calls()), 1, "stop() should not reset expectations")
@@ -78,7 +78,7 @@ class TestRegistry(unittest.TestCase):
         def registry(num):
             try:
                 try:
-                    fudge.start()
+                    fudge.clear_calls()
                     exp = ExpectedCall(self.fake, 'callMe')
                     exp()
                     reg.expect_call(exp)
@@ -86,7 +86,7 @@ class TestRegistry(unittest.TestCase):
                     reg.expect_call(exp)
                     reg.expect_call(exp)
                     eq_(len(reg.get_expected_calls()), 4)
-                    fudge.stop()
+                    fudge.verify()
                     fudge.clear_expectations()
                 except Exception, er:
                     thread_run.errors.append(er)
@@ -166,7 +166,7 @@ class TestFakeExpectations(unittest.TestCase):
     @raises(AssertionError)
     def test_nocall(self):
         exp = self.fake.expects('something')
-        fudge.stop()
+        fudge.verify()
     
     @raises(AssertionError)
     def test_wrong_args(self):
@@ -312,7 +312,7 @@ class TestFakeCallables(unittest.TestCase):
     def test_callable(self):
         self.fake = fudge.Fake(callable=True)
         self.fake() # allow the call
-        fudge.stop() # no error
+        fudge.verify() # no error
     
     @raises(AttributeError)
     def test_cannot_stub_any_call_by_default(self):
@@ -379,7 +379,7 @@ class TestFakeCallablesTimesCalled(unittest.TestCase):
     def test_when_provided(self):
         self.fake = fudge.Fake().provides("something").times_called(2)
         # this should not raise an error because the call was provided not expected
-        fudge.stop()
+        fudge.verify()
         
     @raises(AssertionError)
     def test_when_provided_raises_on_too_many_calls(self):
@@ -392,7 +392,7 @@ class TestFakeCallablesTimesCalled(unittest.TestCase):
     def test_when_expected(self):
         self.fake = fudge.Fake().expects("something").times_called(2)
         self.fake.something()
-        fudge.stop()
+        fudge.verify()
     
     @raises(AssertionError)
     def test_when_expected_raises_on_too_many_calls(self):
@@ -400,31 +400,31 @@ class TestFakeCallablesTimesCalled(unittest.TestCase):
         self.fake.something()
         self.fake.something()
         self.fake.something() # too many
-        fudge.stop()
+        fudge.verify()
         
     @raises(AssertionError)
     def test_expected_callable(self):
         login = fudge.Fake('login',expect_call=True).times_called(2)
         login()
-        fudge.stop()
+        fudge.verify()
         
     def test_callable_ok(self):
         self.fake = fudge.Fake(callable=True).times_called(2)
         self.fake()
         self.fake()
-        fudge.stop()
+        fudge.verify()
         
     def test_when_provided_ok(self):
         self.fake = fudge.Fake().provides("something").times_called(2)
         self.fake.something()
         self.fake.something()
-        fudge.stop()
+        fudge.verify()
         
     def test_when_expected_ok(self):
         self.fake = fudge.Fake().expects("something").times_called(2)
         self.fake.something()
         self.fake.something()
-        fudge.stop()
+        fudge.verify()
 
 class TestStackedCallables(unittest.TestCase):
             
@@ -558,12 +558,12 @@ class TestStackedCallables(unittest.TestCase):
         eq_(fake.something(), 1)
         eq_(fake.something(), 2)
         
-        fudge.start()
+        fudge.clear_calls()
         
         eq_(fake.something(), 1)
         eq_(fake.something(), 2)
         
-        fudge.stop()
+        fudge.verify()
         
         eq_(fake.something(), 1)
         eq_(fake.something(), 2)
