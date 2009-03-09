@@ -114,7 +114,7 @@ You could also write the same test using the stdlib ``unittest.TestCase`` like t
     >>> test.run()
     Sent an email to kumar@hishouse.com
 
-Notice how :func:`fudge.verify` is called within the test itself, not in tearDown().  This is because stop() might raise errors about failed expectations, which is part of your test.
+Notice how :func:`fudge.verify` is called within the test itself, not in tearDown().  This is because :func:`fudge.verify` might raise errors about failed expectations, which is part of your test.
 
 Failed Expectations
 ===================
@@ -160,6 +160,9 @@ to clear the SMTP expectations before testing with the fake database.
 
     >>> fudge.clear_expectations()
 
+Note how this is different from :func:`fudge.clear_calls`, which only 
+clears the actual calls made to your objects.
+
 A Complete Test Module
 ======================
 
@@ -167,7 +170,7 @@ If you're using a test framework like `Nose`_ or `py.test`_ that supports
 module level setup / teardown hooks, one strategy is to declare all Fake 
 objects at the top of your test module and clear expectations after all tests 
 are run on your Fake objects.  Here is an example of how you could lay out 
-your test module (example works for `Nose`_ only):
+your test module:
 
 .. doctest::
     
@@ -275,10 +278,25 @@ You can do this with the keyword argument :class:`callable=True <fudge.Fake>`.  
     >>> test_login()
     Welcome!
 
+However, the above test will not raise an error if you forget to call login().  If you want to fudge a callable and declare an expectation that it should be called, use :class:`expect_call=True <fudge.Fake>`:
+
+.. doctest::
+    
+    >>> login = fudge.Fake('login', expect_call=True).returns(True)
+    >>> fudge.clear_calls()
+    >>> remote_user = None
+    >>> if remote_user:
+    ...     auth.login("joe","sekret")
+    ... 
+    >>> fudge.verify()
+    Traceback (most recent call last):
+    ...
+    AssertionError: fake:login() was not called
+
 Cascading Objects
 =================
 
-Some objects support *cascading* which means each method returns an object.  Here is an example of fudging a cascading `SQLAlchemy query <http://www.sqlalchemy.org/docs/05/ormtutorial.html#querying>`_.  Notice that :meth:`Fake.returns_fake() <fudge.Fake.returns_fake>` is used to specify that ``session.query(User)`` should return a new object.  Notice also that because query() should be iterable, it is set to return a list of fake User objects.
+Some objects you might want to work with will support *cascading* which means each method returns an object.  Here is an example of fudging a cascading `SQLAlchemy query <http://www.sqlalchemy.org/docs/05/ormtutorial.html#querying>`_.  Notice that :meth:`Fake.returns_fake() <fudge.Fake.returns_fake>` is used to specify that ``session.query(User)`` should return a new object.  Notice also that because query() should be iterable, it is set to return a list of fake User objects.
 
 .. doctest::
     
