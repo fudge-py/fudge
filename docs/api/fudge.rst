@@ -17,7 +17,10 @@ fudge
 
 .. autofunction:: fudge.patched_context
 
-.. autofunction:: fudge.patch_object
-
 .. autoclass:: fudge.Fake
+   :members:
+
+.. autofunction:: fudge.patch_object
+   
+.. autoclass:: fudge.PatchHandler
    :members:

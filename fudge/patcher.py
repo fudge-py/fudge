@@ -1,10 +1,10 @@
 
-__all__ = ['patch_object', 'with_patched_object']
+__all__ = ['patch_object', 'with_patched_object', 'PatchHandler'] # patched_context, see below
 
 from fudge.util import wraps
 
 def patch_object(obj, attr_name, patched_value):
-    """A utility to patch an object and return a handle for later restoration.
+    """A utility to patch an object and return :class:`fudge.PatchHandler` for later restoration.
     
     You can use more convenient wrappers :func:`with_patched_object` and :func:`patched_context`
     """
@@ -30,15 +30,15 @@ else:
         
         Example::
             
-            >>> class Session(object):
+            >>> class Session:
             ...     state = 'clean'
             ... 
             >>> with patched_context(Session, "state", "dirty"):
             ...     print Session.state
             ... 
-            "dirty"
+            dirty
             >>> print Session.state
-            "clean"
+            clean
             
         """
         patched_object = patch_object(obj, attr_name, patched_value)
@@ -50,7 +50,23 @@ else:
     __all__.append('patched_context')
 
 def with_patched_object(obj, attr_name, patched_value):
-    """Decorator that patches an object before method() and restores it afterwards."""
+    """Decorator that patches an object before method() and restores it afterwards.
+    
+    Example::
+        
+        >>> class Session:
+        ...     state = 'clean'
+        ... 
+        >>> @with_patched_object(Session, "state", "dirty")
+        ... def test():
+        ...     print Session.state
+        ... 
+        >>> test()
+        dirty
+        >>> print Session.state
+        clean
+        
+    """
     def patcher(method):
         @wraps(method)
         def method_call(*m_args, **m_kw):
@@ -63,6 +79,10 @@ def with_patched_object(obj, attr_name, patched_value):
     return patcher
 
 class PatchHandler(object):
+    """Low level patch handler that memorizes a patch so you can restore it later.
+    
+    You can use more convenient wrappers :func:`with_patched_object` and :func:`patched_context`
+    """
     def __init__(self, orig_object, attr_name):
         self.orig_object = orig_object
         self.attr_name = attr_name
@@ -72,4 +92,5 @@ class PatchHandler(object):
         setattr(self.orig_object, self.attr_name, patched_value)
         
     def restore(self):
+        """restore the patch"""
         setattr(self.orig_object, self.attr_name, self.orig_value)
