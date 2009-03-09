@@ -14,6 +14,20 @@ def patch_object(obj, attr_name, patched_value):
     handle.patch(patched_value)
     return handle
 
+try:
+    from contextlib import contextmanager
+
+    @contextmanager
+    def patch(obj, attr_name, patched_value):
+        """Convenience function so `patch_object` for the with_statement"""
+        patched_object = patch_object(obj, attr_name, patched_value)
+        yield
+        patched_object.restore()
+
+    __all__.append('patch')
+except ImportError:
+    pass
+
 def with_patched_object(obj, attr_name, patched_value):
     """Decorator that patches an object before method() and restores it afterwards."""
     def patcher(method):
