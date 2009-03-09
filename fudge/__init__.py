@@ -596,10 +596,12 @@ class Fake(object):
         
         # hmm, we need a copy here so that the last call 
         # falls off the stack.
-        next_call = Call(self, call_name=self._last_declared_call_name)
-        stack.add_call(next_call)
         if stack.expected:
+            next_call = ExpectedCall(self, call_name=self._last_declared_call_name)
             registry.expect_call(next_call)
+        else:
+            next_call = Call(self, call_name=self._last_declared_call_name)
+        stack.add_call(next_call)
         return self
     
     def provides(self, call_name):
