@@ -640,7 +640,8 @@ class Fake(object):
     def times_called(self, n):
         """Set the number of times an object can be called.
 
-        e.g.::
+        When working with provided calls, you'll only see an 
+        error if the expected call count is exceeded ::
         
             >>> auth = Fake('auth').provides('login').times_called(1)
             >>> auth.login()
@@ -648,6 +649,17 @@ class Fake(object):
             Traceback (most recent call last):
             ...
             AssertionError: fake:auth.login() was called 2 time(s). Expected 1.
+        
+        When working with expected calls, you'll see an error if 
+        the call count is never met ::
+        
+            >>> import fudge
+            >>> auth = fudge.Fake('auth').expects('login').times_called(2)
+            >>> auth.login()
+            >>> fudge.stop()
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:auth.login() was called 1 time(s). Expected 2.
 
         """
         exp = self._get_current_call()
