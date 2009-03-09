@@ -24,7 +24,6 @@ class Registry(object):
     def __init__(self):
         self.expected_calls = {}
         self.call_stacks = []
-        self.all_calls = []
     
     def __contains__(self, obj):
         return obj in self.get_expected_calls()
@@ -32,7 +31,6 @@ class Registry(object):
     def clear_all(self):
         self.clear_actual_calls()
         self.clear_expectations()
-        self.clear_all_calls()
         
     def clear_actual_calls(self):
         for exp in self.get_expected_calls():
@@ -41,10 +39,6 @@ class Registry(object):
     def clear_expectations(self):
         c = self.get_expected_calls()
         c[:] = []
-        self.clear_all_calls()
-
-    def clear_all_calls(self):
-        self.all_calls = []
     
     def get_expected_calls(self):
         self.expected_calls.setdefault(thread.get_ident(), [])
@@ -52,9 +46,6 @@ class Registry(object):
     
     def register_call_stack(self, call_stack):
         self.call_stacks.append(call_stack)
-
-    def add_call(self, call):
-        self.all_calls.append(call)
     
     def start(self):
         """Clears out any calls that were made on previously 
@@ -75,8 +66,7 @@ class Registry(object):
         try:
             for exp in self.get_expected_calls():
                 exp.assert_called()
-            for call in self.all_calls:
-                call.assert_times_called()
+                exp.assert_times_called()
         finally:
             self.start()
         
@@ -338,13 +328,9 @@ class Fake(object):
         self._name = (name or self._guess_name())
         self._last_declared_call_name = None
         self._allows_any_call = allows_any_call
+        self._stub = None
         self._call_stack = None
         self._callable = callable or allows_any_call
-        if self._callable:
-            self._stub = Call(self, call_name=name)
-            registry.add_call(self._stub)
-        else:
-            self._stub = None
     
     def __getattribute__(self, name):
         """Favors stubbed out attributes, falls back to real attributes
@@ -372,7 +358,7 @@ class Fake(object):
                 return self_call
             
             if g('_allows_any_call'):
-                return self._stub
+                return Call(self, call_name=name)
             
             raise AttributeError("%s object does not allow call or attribute '%s'" % (
                                     self, name))
@@ -385,6 +371,8 @@ class Fake(object):
             return self
         elif self._callable:
             # go into stub mode:
+            if not self._stub:
+                self._stub = Call(self)
             call = self._stub
             return call(*args, **kwargs)
         else:
@@ -448,7 +436,9 @@ class Fake(object):
     
     def _get_current_call(self):
         if not self._last_declared_call_name:
-            return self._stub
+            if not self._stub:
+                self._stub = Call(self)
+                return self._stub
         exp = self._declared_calls[self._last_declared_call_name].get_call_object()
         return exp
     
@@ -485,7 +475,6 @@ class Fake(object):
         c = ExpectedCall(self, call_name)
         self._declare_call(call_name, c)
         registry.expect_call(c)
-        registry.add_call(c)
         return self
     
     def has_attr(self, **attributes):
@@ -568,7 +557,6 @@ class Fake(object):
         self._last_declared_call_name = call_name
         c = Call(self, call_name)
         self._declare_call(call_name, c)
-        registry.add_call(c)
         return self
     
     def returns(self, val):

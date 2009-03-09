@@ -370,6 +370,61 @@ class TestFakeCallables(unittest.TestCase):
             
         self.fake = fudge.Fake().provides("something").calls(something)
         eq_(self.fake.something(), "hijacked")
+        
+class TestFakeCallablesTimesCalled(unittest.TestCase):
+    
+    def tearDown(self):
+        fudge.clear_expectations()
+        
+    def test_when_provided(self):
+        self.fake = fudge.Fake().provides("something").times_called(2)
+        # this should not raise an error because the call was provided not expected
+        fudge.stop()
+        
+    @raises(AssertionError)
+    def test_when_provided_raises_on_too_many_calls(self):
+        self.fake = fudge.Fake().provides("something").times_called(2)
+        self.fake.something()
+        self.fake.something()
+        self.fake.something() # too many
+    
+    @raises(AssertionError)
+    def test_when_expected(self):
+        self.fake = fudge.Fake().expects("something").times_called(2)
+        self.fake.something()
+        fudge.stop()
+    
+    @raises(AssertionError)
+    def test_when_expected_raises_on_too_many_calls(self):
+        self.fake = fudge.Fake().expects("something").times_called(2)
+        self.fake.something()
+        self.fake.something()
+        self.fake.something() # too many
+        fudge.stop()
+        
+    @raises(AssertionError)
+    def test_callable(self):
+        self.fake = fudge.Fake(callable=True).times_called(2)
+        self.fake()
+        fudge.stop()
+        
+    def test_callable_ok(self):
+        self.fake = fudge.Fake(callable=True).times_called(2)
+        self.fake()
+        self.fake()
+        fudge.stop()
+        
+    def test_when_provided_ok(self):
+        self.fake = fudge.Fake().provides("something").times_called(2)
+        self.fake.something()
+        self.fake.something()
+        fudge.stop()
+        
+    def test_when_expected_ok(self):
+        self.fake = fudge.Fake().expects("something").times_called(2)
+        self.fake.something()
+        self.fake.something()
+        fudge.stop()
 
 class TestStackedCallables(unittest.TestCase):
             
