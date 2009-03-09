@@ -436,9 +436,10 @@ class Fake(object):
     
     def _get_current_call(self):
         if not self._last_declared_call_name:
+            # stub mode:
             if not self._stub:
                 self._stub = Call(self)
-                return self._stub
+            return self._stub
         exp = self._declared_calls[self._last_declared_call_name].get_call_object()
         return exp
     
