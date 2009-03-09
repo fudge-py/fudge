@@ -381,10 +381,13 @@ class Fake(object):
         self._name = (name or self._guess_name())
         self._last_declared_call_name = None
         self._allows_any_call = allows_any_call
-        self._stub = None
         self._call_stack = None
-        self._callable = callable or allows_any_call or expect_call
-        self._callable_is_expected = expect_call
+        if expect_call:
+            self._callable = ExpectedCall(self)
+        elif callable or allows_any_call:
+            self._callable = Call(self)
+        else:
+            self._callable = None
     
     def __getattribute__(self, name):
         """Favors stubbed out attributes, falls back to real attributes
@@ -412,7 +415,8 @@ class Fake(object):
                 return self_call
             
             if g('_allows_any_call'):
-                return Call(self, call_name=name)
+                g('_callable').call_name = name
+                return g('_callable')
             
             raise AttributeError("%s object does not allow call or attribute '%s'" % (
                                     self, name))
@@ -424,11 +428,7 @@ class Fake(object):
             call(*args, **kwargs)
             return self
         elif self._callable:
-            # go into stub mode:
-            if not self._stub:
-                self._stub = self._create_stub()
-            call = self._stub
-            return call(*args, **kwargs)
+            return self._callable(*args, **kwargs)
         else:
             raise RuntimeError("%s object cannot be called (maybe you want %s(callable=True) ?)" % (
                                                                         self, self.__class__.__name__))
@@ -438,15 +438,6 @@ class Fake(object):
     
     def _declare_call(self, call_name, call):
         self._declared_calls[call_name] = call
-    
-    def _create_stub(self):
-        """when Fake(callable=True) or Fake(expect_call=True) this creates the callable."""
-        # uggh, _stub mode is confusing and needs a rewrite
-        if self._callable_is_expected:
-            c = ExpectedCall(self)
-        else:
-            c = Call(self)
-        return c
     
     _assignment = re.compile(r"\s*(?P<name>[a-zA-Z0-9_]+)\s*=\s*(fudge\.)?Fake\(.*")    
     def _guess_asn_from_file(self, frame):
@@ -499,10 +490,9 @@ class Fake(object):
     
     def _get_current_call(self):
         if not self._last_declared_call_name:
-            # stub mode:
-            if not self._stub:
-                self._stub = self._create_stub()
-            return self._stub
+            if not self._callable:
+                raise ValueError("Call to a method that expects a predefined call but no such call exists")
+            return self._callable
         exp = self._declared_calls[self._last_declared_call_name].get_call_object()
         return exp
     
