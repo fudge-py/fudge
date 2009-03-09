@@ -67,3 +67,20 @@ Contributing
 ============
 
 Please submit `bugs and patches <http://bitbucket.org/kumar303/fudge/issues/>`_, preferably with tests.  All contributors will be acknowledged.  Thanks!
+
+Credits
+=======
+
+Fudge was created by Kumar McMillan and contains contributions by Cristian Esquivias.
+
+Changelog
+=========
+
+- 0.9.1
+  
+  - Added :func:`fudge.Fake.times_called` to expect a certain call count (contributed by Cristian Esquivias)
+  - Added :class:`Fake(expect_call=True) <fudge.Fake>` to indicate an expected callable.
+  
+- 0.9.0
+  
+  - first release

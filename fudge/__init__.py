@@ -5,7 +5,7 @@ See :ref:`fudge-examples` for common scenarios.
 
 """
 
-__version__ = '0.9.0'
+__version__ = '0.9.1'
 import os
 import re
 import sys
@@ -164,7 +164,13 @@ class Call(object):
     def __call__(self, *args, **kwargs):
         self.was_called = True
         self.actual_times_called += 1
-        self.assert_times_called()
+        
+        # make sure call count doesn't go over :
+        if self.expected_times_called is not None and \
+                self.actual_times_called > self.expected_times_called:
+            raise AssertionError(
+                '%s was called %s time(s). Expected %s.' % (
+                    self, self.actual_times_called, self.expected_times_called))
 
         if self.call_replacement:
             return self.call_replacement(*args, **kwargs)
@@ -224,9 +230,9 @@ class Call(object):
 
     def assert_times_called(self):
         if self.expected_times_called is not None and \
-                self.actual_times_called > self.expected_times_called:
+                self.actual_times_called != self.expected_times_called:
             raise AssertionError(
-                '%s was called %d times. Expected %d.' % (
+                '%s was called %s time(s). Expected %s.' % (
                     self, self.actual_times_called, self.expected_times_called))
             
     
@@ -311,7 +317,11 @@ class Fake(object):
     
     **callable=False**
         When True, the Fake() acts like a callable.  Use this if you are replacing a single 
-        method.
+        method.  See example below.
+    
+    **expect_call=True**
+        When True, the Fake() acts like a callable that must be called (implies callable=True).
+        Use this when replace a single method that must be called.  See example below.
     
     Short example::
     
@@ -319,10 +329,27 @@ class Fake(object):
         >>> auth = fudge.Fake('auth').expects('login').with_args('joe_username', 'joes_password')
         >>> auth.login("joe_username", "joes_password") # now works
         >>> fudge.clear_expectations()
+    
+    When ``callable=True`` the object acts like a method ::
+        
+        >>> import fudge
+        >>> login = fudge.Fake('login', callable=True)
+        >>> login() # can be called
+    
+    When ``expect_call=True`` the object acts like a method that must be called ::
+    
+        >>> import fudge
+        >>> login = fudge.Fake('login', expect_call=True).times_called(2)
+        >>> login()
+        >>> fudge.stop()
+        Traceback (most recent call last):
+        ...
+        AssertionError: fake:login() was called 1 time(s). Expected 2.
+        >>> fudge.clear_expectations()
         
     """
     
-    def __init__(self, name=None, allows_any_call=False, callable=False):
+    def __init__(self, name=None, allows_any_call=False, callable=False, expect_call=False):
         self._attributes = {}
         self._declared_calls = {}
         self._name = (name or self._guess_name())
@@ -330,7 +357,8 @@ class Fake(object):
         self._allows_any_call = allows_any_call
         self._stub = None
         self._call_stack = None
-        self._callable = callable or allows_any_call
+        self._callable = callable or allows_any_call or expect_call
+        self._callable_is_expected = expect_call
     
     def __getattribute__(self, name):
         """Favors stubbed out attributes, falls back to real attributes
@@ -372,7 +400,7 @@ class Fake(object):
         elif self._callable:
             # go into stub mode:
             if not self._stub:
-                self._stub = Call(self)
+                self._stub = self._create_stub()
             call = self._stub
             return call(*args, **kwargs)
         else:
@@ -384,6 +412,16 @@ class Fake(object):
     
     def _declare_call(self, call_name, call):
         self._declared_calls[call_name] = call
+    
+    def _create_stub(self):
+        """when Fake(callable=True) or Fake(expect_call=True) this creates the callable."""
+        # uggh, _stub mode is confusing and needs a rewrite
+        if self._callable_is_expected:
+            c = ExpectedCall(self)
+            registry.expect_call(c)
+        else:
+            c = Call(self)
+        return c
     
     _assignment = re.compile(r"\s*(?P<name>[a-zA-Z0-9_]+)\s*=\s*(fudge\.)?Fake\(.*")    
     def _guess_asn_from_file(self, frame):
@@ -438,7 +476,7 @@ class Fake(object):
         if not self._last_declared_call_name:
             # stub mode:
             if not self._stub:
-                self._stub = Call(self)
+                self._stub = self._create_stub()
             return self._stub
         exp = self._declared_calls[self._last_declared_call_name].get_call_object()
         return exp
@@ -598,6 +636,23 @@ class Fake(object):
         fake = self.__class__(*args, **kwargs)
         exp.return_val = fake
         return fake
+        
+    def times_called(self, n):
+        """Set the number of times an object can be called.
+
+        e.g.::
+        
+            >>> auth = Fake('auth').provides('login').times_called(1)
+            >>> auth.login()
+            >>> auth.login()
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:auth.login() was called 2 time(s). Expected 1.
+
+        """
+        exp = self._get_current_call()
+        exp.expected_times_called = n
+        return self
     
     def with_args(self, *args, **kwargs):
         """Set the last call to expect specific arguments.
@@ -648,21 +703,4 @@ class Fake(object):
         """
         exp = self._get_current_call()
         exp.expected_kwarg_count = count
-        return self
-        
-    def times_called(self, n):
-        """Set the number of times an object can be called.
-
-        e.g.::
-        
-            >>> auth = Fake('auth').provides('login').times_called(1)
-            >>> auth.login()
-            >>> auth.login()
-            Traceback (most recent call last):
-            ...
-            AssertionError: fake:auth.login() was called 2 times. Expected 1.
-
-        """
-        exp = self._get_current_call()
-        exp.expected_times_called = n
         return self

@@ -403,9 +403,9 @@ class TestFakeCallablesTimesCalled(unittest.TestCase):
         fudge.stop()
         
     @raises(AssertionError)
-    def test_callable(self):
-        self.fake = fudge.Fake(callable=True).times_called(2)
-        self.fake()
+    def test_expected_callable(self):
+        login = fudge.Fake('login',expect_call=True).times_called(2)
+        login()
         fudge.stop()
         
     def test_callable_ok(self):
