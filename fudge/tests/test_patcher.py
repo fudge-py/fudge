@@ -1,4 +1,5 @@
 
+from nose.exc import SkipTest
 from nose.tools import eq_
 import fudge
 
@@ -54,4 +55,18 @@ def test_decorator_on_class():
     s.some_test()
     eq_(holder.test_called, True)
     eq_(type(holder.exc), type(Exception()))
+
+def test_patched_context():
+    if not hasattr(fudge, "patched_context"):
+        raise SkipTest("Cannot test with patched_context() because not in 2.5")
+    
+    class Boo:
+        fargo = "is over there"
+    
+    ctx = fudge.patched_context(Boo, 'fargo', 'is right here')
+    # simulate with fudge.patched_context():
+    ctx.__enter__()
+    eq_(Boo.fargo, "is right here")
+    ctx.__exit__(None, None, None)
+    eq_(Boo.fargo, "is over there")
     
