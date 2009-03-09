@@ -22,8 +22,13 @@ What about all the other mock frameworks for Python?  I *really* didn't want to 
 
   - I didn't like how mock focused on post mortem inspection.
 
-- `pyMock <http://theblobshop.com/pymock/>`_ (based on `EasyMock <http://www.easymock.org/>`_)
+- `pyMock <http://theblobshop.com/pymock/>`_ (based on `EasyMock`_)
 
   - This uses a record / playback technique whereby you act upon your real objects then flip a switch and they become fake.  This seems like it has some benefits for maintenance but I'm not sure that the overhead of recording with real objects is worth it.  I suppose you'd need a real database, a real web service, etc.
 
+- `Mox <http://code.google.com/p/pymox/>`_ (based on `EasyMock`_)
+  
+  - This also uses the record / playback technique but with a DSL (domain specific language).  It was brought to my attention after creating Fudge but thought it was worth mentioning.
+
 .. _jMock: http://www.jmock.org/
+.. _EasyMock: http://www.easymock.org/
