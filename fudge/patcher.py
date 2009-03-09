@@ -4,6 +4,10 @@ __all__ = ['patch_object', 'with_patched_object']
 from fudge.util import wraps
 
 def patch_object(obj, attr_name, patched_value):
+    """A utility to patch an object and return a handle for later restoration.
+    
+    You can use more convenient wrappers :func:`with_patched_object` and :func:`patched_context`
+    """
     if isinstance(obj, (str, unicode)):
         obj_path = obj
         obj = __import__(obj_path)
@@ -22,7 +26,21 @@ else:
     # in 2.5+
     @contextmanager
     def patched_context(obj, attr_name, patched_value):
-        """A shortcut that provides :func:`fudge.patch_object` using the with statement"""
+        """A context manager to execute :func:`fudge.patch_object` from the with statement
+        
+        Example::
+            
+            >>> class Session(object):
+            ...     state = 'clean'
+            ... 
+            >>> with patched_context(Session, "state", "dirty"):
+            ...     print Session.state
+            ... 
+            "dirty"
+            >>> print Session.state
+            "clean"
+            
+        """
         patched_object = patch_object(obj, attr_name, patched_value)
         try:
             yield
