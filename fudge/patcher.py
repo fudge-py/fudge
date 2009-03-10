@@ -89,8 +89,9 @@ class PatchHandler(object):
         self.orig_value = getattr(self.orig_object, self.attr_name)
     
     def patch(self, patched_value):
+        """set a new value for the attibute of the object."""
         setattr(self.orig_object, self.attr_name, patched_value)
         
     def restore(self):
-        """restore the patch"""
+        """restore the saved value for the attribute of the object."""
         setattr(self.orig_object, self.attr_name, self.orig_value)
