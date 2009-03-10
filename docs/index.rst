@@ -78,6 +78,8 @@ Changelog
 
 - 0.9.1
   
+  - Added context manager :func:`fudge.patched_context` so the with statement can be used for 
+    patching (contributed by Cristian Esquivias)
   - fudge.start() has been deprecated in favor of :func:`fudge.clear_calls` which does the same thing
   - fudge.stop() has been deprecated in favor of :func:`fudge.verify`, ditto
   - Added :func:`fudge.Fake.times_called` to expect a certain call count (contributed by Cristian Esquivias)
