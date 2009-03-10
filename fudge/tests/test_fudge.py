@@ -3,7 +3,7 @@ import thread
 import unittest
 import fudge
 from nose.tools import eq_, raises
-from fudge import ExpectedCall, Call, CallStack
+from fudge import ExpectedCall, Call, CallStack, FakeDeclarationError
 
 class TestRegistry(unittest.TestCase):
     
@@ -368,7 +368,7 @@ class TestFakeCallables(unittest.TestCase):
         self.fake = fudge.Fake().provides("something").calls(something)
         eq_(self.fake.something(), "hijacked")
         
-class TestFakeCallablesTimesCalled(unittest.TestCase):
+class TestFakeTimesCalled(unittest.TestCase):
     
     def tearDown(self):
         fudge.clear_expectations()
@@ -421,6 +421,20 @@ class TestFakeCallablesTimesCalled(unittest.TestCase):
         self.fake = fudge.Fake().expects("something").times_called(2)
         self.fake.something()
         self.fake.something()
+        fudge.verify()
+    
+    @raises(FakeDeclarationError)
+    def test_next_call_then_times_called_is_error(self):
+        self.fake = fudge.Fake().expects("hi").returns("goodday").next_call().times_called(4)
+        self.fake.hi()
+        self.fake.hi()
+        fudge.verify()
+    
+    @raises(FakeDeclarationError)
+    def test_times_called_then_next_call_is_error(self):
+        self.fake = fudge.Fake().expects("hi").times_called(4).next_call()
+        self.fake.hi()
+        self.fake.hi()
         fudge.verify()
 
 class TestStackedCallables(unittest.TestCase):

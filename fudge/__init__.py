@@ -11,6 +11,7 @@ import re
 import sys
 import thread
 import warnings
+from fudge.exc import FakeDeclarationError
 from fudge.patcher import *
 from fudge.util import wraps
 
@@ -575,6 +576,9 @@ class Fake(object):
             
         """
         exp = self._declared_calls[self._last_declared_call_name]
+        if getattr(exp, 'expected_times_called', None) is not None:
+            raise FakeDeclarationError("Cannot use next_call() in combination with times_called()")
+        
         if not isinstance(exp, CallStack):
             # lazily create a stack with the last defined 
             # expected call as the first on the stack:
@@ -677,6 +681,12 @@ class Fake(object):
             AssertionError: fake:auth.login() was called 1 time(s). Expected 2.
 
         """
+        if self._last_declared_call_name:
+            # when this is None, self._callable is in effect
+            actual_last_call = self._declared_calls[self._last_declared_call_name]
+            if isinstance(actual_last_call, CallStack):
+                raise FakeDeclarationError("Cannot use times_called() in combination with next_call()")
+        
         exp = self._get_current_call()
         exp.expected_times_called = n
         return self
