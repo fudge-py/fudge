@@ -574,6 +574,8 @@ class Fake(object):
             ...
             AssertionError: This attribute of fake:unnamed can only be called 3 time(s).  Call reset() if necessary.
             
+        .. note:: This cannot be used in combination with :func:`fudge.Fake.times_called`
+        
         """
         exp = self._declared_calls[self._last_declared_call_name]
         if getattr(exp, 'expected_times_called', None) is not None:
@@ -679,13 +681,15 @@ class Fake(object):
             Traceback (most recent call last):
             ...
             AssertionError: fake:auth.login() was called 1 time(s). Expected 2.
-
+        
+        .. note:: This cannot be used in combination with :func:`fudge.Fake.next_call`
+        
         """
         if self._last_declared_call_name:
-            # when this is None, self._callable is in effect
             actual_last_call = self._declared_calls[self._last_declared_call_name]
             if isinstance(actual_last_call, CallStack):
                 raise FakeDeclarationError("Cannot use times_called() in combination with next_call()")
+        # else: # self._callable is in effect
         
         exp = self._get_current_call()
         exp.expected_times_called = n
