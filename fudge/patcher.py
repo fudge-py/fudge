@@ -4,7 +4,9 @@ __all__ = ['patch_object', 'with_patched_object', 'PatchHandler'] # patched_cont
 from fudge.util import wraps
 
 def patch_object(obj, attr_name, patched_value):
-    """A utility to patch an object and return :class:`fudge.PatchHandler` for later restoration.
+    """Patches an object and returns an instance of :class:`fudge.PatchHandler` for later restoration.
+    
+    Note that if attr_name is not an object it is assumed to be a path to a module and will be imported.
     
     You can use more convenient wrappers :func:`with_patched_object` and :func:`patched_context`
     """
@@ -89,9 +91,9 @@ class PatchHandler(object):
         self.orig_value = getattr(self.orig_object, self.attr_name)
     
     def patch(self, patched_value):
-        """set a new value for the attibute of the object."""
+        """Set a new value for the attibute of the object."""
         setattr(self.orig_object, self.attr_name, patched_value)
         
     def restore(self):
-        """restore the saved value for the attribute of the object."""
+        """Restore the saved value for the attribute of the object."""
         setattr(self.orig_object, self.attr_name, self.orig_value)
