@@ -45,7 +45,7 @@ else:
         """
         patched_object = patch_object(obj, attr_name, patched_value)
         try:
-            yield
+            yield patched_object
         finally:
             patched_object.restore()
 
