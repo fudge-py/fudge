@@ -26,7 +26,7 @@ else:
     # in 2.5+
     @contextmanager
     def patched_context(obj, attr_name, patched_value):
-        """A context manager to execute :func:`fudge.patch_object` from the with statement
+        """A context manager to execute :func:`fudge.patch_object` in a with statement
         
         Example::
             
