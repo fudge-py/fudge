@@ -91,7 +91,12 @@ The above code could also be written as a test function, compatible with `Nose`_
     >>> test_email()
     Sent an email to kumar@hishouse.com
 
-You could also write the same test using the stdlib ``unittest.TestCase`` like this:
+You can also patch code using the `with statement <http://www.python.org/dev/peps/pep-0343/>`_; see :func:`fudge.patched_context`.
+
+A unittest.TestCase
+===================
+
+The same test above can be written using the standard ``unittest.TestCase`` module like this:
 
 .. doctest::
     
@@ -149,8 +154,8 @@ Clearing Expectations
 
 Fudge assumes that when you declare expectations on a Fake, 
 you will use the Fake object in more than one test.  For this reason, 
-you'll need to tear down queued up expectations explicitly if you 
-want to start testing with other fake objects.
+you'll need to clear the expectation registry explicitly if you 
+want to start testing with another fake object.
 
 In other words, if one test uses a fake SMTP but some test later on 
 uses a fake database and has nothing to do with email then you'll need 
@@ -160,7 +165,7 @@ to clear the SMTP expectations before testing with the fake database.
 
     >>> fudge.clear_expectations()
 
-Note how this is different from :func:`fudge.clear_calls`, which only 
+This is different from :func:`fudge.clear_calls`, which only 
 clears the actual calls made to your objects.
 
 A Complete Test Module
@@ -278,7 +283,7 @@ You can do this with the keyword argument :class:`callable=True <fudge.Fake>`.  
     >>> test_login()
     Welcome!
 
-However, the above test will not raise an error if you forget to call login().  If you want to fudge a callable and declare an expectation that it should be called, use :class:`expect_call=True <fudge.Fake>`:
+However, the above test will *not* raise an error if you forget to call login().  If you want to fudge a callable and declare an expectation that it should be called, use :class:`expect_call=True <fudge.Fake>`:
 
 .. doctest::
     

@@ -6,7 +6,7 @@ from fudge.util import wraps
 def patch_object(obj, attr_name, patched_value):
     """Patches an object and returns an instance of :class:`fudge.PatchHandler` for later restoration.
     
-    Note that if attr_name is not an object it is assumed to be a path to a module and will be imported.
+    Note that if *obj* is not an object but a path to a module then it will be imported.
     
     You can use more convenient wrappers :func:`with_patched_object` and :func:`patched_context`
     """
@@ -28,7 +28,7 @@ else:
     # in 2.5+
     @contextmanager
     def patched_context(obj, attr_name, patched_value):
-        """A context manager to execute :func:`fudge.patch_object` in a with statement
+        """A context manager to execute :func:`fudge.patch_object` in a `with statement`_
         
         Example::
             
@@ -41,6 +41,8 @@ else:
             dirty
             >>> print Session.state
             clean
+        
+        .. _with statement: http://www.python.org/dev/peps/pep-0343/
             
         """
         patched_object = patch_object(obj, attr_name, patched_value)
