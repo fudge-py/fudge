@@ -10,6 +10,9 @@ PAPER         =
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d _build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+FD_PROJECT_HOST ?= FD_PROJECT_HOST
+FD_PROJECT_SCP_TARGET ?= FD_PROJECT_SCP_TARGET
+FD_PROJECT_PATH_TARGET ?= FD_PROJECT_PATH_TARGET
 
 .PHONY: help clean html web pickle htmlhelp latex changes linkcheck
 
@@ -32,9 +35,12 @@ html:
 	@echo "Build finished. The HTML pages are in _build/html."
 
 docslive:
-	cd _build/; tar -czf fudge-docs.tar.gz html
-	scp _build/fudge-docs.tar.gz $(FD_PROJECTS)/fudge/
-	@echo "Docs sent to $(FD_PROJECTS)/fudge/"
+	cd _build/; cp -R html current && tar -czf current.tar.gz current
+	scp _build/current.tar.gz $(FD_PROJECT_SCP_TARGET)/fudge/ && \
+	    ssh $(FD_PROJECT_HOST) "cd $(FD_PROJECT_PATH_TARGET)/fudge && rm -fr current && tar -xzf current.tar.gz && rm current.tar.gz" && \
+	    rm -fr _build/current.tar.gz && \
+	    rm -fr _build/current
+	@echo "Docs sent to $(FD_PROJECT_SCP_TARGET)/fudge/"
 
 doctest:
 	mkdir -p _build/html _build/doctrees
