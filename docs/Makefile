@@ -10,9 +10,12 @@ PAPER         =
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d _build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
-FD_PROJECT_HOST ?= FD_PROJECT_HOST
-FD_PROJECT_SCP_TARGET ?= FD_PROJECT_SCP_TARGET
-FD_PROJECT_PATH_TARGET ?= FD_PROJECT_PATH_TARGET
+
+# this is the best I can think of 
+# for making it obvious to the user 
+# that he forgot to set some environ vars
+FD_PROJECTS_HOST ?= FD_PROJECTS_HOST
+FD_PROJECTS_PATH_TARGET ?= FD_PROJECTS_PATH_TARGET
 
 .PHONY: help clean html web pickle htmlhelp latex changes linkcheck
 
@@ -36,11 +39,11 @@ html:
 
 docslive:
 	cd _build/; cp -R html current && tar -czf current.tar.gz current
-	scp _build/current.tar.gz $(FD_PROJECT_SCP_TARGET)/fudge/ && \
-	    ssh $(FD_PROJECT_HOST) "cd $(FD_PROJECT_PATH_TARGET)/fudge && rm -fr current && tar -xzf current.tar.gz && rm current.tar.gz" && \
+	scp _build/current.tar.gz $(FD_PROJECTS_HOST):$(FD_PROJECTS_PATH_TARGET)/fudge/ && \
+	    ssh $(FD_PROJECTS_HOST) "cd $(FD_PROJECTS_PATH_TARGET)/fudge && rm -fr current && tar -xzf current.tar.gz && rm current.tar.gz" && \
 	    rm -fr _build/current.tar.gz && \
 	    rm -fr _build/current
-	@echo "Docs sent to $(FD_PROJECT_SCP_TARGET)/fudge/"
+	@echo "Docs sent to $(FD_PROJECTS_HOST):$(FD_PROJECTS_PATH_TARGET)/fudge/"
 
 doctest:
 	mkdir -p _build/html _build/doctrees
