@@ -367,6 +367,16 @@ class TestFakeCallables(unittest.TestCase):
             
         self.fake = fudge.Fake().provides("something").calls(something)
         eq_(self.fake.something(), "hijacked")
+    
+    @raises(RuntimeError)
+    def test_raises_class(self):
+        self.fake = fudge.Fake().provides("fail").raises(RuntimeError)
+        self.fake.fail()
+    
+    @raises(RuntimeError)
+    def test_raises_instance(self):
+        self.fake = fudge.Fake().provides("fail").raises(RuntimeError("batteries ran out"))
+        self.fake.fail()
         
 class TestFakeTimesCalled(unittest.TestCase):
     

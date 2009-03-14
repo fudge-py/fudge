@@ -21,6 +21,7 @@ fudge
    :members:
    
 .. autoclass:: fudge.FakeDeclarationError
+   :members:
 
 .. autofunction:: fudge.patch_object
    
