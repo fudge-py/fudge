@@ -78,7 +78,7 @@ Changelog
 
 - 0.9.2
   
-  - Added keyword :func:`fudge.Fake.next_call(after="other_call") <fudge.Fake.next_call>` to make for 
+  - Added keyword :func:`fudge.Fake.next_call(for_method="other_call") <fudge.Fake.next_call>` to make for 
     more readable declarations.
   - Added :func:`fudge.Fake.remember_order` so that order of expected calls can be verified.
   - Fixed bug in :func:`fudge.Fake.next_call` so that this now works: ``Fake(callable=True).next_call().returns(...)``

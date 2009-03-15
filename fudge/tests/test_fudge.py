@@ -647,7 +647,7 @@ class TestNextCall(unittest.TestCase):
         db = Fake("db")\
             .provides("get_id").returns(1)\
             .provides("set_id")\
-            .next_call(after="get_id").returns(2)
+            .next_call(for_method="get_id").returns(2)
         # print [c.return_val for c in db._declared_calls["get_id"]._calls]
         eq_(db.get_id(), 1)
         eq_(db.set_id(), None)
@@ -657,7 +657,7 @@ class TestNextCall(unittest.TestCase):
         db = Fake("db")\
             .expects("get_id").returns(1)\
             .expects("set_id")\
-            .next_call(after="get_id").returns(2)
+            .next_call(for_method="get_id").returns(2)
         eq_(db.get_id(), 1)
         eq_(db.set_id(), None)
         eq_(db.get_id(), 2)
@@ -701,7 +701,7 @@ class TestOrderedCalls(unittest.TestCase):
             .remember_order()\
             .expects("get_id").returns(1)\
             .expects("set_id")\
-            .next_call(after="get_id").returns(2)
+            .next_call(for_method="get_id").returns(2)
         eq_(db.get_id(), 1)
         eq_(db.set_id(), None)
         eq_(db.get_id(), 2)

@@ -352,7 +352,7 @@ Just preface any calls to :func:`fudge.Fake.expects` with :func:`fudge.Fake.reme
     >>> session = fudge.Fake("session").remember_order()\
     ...                                .expects("get_count").returns(0)\
     ...                                .expects("set_count").with_args(5)\
-    ...                                .next_call(after="get_count").returns(5)
+    ...                                .next_call(for_method="get_count").returns(5)
     ... 
     >>> session.get_count()
     0

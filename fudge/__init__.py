@@ -642,7 +642,7 @@ class Fake(object):
         self._attributes.update(attributes)
         return self
     
-    def next_call(self, after=None):
+    def next_call(self, for_method=None):
         """Start expecting or providing multiple calls.
         
         .. note:: next_call() cannot be used in combination with :func:`fudge.Fake.times_called`
@@ -675,8 +675,9 @@ class Fake(object):
             ...
             AssertionError: This attribute of fake:unnamed can only be called 3 time(s).  Call reset() if necessary or fudge.clear_calls().
         
-        When calls and return values are interspersed in real life, it may be more readable to
-        use ``next_call(after="other_call")`` like this ::
+        If you need to affect the next call of something other than the last declared call, 
+        use ``next_call(for_method="other_call")``.  Here is an example using getters and setters 
+        on a session object ::
             
             >>> from fudge import Fake
             >>> sess = Fake('session').provides('get_count').returns(1)
@@ -684,7 +685,7 @@ class Fake(object):
         
         Now go back and adjust return values for get_count() ::
         
-            >>> sess = sess.next_call(after='get_count').returns(5)
+            >>> sess = sess.next_call(for_method='get_count').returns(5)
         
         This allows these calls to be made ::
         
@@ -698,15 +699,15 @@ class Fake(object):
         
         """
         last_call_name = self._last_declared_call_name
-        if after:
-            if after not in self._declared_calls:
+        if for_method:
+            if for_method not in self._declared_calls:
                 raise FakeDeclarationError(
-                            "next_call(after=%r) is not possible; "
+                            "next_call(for_method=%r) is not possible; "
                             "declare expects(%r) or provides(%r) first" % (
-                                                        after, after, after))
+                                                        for_method, for_method, for_method))
             else:
                 # set this for the local function:
-                last_call_name = after
+                last_call_name = for_method
                 # reset this for subsequent methods:
                 self._last_declared_call_name = last_call_name
                 
@@ -800,7 +801,7 @@ class Fake(object):
             >>> import fudge
             >>> sess = fudge.Fake("session").remember_order().expects("get_id").returns(1)
             >>> sess = sess.expects("set_id").with_args(5)
-            >>> sess = sess.next_call(after="get_id").returns(5)
+            >>> sess = sess.next_call(for_method="get_id").returns(5)
         
         Multiple calls to ``get_id()`` are now expected ::
         
