@@ -332,14 +332,21 @@ class ExpectedCallOrder(object):
     
     def assert_order_met(self):
         error = None
-        for i,call in enumerate(self._call_order):
-            if len(self._actual_calls) < i+1:
-                error = "Not enough calls were made"
-                break
-            ac_call = self._actual_calls[i]
-            if ac_call is not call:
-                error = "Call #%s was %r" % (i+1, ac_call)
-                break
+        if len(self._actual_calls) == 0:
+            error = "Not enough calls were made"
+        else:
+            for i,call in enumerate(self._call_order):
+                if len(self._actual_calls) < i+1:
+                    calls_made = len(self._actual_calls)
+                    if calls_made == 1:
+                        error = "Only 1 call was made"
+                    else:
+                        error = "Only %s calls were made" % calls_made
+                    break
+                ac_call = self._actual_calls[i]
+                if ac_call is not call:
+                    error = "Call #%s was %r" % (i+1, ac_call)
+                    break
         if error:
             msg = "%s; Expected: %s" % (
                     error, 
@@ -379,6 +386,11 @@ class CallStack(object):
     def __iter__(self):
         for c in self._calls:
             yield c
+    
+    def __repr__(self):
+        return "<%s for %r>" % (self.__class__.__name__, self._calls)
+    
+    __str__ = __repr__
             
     def add_call(self, call):
         self._calls.append(call)
@@ -607,7 +619,8 @@ class Fake(object):
         
         .. note:: 
             If you want to also verify the order these calls are made in, 
-            use :func:`fudge.Fake.remember_order`
+            use :func:`fudge.Fake.remember_order`.  When using :func:`fudge.Fake.next_call` 
+            after ``expects(...)``, each new call will be part of the expected order
             
         """
         self._last_declared_call_name = call_name
@@ -629,13 +642,16 @@ class Fake(object):
         self._attributes.update(attributes)
         return self
     
-    def next_call(self):
+    def next_call(self, after=None):
         """Start expecting or providing multiple calls.
+        
+        .. note:: next_call() cannot be used in combination with :func:`fudge.Fake.times_called`
         
         Up until calling this method, calls are infinite.
         
         For example, before next_call() ... ::
-        
+            
+            >>> from fudge import Fake
             >>> f = Fake().provides('status').returns('Awake!')
             >>> f.status()
             'Awake!'
@@ -644,6 +660,7 @@ class Fake(object):
         
         After next_call() ... ::
             
+            >>> from fudge import Fake
             >>> f = Fake().provides('status').returns('Awake!')
             >>> f = f.next_call().returns('Asleep')
             >>> f = f.next_call().returns('Dreaming')
@@ -657,12 +674,44 @@ class Fake(object):
             Traceback (most recent call last):
             ...
             AssertionError: This attribute of fake:unnamed can only be called 3 time(s).  Call reset() if necessary or fudge.clear_calls().
+        
+        When calls and return values are interspersed in real life, it may be more readable to
+        use ``next_call(after="other_call")`` like this ::
             
-        .. note:: This cannot be used in combination with :func:`fudge.Fake.times_called`
+            >>> from fudge import Fake
+            >>> sess = Fake('session').provides('get_count').returns(1)
+            >>> sess = sess.provides('set_count').with_args(5)
+        
+        Now go back and adjust return values for get_count() ::
+        
+            >>> sess = sess.next_call(after='get_count').returns(5)
+        
+        This allows these calls to be made ::
+        
+            >>> sess.get_count()
+            1
+            >>> sess.set_count(5)
+            >>> sess.get_count()
+            5
+        
+        When using :func:`fudge.Fake.remember_order` in combination with :func:`fudge.Fake.expects` and :func:`fudge.Fake.next_call` each new call will be part of the expected order.
         
         """
-        if self._last_declared_call_name:
-            exp = self._declared_calls[self._last_declared_call_name]
+        last_call_name = self._last_declared_call_name
+        if after:
+            if after not in self._declared_calls:
+                raise FakeDeclarationError(
+                            "next_call(after=%r) is not possible; "
+                            "declare expects(%r) or provides(%r) first" % (
+                                                        after, after, after))
+            else:
+                # set this for the local function:
+                last_call_name = after
+                # reset this for subsequent methods:
+                self._last_declared_call_name = last_call_name
+                
+        if last_call_name:
+            exp = self._declared_calls[last_call_name]
         elif self._callable:
             exp = self._callable
         else:
@@ -679,8 +728,8 @@ class Fake(object):
                                     call_name=exp.call_name)
         
             # replace the old call obj using the same name:
-            if self._last_declared_call_name:
-                self._declare_call(self._last_declared_call_name, stack)
+            if last_call_name:
+                self._declare_call(last_call_name, stack)
             elif self._callable:
                 self._callable = stack
         else:
@@ -689,7 +738,7 @@ class Fake(object):
         # hmm, we need a copy here so that the last call 
         # falls off the stack.
         if stack.expected:
-            next_call = ExpectedCall(self, call_name=exp.call_name)
+            next_call = ExpectedCall(self, call_name=exp.call_name, call_order=self._expected_call_order)
         else:
             next_call = Call(self, call_name=exp.call_name)
         stack.add_call(next_call)
@@ -743,6 +792,24 @@ class Fake(object):
             Traceback (most recent call last):
             ...
             AssertionError: Call #1 was fake:db.update(); Expected: #1 fake:db.insert(), #2 fake:db.update()
+            >>> fudge.clear_expectations()
+        
+        When declaring multiple calls using :func:`fudge.Fake.next_call`, each subsequent call will be added 
+        to the expected order of calls ::
+            
+            >>> import fudge
+            >>> sess = fudge.Fake("session").remember_order().expects("get_id").returns(1)
+            >>> sess = sess.expects("set_id").with_args(5)
+            >>> sess = sess.next_call(after="get_id").returns(5)
+        
+        Multiple calls to ``get_id()`` are now expected ::
+        
+            >>> sess.get_id()
+            1
+            >>> sess.set_id(5)
+            >>> sess.get_id()
+            5
+            >>> fudge.verify()
             >>> fudge.clear_expectations()
         
         """

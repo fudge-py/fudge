@@ -417,17 +417,6 @@ class TestFakeCallables(unittest.TestCase):
     def test_raises_instance(self):
         self.fake = fudge.Fake().provides("fail").raises(RuntimeError("batteries ran out"))
         self.fake.fail()
-    
-    def test_next_call_with_callables(self):
-        login = fudge.Fake('login',callable=True)\
-                                .returns("yes")\
-                                .next_call()\
-                                .returns("maybe")\
-                                .next_call()\
-                                .returns("no")
-        eq_(login(), "yes")
-        eq_(login(), "maybe")
-        eq_(login(), "no")
         
 class TestFakeTimesCalled(unittest.TestCase):
     
@@ -483,6 +472,11 @@ class TestFakeTimesCalled(unittest.TestCase):
         self.fake.something()
         self.fake.something()
         fudge.verify()
+
+class TestNextCall(unittest.TestCase):
+    
+    def tearDown(self):
+        fudge.clear_expectations()
     
     @raises(FakeDeclarationError)
     def test_next_call_then_times_called_is_error(self):
@@ -497,8 +491,6 @@ class TestFakeTimesCalled(unittest.TestCase):
         self.fake.hi()
         self.fake.hi()
         fudge.verify()
-
-class TestStackedCallables(unittest.TestCase):
             
     def test_stacked_returns(self):
         fake = fudge.Fake().provides("something")
@@ -639,6 +631,38 @@ class TestStackedCallables(unittest.TestCase):
         
         eq_(fake.something(), 1)
         eq_(fake.something(), 2)
+    
+    def test_next_call_with_callables(self):
+        login = fudge.Fake('login',callable=True)\
+                                .returns("yes")\
+                                .next_call()\
+                                .returns("maybe")\
+                                .next_call()\
+                                .returns("no")
+        eq_(login(), "yes")
+        eq_(login(), "maybe")
+        eq_(login(), "no")
+    
+    def test_returns(self):
+        db = Fake("db")\
+            .provides("get_id").returns(1)\
+            .provides("set_id")\
+            .next_call(after="get_id").returns(2)
+        # print [c.return_val for c in db._declared_calls["get_id"]._calls]
+        eq_(db.get_id(), 1)
+        eq_(db.set_id(), None)
+        eq_(db.get_id(), 2)
+    
+    def test_expectations_with_multiple_return_values(self):
+        db = Fake("db")\
+            .expects("get_id").returns(1)\
+            .expects("set_id")\
+            .next_call(after="get_id").returns(2)
+        eq_(db.get_id(), 1)
+        eq_(db.set_id(), None)
+        eq_(db.get_id(), 2)
+        
+        fudge.verify()
 
 class TestOrderedCalls(unittest.TestCase):
     
@@ -671,5 +695,17 @@ class TestOrderedCalls(unittest.TestCase):
         call_order.add_expected_call(exp)
         
         r.verify()
+    
+    def test_multiple_return_values_are_ignored(self):
+        db = Fake("db")\
+            .remember_order()\
+            .expects("get_id").returns(1)\
+            .expects("set_id")\
+            .next_call(after="get_id").returns(2)
+        eq_(db.get_id(), 1)
+        eq_(db.set_id(), None)
+        eq_(db.get_id(), 2)
+        
+        fudge.verify()
         
         
