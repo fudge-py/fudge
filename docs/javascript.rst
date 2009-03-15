@@ -3,7 +3,7 @@
 Fudge For JavaScript
 ====================
 
-Although `Ersatz <http://github.com/centro/ersatz/tree/master>`_ is a port of `Mocha <http://mocha.rubyforge.org/>`_ to JavaScript and that's pretty much what :ref:`Fudge <fudge-examples>` is, I couldn't get Ersatz to work with one of my libraries because it uses Prototype.  So I started porting Fudge to JavaScript.  As of this writing it has only been partially implemented.
+Although `Ersatz <http://github.com/centro/ersatz/tree/master>`_ is a port of `Mocha <http://mocha.rubyforge.org/>`_ to JavaScript and that's pretty much what :ref:`Fudge <using-fudge>` is, I couldn't get Ersatz to work with one of my libraries because it uses Prototype.  So I started porting Fudge to JavaScript.  As of this writing it has only been partially implemented.
 
 Install
 =======
@@ -23,4 +23,4 @@ and open http://localhost:8000/tests/test_fudge.html  Take note that while Fudge
 Usage
 =====
 
-Refer to the :ref:`fudge-examples` in Python to get an idea for how to use the JavaScript version.  As mentioned before, the JavaScript port is not yet fully implemented.
+Refer to :ref:`using-fudge` in Python to get an idea for how to use the JavaScript version.  As mentioned before, the JavaScript port is not yet fully implemented.

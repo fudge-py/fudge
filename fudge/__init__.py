@@ -1,7 +1,7 @@
 
 """Fudge is a module for replacing real objects with fakes (mocks, stubs, etc) while testing.
 
-See :ref:`fudge-examples` for common scenarios.
+See :ref:`using-fudge` for common scenarios.
 
 """
 

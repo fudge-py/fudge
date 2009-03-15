@@ -1,9 +1,9 @@
 
-.. _fudge-examples:
+.. _using-fudge:
 
-==============
-Fudge Examples
-==============
+===========
+Using Fudge
+===========
 
 Fudging Email
 =============
@@ -81,6 +81,7 @@ The above code could also be written as a test function, compatible with `Nose`_
 
 .. doctest::
     
+    >>> import fudge
     >>> @fudge.with_fakes
     ... @fudge.with_patched_object("smtplib", "SMTP", SMTP)
     ... def test_email():
@@ -100,6 +101,7 @@ The same test above can be written using the standard ``unittest.TestCase`` modu
 
 .. doctest::
     
+    >>> import fudge
     >>> import unittest
     >>> class TestEmail(unittest.TestCase):
     ...     def setUp(self):
@@ -180,7 +182,6 @@ your test module:
 .. doctest::
     
     >>> import fudge
-    
     >>> SMTP = fudge.Fake()
     >>> SMTP = SMTP.expects('__init__')
     >>> SMTP = SMTP.expects('connect')
@@ -218,6 +219,7 @@ for the method is_logged_in():
 
 .. doctest::
     
+    >>> import fudge
     >>> auth = fudge.Fake()
     >>> user = auth.provides('current_user').returns_fake()
     >>> user = user.provides('is_logged_in').returns(True)
@@ -245,8 +247,8 @@ You can do this using :meth:`Fake.calls() <fudge.Fake.calls>` like this:
 
 .. doctest::
     
+    >>> import fudge
     >>> auth = fudge.Fake()
-    
     >>> def check_user(username):
     ...     if username=='bert':
     ...         print "Bird is the word"
@@ -254,7 +256,6 @@ You can do this using :meth:`Fake.calls() <fudge.Fake.calls>` like this:
     ...         print "Access denied"
     ... 
     >>> auth = auth.provides('show_secret_word_for_user').calls(check_user)
-    
     >>> auth.show_secret_word_for_user("bert")
     Bird is the word
     >>> auth.show_secret_word_for_user("ernie")
@@ -268,8 +269,8 @@ You can do this with the keyword argument :class:`callable=True <fudge.Fake>`.  
 
 .. doctest::
     
+    >>> import fudge
     >>> login = fudge.Fake(callable=True).with_args("eziekel", "pazzword").returns(True)
-    
     >>> @fudge.with_fakes
     ... @fudge.with_patched_object("auth", "login", login)
     ... def test_login():
@@ -305,6 +306,7 @@ Some objects you might want to work with will support *cascading* which means ea
 
 .. doctest::
     
+    >>> import fudge
     >>> session = fudge.Fake('session')
     >>> query = session.provides('query').returns_fake()
     >>> query = query.provides('order_by').returns(
@@ -324,6 +326,7 @@ Let's say you want to test code that needs to call a function multiple times and
 
 .. doctest::
     
+    >>> import fudge
     >>> cart = fudge.Fake('cart').provides('add').with_args('book')
     >>> cart = cart.returns({'contents': ['book']})
     >>> cart = cart.next_call().with_args('dvd').returns({'contents': ['book','dvd']})

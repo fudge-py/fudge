@@ -51,7 +51,7 @@ Contents
 .. toctree::
    :maxdepth: 2
    
-   examples
+   using-fudge
    javascript
    why-fudge
 
