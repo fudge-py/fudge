@@ -3,7 +3,8 @@ import thread
 import unittest
 import fudge
 from nose.tools import eq_, raises
-from fudge import ExpectedCall, Call, CallStack, FakeDeclarationError
+from fudge import (
+    ExpectedCall, ExpectedCallOrder, Call, CallStack, FakeDeclarationError)
 
 class TestRegistry(unittest.TestCase):
     
@@ -56,11 +57,16 @@ class TestRegistry(unittest.TestCase):
         exp = ExpectedCall(self.fake, 'callMe')
         exp()
         eq_(len(self.reg.get_expected_calls()), 1)
+        exp_order = ExpectedCallOrder(self.fake)
+        self.reg.remember_expected_call_order(exp_order)
+        eq_(self.reg.get_expected_call_order().keys(), [self.fake])
         
         fudge.clear_expectations()
         
         eq_(len(self.reg.get_expected_calls()), 0, 
             "clear_expectations() should reset expectations")
+        eq_(len(self.reg.get_expected_call_order().keys()), 0,
+            "clear_expectations() should reset expected call order")
     
     def test_multithreading(self):
         
@@ -76,13 +82,25 @@ class TestRegistry(unittest.TestCase):
             try:
                 try:
                     fudge.clear_calls()
+                    fudge.clear_expectations()
+                    
+                    exp_order = ExpectedCallOrder(self.fake)
+                    reg.remember_expected_call_order(exp_order)
+                    eq_(len(reg.get_expected_call_order().keys()), 1)
+                    
                     # registered first time on __init__ :
-                    exp = ExpectedCall(self.fake, 'callMe')
-                    exp() 
+                    exp = ExpectedCall(self.fake, 'callMe', call_order=exp_order) 
                     reg.expect_call(exp)
                     reg.expect_call(exp)
                     reg.expect_call(exp)
                     eq_(len(reg.get_expected_calls()), 4)
+                    
+                    # actual calls:
+                    exp()
+                    exp()
+                    exp()
+                    exp()
+                    
                     fudge.verify()
                     fudge.clear_expectations()
                 except Exception, er:
@@ -599,6 +617,26 @@ class TestStackedCallables(unittest.TestCase):
         
         eq_(fake.something(), 1)
         eq_(fake.something(), 2)
+
+class TestOrderedCalls(unittest.TestCase):
+    
+    def tearDown(self):
+        fudge.clear_expectations()
+    
+    @raises(AssertionError)
+    def test_out_of_order(self):
+        fake = fudge.Fake().remember_order().expects("one").expects("two")
+        fake.two()
+        fake.one()
+        fudge.verify()
+    
+    @raises(FakeDeclarationError)
+    def test_cannot_remember_order_when_callable_is_true(self):
+        fake = fudge.Fake(callable=True).remember_order()
+    
+    @raises(FakeDeclarationError)
+    def test_cannot_remember_order_when_expect_call_is_true(self):
+        fake = fudge.Fake(expect_call=True).remember_order()
         
         
         

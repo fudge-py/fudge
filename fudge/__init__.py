@@ -25,6 +25,7 @@ class Registry(object):
     
     def __init__(self):
         self.expected_calls = {}
+        self.expected_call_order = {}
         self.call_stacks = []
     
     def __contains__(self, obj):
@@ -47,18 +48,37 @@ class Registry(object):
         self.clear_actual_calls()
         for stack in self.call_stacks:
             stack.reset()
+        for fake, call_order in self.get_expected_call_order().items():
+            call_order.reset_calls()
     
     def clear_expectations(self):
         c = self.get_expected_calls()
         c[:] = []
+        d = self.get_expected_call_order()
+        d.clear()
         
     def expect_call(self, expected_call):
         c = self.get_expected_calls()
         c.append(expected_call)
+        call_order = self.get_expected_call_order()
+        if expected_call.fake in call_order:
+            this_call_order = call_order[expected_call.fake]
+            this_call_order.add_expected_call(expected_call)
     
     def get_expected_calls(self):
         self.expected_calls.setdefault(thread.get_ident(), [])
         return self.expected_calls[thread.get_ident()]
+    
+    def get_expected_call_order(self):
+        self.expected_call_order.setdefault(thread.get_ident(), {})
+        return self.expected_call_order[thread.get_ident()]
+    
+    def remember_expected_call_order(self, expected_call_order):
+        ordered_fakes = self.get_expected_call_order()
+        fake = expected_call_order.fake
+        ## does nothing if called twice like:
+        # Fake().remember_order().remember_order()
+        ordered_fakes.setdefault(fake, expected_call_order)
     
     def register_call_stack(self, call_stack):
         self.call_stacks.append(call_stack)
@@ -73,6 +93,8 @@ class Registry(object):
             for exp in self.get_expected_calls():
                 exp.assert_called()
                 exp.assert_times_called()
+            for fake, call_order in self.get_expected_call_order().items():
+                call_order.assert_order_met()
         finally:
             self.clear_calls()
         
@@ -172,9 +194,12 @@ class Call(object):
     callable=False
         Means this object acts like a function, not a method of an 
         object.
+    
+    call_order=ExpectedCallOrder()
+        A call order to append each call to.  Default is None
     """
     
-    def __init__(self, fake, call_name=None, index=None, callable=False):
+    def __init__(self, fake, call_name=None, index=None, callable=False, call_order=None):
         self.fake = fake
         self.call_name = call_name
         self.call_replacement = None
@@ -189,10 +214,13 @@ class Call(object):
         self.expected_times_called = None
         self.actual_times_called = 0
         self.callable = callable
+        self.call_order = call_order
         
     def __call__(self, *args, **kwargs):
         self.was_called = True
         self.actual_times_called += 1
+        if self.call_order:
+            self.call_order.add_actual_call(self)
         
         if self.exception_to_raise is not None:
             raise self.exception_to_raise
@@ -283,6 +311,43 @@ class ExpectedCall(Call):
         if not self.was_called:
             raise AssertionError("%s was not called" % (self))
 
+class ExpectedCallOrder(object):
+    """An expectation that calls should be called in a specific order."""
+    
+    def __init__(self, fake):
+        self.fake = fake
+        self._call_order = []
+        self._actual_calls = []
+    
+    def __repr__(self):
+        return "%r(%r)" % (self.fake, self._call_order)
+    
+    __str__ = __repr__
+    
+    def add_expected_call(self, call):
+        self._call_order.append(call)
+    
+    def add_actual_call(self, call):
+        self._actual_calls.append(call)
+    
+    def assert_order_met(self):
+        error = None
+        for i,call in enumerate(self._call_order):
+            if len(self._actual_calls) < i+1:
+                error = "Not enough calls were made"
+                break
+            ac_call = self._actual_calls[i]
+            if ac_call is not call:
+                error = "Call #%s was %r" % (i+1, ac_call)
+                break
+        if error:
+            msg = "%s; Expected: %s" % (
+                    error, 
+                    ", ".join(["#%s %r" % (i+1,c) for i,c in enumerate(self._call_order)]))
+            raise AssertionError(msg)
+    
+    def reset_calls(self):
+        self._actual_calls[:] = []
 
 class CallStack(object):
     """A stack of :class:`Call` objects
@@ -403,6 +468,7 @@ class Fake(object):
             self._callable = Call(self, call_name=name, callable=True)
         else:
             self._callable = None
+        self._expected_call_order = None
     
     def __getattribute__(self, name):
         """Favors stubbed out attributes, falls back to real attributes
@@ -541,7 +607,7 @@ class Fake(object):
             
         """
         self._last_declared_call_name = call_name
-        c = ExpectedCall(self, call_name)
+        c = ExpectedCall(self, call_name, call_order=self._expected_call_order)
         self._declare_call(call_name, c)
         return self
     
@@ -657,6 +723,17 @@ class Fake(object):
         """
         exp = self._get_current_call()
         exp.exception_to_raise = exc
+        return self
+    
+    def remember_order(self):
+        """Perform an additional verification that expected 
+        methods are called in the right order.
+        """
+        if self._callable:
+            raise FakeDeclarationError(
+                    "remember_order() cannot be used for Fake(callable=True) or Fake(expect_call=True)")
+        self._expected_call_order = ExpectedCallOrder(self)
+        registry.remember_expected_call_order(self._expected_call_order)
         return self
     
     def returns(self, val):
