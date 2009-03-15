@@ -129,11 +129,11 @@ sendmail() method should be called, your test will raise an
 AssertionError when those expectations are not met.  For example:
 
 .. doctest::
-
+    
     >>> s = SMTP()
     >>> s.connect()
     >>> s.sendmail("whoops")
-    Traceback (most recent call last)
+    Traceback (most recent call last):
     ...
     AssertionError: fake:SMTP.sendmail() was called with 1 arg(s) but expected 3
 
@@ -145,7 +145,7 @@ If your code forgets to call an important method, that would be an error too:
     >>> s = SMTP()
     >>> s.connect()
     >>> fudge.verify()
-    Traceback (most recent call last)
+    Traceback (most recent call last):
     ...
     AssertionError: fake:SMTP.sendmail() was not called
 
@@ -294,7 +294,7 @@ However, the above test will *not* raise an error if you forget to call login().
     ...     auth.login("joe","sekret")
     ... 
     >>> fudge.verify()
-    Traceback (most recent call last)
+    Traceback (most recent call last):
     ...
     AssertionError: fake:login() was not called
 
@@ -333,7 +333,7 @@ Let's say you want to test code that needs to call a function multiple times and
     >>> cart.add('dvd')
     {'contents': ['book', 'dvd']}
     >>> cart.add('monkey')
-    Traceback (most recent call last)
+    Traceback (most recent call last):
     ...
     AssertionError: This attribute of fake:cart can only be called 2 time(s).
 

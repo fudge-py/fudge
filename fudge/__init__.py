@@ -373,7 +373,7 @@ class Fake(object):
         >>> login = fudge.Fake('login', expect_call=True).times_called(2)
         >>> login()
         >>> fudge.verify()
-        Traceback (most recent call last)
+        Traceback (most recent call last):
         ...
         AssertionError: fake:login() was called 1 time(s). Expected 2.
         >>> fudge.clear_expectations()
@@ -525,7 +525,7 @@ class Fake(object):
             >>> fudge.clear_calls()
             >>> session.open()
             >>> fudge.verify()
-            Traceback (most recent call last)
+            Traceback (most recent call last):
             ...
             AssertionError: fake:session.close() was not called
             
@@ -574,7 +574,7 @@ class Fake(object):
             >>> f.status()
             'Dreaming'
             >>> f.status()
-            Traceback (most recent call last)
+            Traceback (most recent call last):
             ...
             AssertionError: This attribute of fake:unnamed can only be called 3 time(s).  Call reset() if necessary.
             
@@ -630,7 +630,7 @@ class Fake(object):
             
             >>> db = Fake('db').provides('insert').raises(ValueError("not enough parameters for insert"))
             >>> db.insert()
-            Traceback (most recent call last)
+            Traceback (most recent call last):
             ...
             ValueError: not enough parameters for insert
             
@@ -687,7 +687,7 @@ class Fake(object):
             >>> auth = Fake('auth').provides('login').times_called(1)
             >>> auth.login()
             >>> auth.login()
-            Traceback (most recent call last)
+            Traceback (most recent call last):
             ...
             AssertionError: fake:auth.login() was called 2 time(s). Expected 1.
         
@@ -698,7 +698,7 @@ class Fake(object):
             >>> auth = fudge.Fake('auth').expects('login').times_called(2)
             >>> auth.login()
             >>> fudge.verify()
-            Traceback (most recent call last)
+            Traceback (most recent call last):
             ...
             AssertionError: fake:auth.login() was called 1 time(s). Expected 2.
         
@@ -722,7 +722,7 @@ class Fake(object):
             
             >>> counter = Fake('counter').expects('increment').with_args(25, table='hits')
             >>> counter.increment(24, table='clicks')
-            Traceback (most recent call last)
+            Traceback (most recent call last):
             ...
             AssertionError: fake:counter.increment(25, table='hits') was called unexpectedly with args (24, table='clicks')
             
@@ -741,7 +741,7 @@ class Fake(object):
             
             >>> auth = Fake('auth').provides('login').with_arg_count(2)
             >>> auth.login('joe_user') # forgot password
-            Traceback (most recent call last)
+            Traceback (most recent call last):
             ...
             AssertionError: fake:auth.login() was called with 1 arg(s) but expected 2
             
@@ -757,7 +757,7 @@ class Fake(object):
             
             >>> auth = Fake('auth').provides('login').with_kwarg_count(2)
             >>> auth.login(username='joe') # forgot password=
-            Traceback (most recent call last)
+            Traceback (most recent call last):
             ...
             AssertionError: fake:auth.login() was called with 1 keyword arg(s) but expected 2
             
