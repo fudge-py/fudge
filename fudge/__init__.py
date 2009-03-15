@@ -604,6 +604,10 @@ class Fake(object):
             Traceback (most recent call last):
             ...
             AssertionError: fake:session.close() was not called
+        
+        .. note:: 
+            If you want to also verify the order these calls are made in, 
+            use :func:`fudge.Fake.remember_order`
             
         """
         self._last_declared_call_name = call_name
@@ -714,7 +718,8 @@ class Fake(object):
         
         For example::
             
-            >>> db = Fake('db').provides('insert').raises(ValueError("not enough parameters for insert"))
+            >>> import fudge
+            >>> db = fudge.Fake('db').provides('insert').raises(ValueError("not enough parameters for insert"))
             >>> db.insert()
             Traceback (most recent call last):
             ...
@@ -726,8 +731,20 @@ class Fake(object):
         return self
     
     def remember_order(self):
-        """Perform an additional verification that expected 
-        methods are called in the right order.
+        """Verify that subsequent :func:`fudge.Fake.expects` are called in the right order.
+        
+        For example::
+            
+            >>> import fudge
+            >>> db = fudge.Fake('db').remember_order().expects('insert').expects('update')
+            >>> db.update()
+            >>> db.insert()
+            >>> fudge.verify()
+            Traceback (most recent call last):
+            ...
+            AssertionError: Call #1 was fake:db.update(); Expected: #1 fake:db.insert(), #2 fake:db.update()
+            >>> fudge.clear_expectations()
+        
         """
         if self._callable:
             raise FakeDeclarationError(
