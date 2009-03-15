@@ -188,7 +188,7 @@ your test module:
     >>> SMTP = SMTP.expects('sendmail').with_arg_count(3)
     >>> SMTP = SMTP.expects('close')
     
-    >>> def teardown():
+    >>> def teardown_module():
     ...     fudge.clear_expectations()
     ... 
     >>> @fudge.with_fakes
@@ -199,14 +199,14 @@ your test module:
     ...                 "Mmmm, fudge")
     ... 
 
-The `Nose`_ framework executes the above test module as follows:
+The above test module will be executed as follows:
     
 .. doctest::
 
     >>> try:
     ...     test_email()
     ... finally:
-    ...     teardown()
+    ...     teardown_module()
     Sent an email to kumar.mcmillan@gmail.com
 
 Stubs Without Expectations
@@ -237,7 +237,7 @@ for the method is_logged_in():
     Bird is the word
     >>> fudge.verify()
 
-Note that if user.is_logged_in() is not called then no error will be raised.
+Note that if ``user.is_logged_in()`` is not called then no error will be raised.
 
 Replacing A Method
 ==================
@@ -323,7 +323,7 @@ Some objects you might want to work with will support *cascading* which means ea
 Multiple Return Values
 ======================
 
-Let's say you want to test code that needs to call a function multiple times and get back multiple values.  Up until now, you've just seen the :meth:`Fake.returns() <fudge.Fake.returns>` method which will return a value infinitely.  To change that, call ``next_call()`` to advance the call sequence.  Here is an example using a shopping cart scenario:
+Let's say you want to test code that needs to call a function multiple times and get back multiple values.  Up until now, you've just seen the :meth:`Fake.returns() <fudge.Fake.returns>` method which will return a value infinitely.  To change that, call :meth:`Fake.next_call() <fudge.Fake.next_call>` to advance the call sequence.  Here is an example using a shopping cart scenario:
 
 .. doctest::
     
@@ -331,7 +331,6 @@ Let's say you want to test code that needs to call a function multiple times and
     >>> cart = fudge.Fake('cart').provides('add').with_args('book')
     >>> cart = cart.returns({'contents': ['book']})
     >>> cart = cart.next_call().with_args('dvd').returns({'contents': ['book','dvd']})
-    
     >>> cart.add('book')
     {'contents': ['book']}
     >>> cart.add('dvd')
