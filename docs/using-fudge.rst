@@ -298,6 +298,7 @@ However, the above test will *not* raise an error if you forget to call login().
     Traceback (most recent call last):
     ...
     AssertionError: fake:login() was not called
+    >>> fudge.clear_expectations()
 
 Cascading Objects
 =================
@@ -340,7 +341,43 @@ Let's say you want to test code that needs to call a function multiple times and
     ...
     AssertionError: This attribute of fake:cart can only be called 2 time(s).
 
+Expecting A Specific Call Order
+===============================
 
+You may need to test an object that expects its methods to be called in a specific order. 
+Just preface any calls to :func:`fudge.Fake.expects` with :func:`fudge.Fake.remember_order` like this:
+
+.. doctest::
+    
+    >>> import fudge
+    >>> session = fudge.Fake("session").remember_order()\
+    ...                                .expects("get_count").returns(0)\
+    ...                                .expects("set_count").with_args(5)\
+    ...                                .next_call(after="get_count").returns(5)
+    ... 
+    >>> session.get_count()
+    0
+    >>> session.set_count(5)
+    >>> session.get_count()
+    5
+    >>> fudge.verify()
+
+A descriptive error is printed if you call things out of order:
+
+.. doctest::
+
+    >>> fudge.clear_calls()
+    >>> session.set_count(5)
+    >>> session.get_count()
+    0
+    >>> session.get_count()
+    5
+    >>> fudge.verify()
+    Traceback (most recent call last):
+    ...
+    AssertionError: Call #1 was fake:session.set_count(5); Expected: #1 fake:session.get_count()[0], #2 fake:session.set_count(5), #3 fake:session.get_count()[1]
+    >>> fudge.clear_expectations()
+    
 .. _Nose: http://somethingaboutorange.com/mrl/projects/nose/
 .. _py.test: http://codespeak.net/py/dist/test.html
 
