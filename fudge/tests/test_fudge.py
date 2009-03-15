@@ -30,7 +30,7 @@ class TestRegistry(unittest.TestCase):
         eq_(exp.was_called, True)
         
         self.reg.clear_calls()
-        eq_(exp.was_called, False, "call was not reset by start()")
+        eq_(exp.was_called, False, "call was not reset by clear_calls()")
     
     def test_verify_resets_calls(self):
         exp = ExpectedCall(self.fake, 'callMe')
@@ -39,8 +39,8 @@ class TestRegistry(unittest.TestCase):
         eq_(len(self.reg.get_expected_calls()), 1)
         
         self.reg.verify()
-        eq_(exp.was_called, False, "call was not reset by stop()")
-        eq_(len(self.reg.get_expected_calls()), 1, "stop() should not reset expectations")
+        eq_(exp.was_called, False, "call was not reset by verify()")
+        eq_(len(self.reg.get_expected_calls()), 1, "verify() should not reset expectations")
     
     def test_global_verify(self):
         exp = ExpectedCall(self.fake, 'callMe')
@@ -50,8 +50,8 @@ class TestRegistry(unittest.TestCase):
         
         fudge.verify()
         
-        eq_(exp.was_called, False, "call was not reset by stop()")
-        eq_(len(self.reg.get_expected_calls()), 1, "stop() should not reset expectations")
+        eq_(exp.was_called, False, "call was not reset by verify()")
+        eq_(len(self.reg.get_expected_calls()), 1, "verify() should not reset expectations")
     
     def test_global_clear_expectations(self):
         exp = ExpectedCall(self.fake, 'callMe')
