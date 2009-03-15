@@ -4,7 +4,7 @@ import unittest
 import fudge
 from nose.tools import eq_, raises
 from fudge import (
-    ExpectedCall, ExpectedCallOrder, Call, CallStack, FakeDeclarationError)
+    Fake, Registry, ExpectedCall, ExpectedCallOrder, Call, CallStack, FakeDeclarationError)
 
 class TestRegistry(unittest.TestCase):
     
@@ -659,6 +659,17 @@ class TestOrderedCalls(unittest.TestCase):
     @raises(FakeDeclarationError)
     def test_cannot_remember_order_when_expect_call_is_true(self):
         fake = fudge.Fake(expect_call=True).remember_order()
+    
+    @raises(AssertionError)
+    def test_not_enough_calls(self):
+        r = Registry()
+        fake = Fake()
+        call_order = ExpectedCallOrder(fake)
+        r.remember_expected_call_order(call_order)
         
+        exp = ExpectedCall(fake, "callMe")
+        call_order.add_expected_call(exp)
+        
+        r.verify()
         
         
