@@ -377,6 +377,17 @@ class TestFakeCallables(unittest.TestCase):
     def test_raises_instance(self):
         self.fake = fudge.Fake().provides("fail").raises(RuntimeError("batteries ran out"))
         self.fake.fail()
+    
+    def test_next_call_with_callables(self):
+        login = fudge.Fake('login',callable=True)\
+                                .returns("yes")\
+                                .next_call()\
+                                .returns("maybe")\
+                                .next_call()\
+                                .returns("no")
+        eq_(login(), "yes")
+        eq_(login(), "maybe")
+        eq_(login(), "no")
         
 class TestFakeTimesCalled(unittest.TestCase):
     

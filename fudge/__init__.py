@@ -168,9 +168,13 @@ class Call(object):
     index=None
         When numerical, this indicates the position of the call 
         (as in, a CallStack)
+    
+    callable=False
+        Means this object acts like a function, not a method of an 
+        object.
     """
     
-    def __init__(self, fake, call_name=None, index=None):
+    def __init__(self, fake, call_name=None, index=None, callable=False):
         self.fake = fake
         self.call_name = call_name
         self.call_replacement = None
@@ -184,6 +188,7 @@ class Call(object):
         self.was_called = False
         self.expected_times_called = None
         self.actual_times_called = 0
+        self.callable = callable
         
     def __call__(self, *args, **kwargs):
         self.was_called = True
@@ -239,7 +244,7 @@ class Call(object):
     
     def __repr__(self):
         cls_name = repr(self.fake)
-        if self.call_name:
+        if self.call_name and not self.callable:
             call = "%s.%s" % (cls_name, self.call_name)
         else:
             call = "%s" % cls_name
@@ -289,10 +294,13 @@ class CallStack(object):
         When True, this indicates that the call stack was derived 
         from an expected call.  This is used by Fake to register 
         each call on the stack.
+    
+    call_name
+        Name of the call
         
     """
     
-    def __init__(self, fake, initial_calls=None, expected=False):
+    def __init__(self, fake, initial_calls=None, expected=False, call_name=None):
         self.fake = fake
         self._pointer = 0 # position of next call to be made (can be reset)
         self._calls = []
@@ -300,6 +308,7 @@ class CallStack(object):
             for c in initial_calls:
                 self.add_call(c)
         self.expected = expected
+        self.call_name = call_name
         registry.register_call_stack(self)
     
     def __iter__(self):
@@ -326,7 +335,8 @@ class CallStack(object):
         except IndexError:
             raise AssertionError(
                 "This attribute of %s can only be called %s time(s).  "
-                "Call reset() if necessary." % (self.fake, len(self._calls)))
+                "Call reset() if necessary or fudge.clear_calls()." % (
+                                                self.fake, len(self._calls)))
         self._pointer += 1
         return current_call(*args, **kw)
 
@@ -388,9 +398,9 @@ class Fake(object):
         self._allows_any_call = allows_any_call
         self._call_stack = None
         if expect_call:
-            self._callable = ExpectedCall(self)
+            self._callable = ExpectedCall(self, call_name=name, callable=True)
         elif callable or allows_any_call:
-            self._callable = Call(self)
+            self._callable = Call(self, call_name=name, callable=True)
         else:
             self._callable = None
     
@@ -497,7 +507,7 @@ class Fake(object):
         if not self._last_declared_call_name:
             if not self._callable:
                 raise ValueError("Call to a method that expects a predefined call but no such call exists")
-            return self._callable
+            return self._callable.get_call_object()
         exp = self._declared_calls[self._last_declared_call_name].get_call_object()
         return exp
     
@@ -576,12 +586,18 @@ class Fake(object):
             >>> f.status()
             Traceback (most recent call last):
             ...
-            AssertionError: This attribute of fake:unnamed can only be called 3 time(s).  Call reset() if necessary.
+            AssertionError: This attribute of fake:unnamed can only be called 3 time(s).  Call reset() if necessary or fudge.clear_calls().
             
         .. note:: This cannot be used in combination with :func:`fudge.Fake.times_called`
         
         """
-        exp = self._declared_calls[self._last_declared_call_name]
+        if self._last_declared_call_name:
+            exp = self._declared_calls[self._last_declared_call_name]
+        elif self._callable:
+            exp = self._callable
+        else:
+            raise FakeDeclarationError("next_call() must follow provides(), expects() or Fake(callable=True)")
+            
         if getattr(exp, 'expected_times_called', None) is not None:
             raise FakeDeclarationError("Cannot use next_call() in combination with times_called()")
         
@@ -589,19 +605,23 @@ class Fake(object):
             # lazily create a stack with the last defined 
             # expected call as the first on the stack:
             stack = CallStack(self, initial_calls=[exp], 
-                                    expected=isinstance(exp, ExpectedCall))
+                                    expected=isinstance(exp, ExpectedCall),
+                                    call_name=exp.call_name)
         
             # replace the old call obj using the same name:
-            self._declare_call(self._last_declared_call_name, stack)
+            if self._last_declared_call_name:
+                self._declare_call(self._last_declared_call_name, stack)
+            elif self._callable:
+                self._callable = stack
         else:
             stack = exp
         
         # hmm, we need a copy here so that the last call 
         # falls off the stack.
         if stack.expected:
-            next_call = ExpectedCall(self, call_name=self._last_declared_call_name)
+            next_call = ExpectedCall(self, call_name=exp.call_name)
         else:
-            next_call = Call(self, call_name=self._last_declared_call_name)
+            next_call = Call(self, call_name=exp.call_name)
         stack.add_call(next_call)
         return self
     

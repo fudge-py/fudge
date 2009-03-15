@@ -78,14 +78,15 @@ Changelog
 
 - 0.9.2
   
+  - Fixed bug in :func:`fudge.Fake.next_call()` so that this now works: ``Fake(callable=True).next_call().returns(...)``
   - Added :func:`fudge.Fake.raises` for simulating exceptions
 
 - 0.9.1
   
+  - **DEPRECATED** fudge.start() in favor of :func:`fudge.clear_calls`
+  - **DEPRECATED** fudge.stop() in favor of :func:`fudge.verify`
   - Added context manager :func:`fudge.patched_context` so the with statement can be used for 
     patching (contributed by Cristian Esquivias)
-  - fudge.start() has been **deprecated** in favor of :func:`fudge.clear_calls` which does the same thing
-  - fudge.stop() has been **deprecated** in favor of :func:`fudge.verify`, ditto
   - Added :func:`fudge.Fake.times_called` to expect a certain call count (contributed by Cristian Esquivias)
   - Added :class:`Fake(expect_call=True) <fudge.Fake>` to indicate an expected callable.  Unlike 
     :class:`Fake(callable=True) <fudge.Fake>` the former will raise an error if not called.
