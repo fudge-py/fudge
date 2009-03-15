@@ -31,6 +31,17 @@ class TestRegistry(unittest.TestCase):
         
         self.reg.clear_calls()
         eq_(exp.was_called, False, "call was not reset by clear_calls()")
+        
+    def test_clear_calls_resets_call_order(self):
+        exp_order = ExpectedCallOrder(self.fake)
+        exp = ExpectedCall(self.fake, 'callMe', call_order=exp_order)
+        self.reg.remember_expected_call_order(exp_order)
+        
+        exp()
+        eq_(exp_order._actual_calls, [exp])
+        
+        self.reg.clear_calls()
+        eq_(exp_order._actual_calls, [], "call order calls were not reset by clear_calls()")
     
     def test_verify_resets_calls(self):
         exp = ExpectedCall(self.fake, 'callMe')
@@ -41,6 +52,17 @@ class TestRegistry(unittest.TestCase):
         self.reg.verify()
         eq_(exp.was_called, False, "call was not reset by verify()")
         eq_(len(self.reg.get_expected_calls()), 1, "verify() should not reset expectations")
+        
+    def test_verify_resets_call_order(self):
+        exp_order = ExpectedCallOrder(self.fake)
+        exp = ExpectedCall(self.fake, 'callMe', call_order=exp_order)
+        self.reg.remember_expected_call_order(exp_order)
+        
+        exp()
+        eq_(exp_order._actual_calls, [exp])
+        
+        self.reg.verify()
+        eq_(exp_order._actual_calls, [], "call order calls were not reset by verify()")
     
     def test_global_verify(self):
         exp = ExpectedCall(self.fake, 'callMe')
