@@ -5,8 +5,7 @@ version = None
 for line in open("./fudge/__init__.py"):
     m = re.search("__version__\s*=\s*(.*)", line)
     if m:
-        version = m.group(1).strip()
-        version = version[1:-1] # quotes
+        version = m.group(1).strip()[1:-1] # quotes
         break
 assert version
 
