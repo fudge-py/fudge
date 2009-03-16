@@ -44,7 +44,7 @@ copyright = '2008, Kumar McMillan'
 version = None
 for line in open(os.path.join(os.path.dirname(__file__), 
                     "../fudge/__init__.py")):
-    m = re.search("__version__\s+=\s+(.*)", line)
+    m = re.search("__version__\s*=\s*(.*)", line)
     if m:
         version = m.group(1).strip()
         version = version[1:-1] # quotes
