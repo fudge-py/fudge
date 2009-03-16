@@ -400,14 +400,6 @@ class TestFakeCallables(unittest.TestCase):
         eq_(exp.call_name, "something")
         assert exp not in fudge.registry
     
-    def test_replace_call(self):
-        
-        def something():
-            return "hijacked"
-            
-        self.fake = fudge.Fake().provides("something").calls(something)
-        eq_(self.fake.something(), "hijacked")
-    
     @raises(RuntimeError)
     def test_raises_class(self):
         self.fake = fudge.Fake().provides("fail").raises(RuntimeError)
@@ -417,6 +409,30 @@ class TestFakeCallables(unittest.TestCase):
     def test_raises_instance(self):
         self.fake = fudge.Fake().provides("fail").raises(RuntimeError("batteries ran out"))
         self.fake.fail()
+
+class TestReplacementCalls(unittest.TestCase):
+    
+    def tearDown(self):
+        fudge.clear_expectations()
+    
+    def test_replace_call(self):
+        
+        def something():
+            return "hijacked"
+            
+        fake = fudge.Fake().provides("something").calls(something)
+        eq_(fake.something(), "hijacked")
+    
+    def test_calls_mixed_with_returns(self):
+        
+        called = []
+        def something():
+            called.append(True)
+            return "hijacked"
+            
+        fake = fudge.Fake().provides("something").calls(something).returns("other")
+        eq_(fake.something(), "other")
+        eq_(called, [True])
         
 class TestFakeTimesCalled(unittest.TestCase):
     

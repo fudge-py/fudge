@@ -233,7 +233,11 @@ class Call(object):
                     self, self.actual_times_called, self.expected_times_called))
 
         if self.call_replacement:
-            return self.call_replacement(*args, **kwargs)
+            replacement_return = self.call_replacement(*args, **kwargs)
+            if self.return_val:
+                return self.return_val
+            else:
+                return replacement_return
             
         if self.expected_args:
             if args != self.expected_args:
