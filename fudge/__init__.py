@@ -15,7 +15,7 @@ from fudge.exc import FakeDeclarationError
 from fudge.patcher import *
 from fudge.util import wraps
 
-__all__ = ['start', 'stop', 'clear_expectations', 'Fake']
+__all__ = ['clear_calls', 'verify', 'clear_expectations', 'Fake']
 
 class Registry(object):
     """An internal, thread-safe registry of expected calls.
