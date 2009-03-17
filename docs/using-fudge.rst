@@ -298,6 +298,10 @@ However, the above test will *not* raise an error if you forget to call login().
     Traceback (most recent call last):
     ...
     AssertionError: fake:login() was not called
+
+.. doctest::
+    :hide:
+    
     >>> fudge.clear_expectations()
 
 Cascading Objects
@@ -370,6 +374,10 @@ A descriptive error is printed if you call things out of order:
     Traceback (most recent call last):
     ...
     AssertionError: Call #1 was fake:session.set_count(5); Expected: #1 fake:session.get_count()[0], #2 fake:session.set_count(5), #3 fake:session.get_count()[1], end
+
+.. doctest::
+    :hide:
+    
     >>> fudge.clear_expectations()
     
 .. _Nose: http://somethingaboutorange.com/mrl/projects/nose/
