@@ -94,7 +94,7 @@ class Registry(object):
                 exp.assert_called()
                 exp.assert_times_called()
             for fake, call_order in self.get_expected_call_order().items():
-                call_order.assert_order_met()
+                call_order.assert_order_met(finalize=True)
         finally:
             self.clear_calls()
         
@@ -221,6 +221,7 @@ class Call(object):
         self.actual_times_called += 1
         if self.call_order:
             self.call_order.add_actual_call(self)
+            self.call_order.assert_order_met(finalize=False)
         
         if self.exception_to_raise is not None:
             raise self.exception_to_raise
@@ -334,19 +335,25 @@ class ExpectedCallOrder(object):
     def add_actual_call(self, call):
         self._actual_calls.append(call)
     
-    def assert_order_met(self):
+    def assert_order_met(self, finalize=False):
         error = None
         if len(self._actual_calls) == 0:
             error = "Not enough calls were made"
         else:
             for i,call in enumerate(self._call_order):
                 if len(self._actual_calls) < i+1:
+                    if not finalize:
+                        # we're not done asserting calls so 
+                        # forget about not having enough calls
+                        continue
+                        
                     calls_made = len(self._actual_calls)
                     if calls_made == 1:
                         error = "Only 1 call was made"
                     else:
                         error = "Only %s calls were made" % calls_made
                     break
+                    
                 ac_call = self._actual_calls[i]
                 if ac_call is not call:
                     error = "Call #%s was %r" % (i+1, ac_call)
@@ -792,8 +799,6 @@ class Fake(object):
             >>> import fudge
             >>> db = fudge.Fake('db').remember_order().expects('insert').expects('update')
             >>> db.update()
-            >>> db.insert()
-            >>> fudge.verify()
             Traceback (most recent call last):
             ...
             AssertionError: Call #1 was fake:db.update(); Expected: #1 fake:db.insert(), #2 fake:db.update()

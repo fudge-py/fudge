@@ -367,11 +367,6 @@ A descriptive error is printed if you call things out of order:
 
     >>> fudge.clear_calls()
     >>> session.set_count(5)
-    >>> session.get_count()
-    0
-    >>> session.get_count()
-    5
-    >>> fudge.verify()
     Traceback (most recent call last):
     ...
     AssertionError: Call #1 was fake:session.set_count(5); Expected: #1 fake:session.get_count()[0], #2 fake:session.set_count(5), #3 fake:session.get_count()[1]

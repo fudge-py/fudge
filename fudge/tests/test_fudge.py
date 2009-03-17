@@ -702,15 +702,48 @@ class TestOrderedCalls(unittest.TestCase):
     
     @raises(AssertionError)
     def test_not_enough_calls(self):
+        # need to drop down a level to bypass expected calls:
         r = Registry()
         fake = Fake()
         call_order = ExpectedCallOrder(fake)
         r.remember_expected_call_order(call_order)
         
-        exp = ExpectedCall(fake, "callMe")
+        exp = ExpectedCall(fake, "callMe", call_order=call_order)
         call_order.add_expected_call(exp)
         
         r.verify()
+        
+    @raises(AssertionError)
+    def test_only_one_call(self):
+        # need to drop down a level to bypass expected calls:
+        r = Registry()
+        fake = Fake()
+        call_order = ExpectedCallOrder(fake)
+        r.remember_expected_call_order(call_order)
+        
+        exp = ExpectedCall(fake, "one", call_order=call_order)
+        call_order.add_expected_call(exp)
+        exp() # call this
+        
+        exp = ExpectedCall(fake, "two", call_order=call_order)
+        call_order.add_expected_call(exp)
+        
+        r.verify()
+        
+    def test_incremental_order_assertion_ok(self):
+        # need to drop down a level to bypass expected calls:
+        fake = Fake()
+        call_order = ExpectedCallOrder(fake)
+        
+        exp = ExpectedCall(fake, "one", call_order=call_order)
+        call_order.add_expected_call(exp)
+        exp() # call this
+        
+        exp = ExpectedCall(fake, "two", call_order=call_order)
+        call_order.add_expected_call(exp)
+        
+        # two() not called but assertion is not finalized:
+        call_order.assert_order_met(finalize=False)
     
     def test_multiple_return_values_are_ignored(self):
         db = Fake("db")\
