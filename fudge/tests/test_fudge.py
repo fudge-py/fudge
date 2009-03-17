@@ -35,6 +35,7 @@ class TestRegistry(unittest.TestCase):
     def test_clear_calls_resets_call_order(self):
         exp_order = ExpectedCallOrder(self.fake)
         exp = ExpectedCall(self.fake, 'callMe', call_order=exp_order)
+        exp_order.add_expected_call(exp)
         self.reg.remember_expected_call_order(exp_order)
         
         exp()
@@ -56,6 +57,7 @@ class TestRegistry(unittest.TestCase):
     def test_verify_resets_call_order(self):
         exp_order = ExpectedCallOrder(self.fake)
         exp = ExpectedCall(self.fake, 'callMe', call_order=exp_order)
+        exp_order.add_expected_call(exp)
         self.reg.remember_expected_call_order(exp_order)
         
         exp()
@@ -745,7 +747,7 @@ class TestOrderedCalls(unittest.TestCase):
         # two() not called but assertion is not finalized:
         call_order.assert_order_met(finalize=False)
     
-    def test_multiple_return_values_are_ignored(self):
+    def test_multiple_returns_affect_order(self):
         db = Fake("db")\
             .remember_order()\
             .expects("get_id").returns(1)\
@@ -754,7 +756,16 @@ class TestOrderedCalls(unittest.TestCase):
         eq_(db.get_id(), 1)
         eq_(db.set_id(), None)
         eq_(db.get_id(), 2)
-        
         fudge.verify()
-        
+    
+    @raises(AssertionError)
+    def test_too_many_calls(self):
+        db = Fake("db")\
+            .remember_order()\
+            .expects("get_id").returns(1)\
+            .expects("set_id")
+        eq_(db.get_id(), 1)
+        eq_(db.set_id(), None)
+        # extra :
+        eq_(db.get_id(), 1)
         

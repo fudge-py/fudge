@@ -369,7 +369,7 @@ A descriptive error is printed if you call things out of order:
     >>> session.set_count(5)
     Traceback (most recent call last):
     ...
-    AssertionError: Call #1 was fake:session.set_count(5); Expected: #1 fake:session.get_count()[0], #2 fake:session.set_count(5), #3 fake:session.get_count()[1]
+    AssertionError: Call #1 was fake:session.set_count(5); Expected: #1 fake:session.get_count()[0], #2 fake:session.set_count(5), #3 fake:session.get_count()[1], end
     >>> fudge.clear_expectations()
     
 .. _Nose: http://somethingaboutorange.com/mrl/projects/nose/

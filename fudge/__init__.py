@@ -329,6 +329,14 @@ class ExpectedCallOrder(object):
     
     __str__ = __repr__
     
+    def _repr_call_list(self, call_list):
+        if not len(call_list):
+            return "no calls"
+        else:
+            stack = ["#%s %r" % (i+1,c) for i,c in enumerate(call_list)]
+            stack.append("end")
+            return ", ".join(stack)
+    
     def add_expected_call(self, call):
         self._call_order.append(call)
     
@@ -336,12 +344,16 @@ class ExpectedCallOrder(object):
         self._actual_calls.append(call)
     
     def assert_order_met(self, finalize=False):
+        """assert that calls have been made in the right order."""
         error = None
-        if len(self._actual_calls) == 0:
+        actual_call_len = len(self._actual_calls)
+        expected_call_len = len(self._call_order)
+        
+        if actual_call_len == 0:
             error = "Not enough calls were made"
         else:
             for i,call in enumerate(self._call_order):
-                if len(self._actual_calls) < i+1:
+                if actual_call_len < i+1:
                     if not finalize:
                         # we're not done asserting calls so 
                         # forget about not having enough calls
@@ -358,10 +370,19 @@ class ExpectedCallOrder(object):
                 if ac_call is not call:
                     error = "Call #%s was %r" % (i+1, ac_call)
                     break
+            
+            if not error:
+                if actual_call_len > expected_call_len:
+                    # only show the first extra call since this 
+                    # will be triggered before all calls are finished:
+                    error = "#%s %s was unexpected" % (
+                        expected_call_len+1,
+                        self._actual_calls[expected_call_len]
+                    )
+                
         if error:
             msg = "%s; Expected: %s" % (
-                    error, 
-                    ", ".join(["#%s %r" % (i+1,c) for i,c in enumerate(self._call_order)]))
+                    error, self._repr_call_list(self._call_order))
             raise AssertionError(msg)
     
     def reset_calls(self):
@@ -801,7 +822,7 @@ class Fake(object):
             >>> db.update()
             Traceback (most recent call last):
             ...
-            AssertionError: Call #1 was fake:db.update(); Expected: #1 fake:db.insert(), #2 fake:db.update()
+            AssertionError: Call #1 was fake:db.update(); Expected: #1 fake:db.insert(), #2 fake:db.update(), end
             >>> fudge.clear_expectations()
         
         When declaring multiple calls using :func:`fudge.Fake.next_call`, each subsequent call will be added 
