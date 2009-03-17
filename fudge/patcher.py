@@ -1,5 +1,5 @@
 
-__all__ = ['patch_object', 'with_patched_object', 'PatchHandler'] # patched_context, see below
+__all__ = ['patch_object', 'with_patched_object', 'PatchHandler', 'patched_context']
 
 from fudge.util import wraps
 
@@ -20,38 +20,42 @@ def patch_object(obj, attr_name, patched_value):
     handle.patch(patched_value)
     return handle
 
-try:
-    from contextlib import contextmanager
-except ImportError:
-    pass
-else:
-    # in 2.5+
-    @contextmanager
-    def patched_context(obj, attr_name, patched_value):
-        """A context manager to execute :func:`fudge.patch_object` in a `with statement`_
+class patched_context(object):
+    """A context manager to execute :func:`fudge.patch_object` in a `with statement`_
+    
+    .. lame, lame, cannot figure out how to apply __future__ to doctest 
+       so this output is currently skipped
+    
+    .. doctest:: python25
+        :options: +SKIP
         
-        Example::
-            
-            >>> class Session:
-            ...     state = 'clean'
-            ... 
-            >>> with patched_context(Session, "state", "dirty"):
-            ...     print Session.state
-            ... 
-            dirty
-            >>> print Session.state
-            clean
+        >>> from fudge import patched_context
+        >>> class Session:
+        ...     state = 'clean'
+        ... 
+        >>> with patched_context(Session, "state", "dirty"): # doctest: +SKIP
+        ...     print Session.state
+        ... 
+        dirty
+        >>> print Session.state
+        clean
+    
+    .. _with statement: http://www.python.org/dev/peps/pep-0343/
         
-        .. _with statement: http://www.python.org/dev/peps/pep-0343/
-            
-        """
-        patched_object = patch_object(obj, attr_name, patched_value)
-        try:
-            yield patched_object
-        finally:
-            patched_object.restore()
-
-    __all__.append('patched_context')
+    """
+    def __init__(self, obj, attr_name, patched_value):
+        
+        # note that a @contextmanager decorator would be simpler 
+        # but it can't be used since a value cannot be yielded within a 
+        # try/finally block which is needed to restore the object on finally.
+        
+        self.patched_object = patch_object(obj, attr_name, patched_value)
+    
+    def __enter__(self):
+        return self.patched_object
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.patched_object.restore()
 
 def with_patched_object(obj, attr_name, patched_value):
     """Decorator that patches an object before method() and restores it afterwards.

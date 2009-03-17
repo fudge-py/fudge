@@ -84,6 +84,7 @@ Changelog
   - Added :func:`fudge.Fake.remember_order` so that order of expected calls can be verified.
   - Fixed bug in :func:`fudge.Fake.next_call` so that this now works: ``Fake(callable=True).next_call().returns(...)``
   - Added :func:`fudge.Fake.raises` for simulating exceptions
+  - Improved Python 2.4 compatibility.
   - Fixed bug where ``from fudge import *`` did not import proper objects.
 
 - 0.9.1
