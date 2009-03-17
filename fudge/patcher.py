@@ -2,6 +2,9 @@
 __all__ = ['patch_object', 'with_patched_object', 'PatchHandler', 'patched_context']
 
 from fudge.util import wraps
+from threading import Lock
+
+lock = Lock()
 
 def patch_object(obj, attr_name, patched_value):
     """Patches an object and returns an instance of :class:`fudge.PatchHandler` for later restoration.
@@ -90,6 +93,13 @@ class PatchHandler(object):
     """Low level patch handler that memorizes a patch so you can restore it later.
     
     You can use more convenient wrappers :func:`with_patched_object` and :func:`patched_context`
+    
+    .. note::
+        
+        This is not thread safe.  However, it is probably sufficient enough for "stubbing" a 
+        piece of middleware in a multi-threaded development server.  
+        Threading locks are acquired and released when patching objects.
+        
     """
     def __init__(self, orig_object, attr_name):
         self.orig_object = orig_object
@@ -98,8 +108,16 @@ class PatchHandler(object):
     
     def patch(self, patched_value):
         """Set a new value for the attibute of the object."""
-        setattr(self.orig_object, self.attr_name, patched_value)
+        lock.acquire()
+        try:
+            setattr(self.orig_object, self.attr_name, patched_value)
+        finally:
+            lock.release()
         
     def restore(self):
         """Restore the saved value for the attribute of the object."""
-        setattr(self.orig_object, self.attr_name, self.orig_value)
+        lock.acquire()
+        try:
+            setattr(self.orig_object, self.attr_name, self.orig_value)
+        finally:
+            lock.release()
