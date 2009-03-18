@@ -160,27 +160,28 @@ def with_fakes(method):
         verify() # if no exceptions
     return apply_clear_and_verify
 
-def fmt_val(val):
+def fmt_val(val, shorten=True):
     """Format a value for inclusion in an 
     informative text string.
     """
     val = repr(val)
     max = 50
-    if len(val) > max:
-        close = val[-1]
-        val = val[0:max-4] + "..."
-        if close in (">", "'", '"', ']', '}', ')'):
-            val = val + close
+    if shorten:
+        if len(val) > max:
+            close = val[-1]
+            val = val[0:max-4] + "..."
+            if close in (">", "'", '"', ']', '}', ')'):
+                val = val + close
     return val
 
-def fmt_dict_vals(dict_vals):
+def fmt_dict_vals(dict_vals, shorten=True):
     """Returns list of key=val pairs formatted
     for inclusion in an informative text string.
     """
     items = dict_vals.items()
     if not items:
-        return [fmt_val(None)]
-    return ["%s=%s" % (k, fmt_val(v)) for k,v in items]
+        return [fmt_val(None, shorten=shorten)]
+    return ["%s=%s" % (k, fmt_val(v, shorten=shorten)) for k,v in items]
 
 class Call(object):
     """A call that can be made on a Fake object.
@@ -243,7 +244,9 @@ class Call(object):
         if self.expected_args:
             if args != self.expected_args:
                 raise AssertionError(
-                    "%s was called unexpectedly with args %s" % (self, self._repr_call(args, kwargs)))
+                    "%s was called unexpectedly with args %s" % (
+                            self, 
+                            self._repr_call(args, kwargs, shorten_long_vals=False)))
         elif self.expected_arg_count is not None:
             if len(args) != self.expected_arg_count:
                 raise AssertionError(
@@ -254,7 +257,7 @@ class Call(object):
             if kwargs != self.expected_kwargs:
                 raise AssertionError(
                     "%s was called unexpectedly with keyword args %s" % (
-                                self, ", ".join(fmt_dict_vals(kwargs))))
+                                self, ", ".join(fmt_dict_vals(kwargs, shorten=False))))
         elif self.expected_kwarg_count is not None:
             if len(kwargs.keys()) != self.expected_kwarg_count:
                 raise AssertionError(
@@ -263,12 +266,12 @@ class Call(object):
         
         return self.return_val
 
-    def _repr_call(self, expected_args, expected_kwargs):
+    def _repr_call(self, expected_args, expected_kwargs, shorten_long_vals=True):
         args = []
         if expected_args:
-            args.extend([fmt_val(a) for a in expected_args])
+            args.extend([fmt_val(a, shorten=shorten_long_vals) for a in expected_args])
         if expected_kwargs:
-            args.extend(fmt_dict_vals(expected_kwargs))
+            args.extend(fmt_dict_vals(expected_kwargs, shorten=shorten_long_vals))
         if args:
             call = "(%s)" % ", ".join(args)
         else:

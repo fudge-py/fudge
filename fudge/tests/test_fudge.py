@@ -60,6 +60,36 @@ class TestFake(unittest.TestCase):
             "was called unexpectedly with args ()")
         else:
             raise RuntimeError("expected AssertionError")
+    
+    def test_arg_diffs_are_not_shortened(self):
+        fake = Fake("widget").provides("set_bits").with_args(
+            "12345678910111213141516171819202122232425262728293031"
+        )
+        try:
+            # this should not be shortened but the above arg spec should:
+            fake.set_bits("99999999999999999999999999999999999999999999999999999999")
+        except AssertionError, exc:
+            eq_(str(exc),
+            "fake:widget.set_bits('123456789101112131415161718192021222324252627...') "
+            "was called unexpectedly with args "
+            "('99999999999999999999999999999999999999999999999999999999')")
+        else:
+            raise RuntimeError("expected AssertionError")
+    
+    def test_kwarg_diffs_are_not_shortened(self):
+        fake = Fake("widget").provides("set_bits").with_args(
+            newbits="12345678910111213141516171819202122232425262728293031"
+        )
+        try:
+            # this should not be shortened but the above arg spec should:
+            fake.set_bits(newbits="99999999999999999999999999999999999999999999999999999999")
+        except AssertionError, exc:
+            eq_(str(exc),
+            "fake:widget.set_bits(newbits='123456789101112131415161718192021222324252627...') "
+            "was called unexpectedly with keyword args "
+            "newbits='99999999999999999999999999999999999999999999999999999999'")
+        else:
+            raise RuntimeError("expected AssertionError")
 
 class TestReturnsFake(unittest.TestCase):
     

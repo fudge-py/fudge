@@ -82,6 +82,7 @@ Changelog
 
 - 0.9.2
   
+  - Values in failed comparisons are no longer shortened when too long.
   - Fixed bug where :func:`fudge.Fake.returns` did not work if you had replaced a call with :func:`fudge.Fake.calls`
   - Added keyword :func:`fudge.Fake.next_call(for_method="other_call") <fudge.Fake.next_call>` to make for 
     more readable declarations.
