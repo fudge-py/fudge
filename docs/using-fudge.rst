@@ -92,7 +92,7 @@ The above code could also be written as a test function, compatible with `Nose`_
     >>> test_email()
     Sent an email to kumar@hishouse.com
 
-You can also patch code using the `with statement <http://www.python.org/dev/peps/pep-0343/>`_; see :func:`fudge.patched_context`.
+You can also patch code using the `with statement <http://www.python.org/dev/peps/pep-0343/>`_; see :func:`fudge.patcher.patched_context`.
 
 A unittest.TestCase
 ===================

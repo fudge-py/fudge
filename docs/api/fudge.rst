@@ -1,6 +1,4 @@
 
-.. _fudge-api:
-
 -----
 fudge
 -----
@@ -13,17 +11,8 @@ fudge
 
 .. autofunction:: fudge.with_fakes
 
-.. autofunction:: fudge.with_patched_object
-
-.. autofunction:: fudge.patched_context
-
 .. autoclass:: fudge.Fake
    :members:
    
 .. autoclass:: fudge.FakeDeclarationError
-   :members:
-
-.. autofunction:: fudge.patch_object
-   
-.. autoclass:: fudge.PatchHandler
    :members:

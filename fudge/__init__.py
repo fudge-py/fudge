@@ -496,6 +496,8 @@ class Fake(object):
         ...
         AssertionError: fake:login() was called 1 time(s). Expected 2.
         >>> fudge.clear_expectations()
+    
+    Instance methods will raise either AssertionError or :class:`fudge.FakeDeclarationError`
         
     """
     

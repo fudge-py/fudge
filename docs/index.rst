@@ -30,6 +30,8 @@ If you don't have ``easy_install`` for Python you can get it like this::
     $ wget http://peak.telecommunity.com/dist/ez_setup.py
     $ sudo python ez_setup.py
 
+Fudge requires Python 2.4 or higher and is developed primarily against 2.5 and 2.6.
+
 .. _fudge-source:
 
 Source
@@ -54,6 +56,8 @@ Contents
    using-fudge
    javascript
    why-fudge
+
+.. _fudge-api:
 
 API Reference
 =============
@@ -91,7 +95,7 @@ Changelog
   
   - **DEPRECATED** fudge.start() in favor of :func:`fudge.clear_calls`
   - **DEPRECATED** fudge.stop() in favor of :func:`fudge.verify`
-  - Added context manager :func:`fudge.patched_context` so the with statement can be used for 
+  - Added context manager :func:`fudge.patcher.patched_context` so the with statement can be used for 
     patching (contributed by Cristian Esquivias)
   - Added :func:`fudge.Fake.times_called` to expect a certain call count (contributed by Cristian Esquivias)
   - Added :class:`Fake(expect_call=True) <fudge.Fake>` to indicate an expected callable.  Unlike 
