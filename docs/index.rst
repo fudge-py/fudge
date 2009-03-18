@@ -87,8 +87,8 @@ Changelog
     (i.e. :func:`fudge.Fake.with_args`)
   - Added :func:`fudge.Fake.remember_order` so that order of expected calls can be verified.
   - Added :func:`fudge.Fake.raises` for simulating exceptions
-  - Added keyword :func:`fudge.Fake.next_call(for_method="other_call") <fudge.Fake.next_call>` to make for 
-    more readable declarations.
+  - Added keyword :func:`fudge.Fake.next_call(for_method="other_call") <fudge.Fake.next_call>` 
+    so that arbitrary methods can be modified (not just the last one).
   - Fixed bug where :func:`fudge.Fake.returns` did not work if you had replaced a call with :func:`fudge.Fake.calls`
   - Fixed bug in :func:`fudge.Fake.next_call` so that this now works: ``Fake(callable=True).next_call().returns(...)``
   - Fixed: Improved Python 2.4 compatibility.
