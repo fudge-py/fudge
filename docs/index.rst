@@ -82,14 +82,16 @@ Changelog
 
 - 0.9.2
   
-  - Values in failed comparisons are no longer shortened when too long.
-  - Fixed bug where :func:`fudge.Fake.returns` did not work if you had replaced a call with :func:`fudge.Fake.calls`
+  - **Changed**: values in failed comparisons are no longer shortened when too long.
+  - **Changed**: :func:`fudge.Fake.calls` no longer trumps expectations 
+    (i.e. :func:`fudge.Fake.with_args`)
+  - Added :func:`fudge.Fake.remember_order` so that order of expected calls can be verified.
+  - Added :func:`fudge.Fake.raises` for simulating exceptions
   - Added keyword :func:`fudge.Fake.next_call(for_method="other_call") <fudge.Fake.next_call>` to make for 
     more readable declarations.
-  - Added :func:`fudge.Fake.remember_order` so that order of expected calls can be verified.
+  - Fixed bug where :func:`fudge.Fake.returns` did not work if you had replaced a call with :func:`fudge.Fake.calls`
   - Fixed bug in :func:`fudge.Fake.next_call` so that this now works: ``Fake(callable=True).next_call().returns(...)``
-  - Added :func:`fudge.Fake.raises` for simulating exceptions
-  - Improved Python 2.4 compatibility.
+  - Fixed: Improved Python 2.4 compatibility.
   - Fixed bug where ``from fudge import *`` did not import proper objects.
 
 - 0.9.1

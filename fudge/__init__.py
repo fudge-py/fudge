@@ -233,13 +233,19 @@ class Call(object):
             raise AssertionError(
                 '%s was called %s time(s). Expected %s.' % (
                     self, self.actual_times_called, self.expected_times_called))
-
+        
+        return_val = None
+        replacement_return = None
+        
         if self.call_replacement:
             replacement_return = self.call_replacement(*args, **kwargs)
-            if self.return_val:
-                return self.return_val
-            else:
-                return replacement_return
+        if self.return_val is not None:
+            # this wins:
+            return_value = self.return_val
+        else:
+            # but it is intuitive to otherwise 
+            # return the replacement's return:
+            return_value = replacement_return
             
         if self.expected_args:
             if args != self.expected_args:
@@ -264,7 +270,7 @@ class Call(object):
                     "%s was called with %s keyword arg(s) but expected %s" % (
                         self, len(kwargs.keys()), self.expected_kwarg_count))
         
-        return self.return_val
+        return return_value
 
     def _repr_call(self, expected_args, expected_kwargs, shorten_long_vals=True):
         args = []
