@@ -89,6 +89,8 @@ Changelog
   - Added :func:`fudge.Fake.raises` for simulating exceptions
   - Added keyword :func:`fudge.Fake.next_call(for_method="other_call") <fudge.Fake.next_call>` 
     so that arbitrary methods can be modified (not just the last one).
+  - Fixed: error is raised if you declare multiple :func:`fudge.Fake.provides` for the same Fake. 
+    This also applies to :func:`fudge.Fake.expects`
   - Fixed bug where :func:`fudge.Fake.returns` did not work if you had replaced a call with :func:`fudge.Fake.calls`
   - Fixed bug in :func:`fudge.Fake.next_call` so that this now works: ``Fake(callable=True).next_call().returns(...)``
   - Fixed: Improved Python 2.4 compatibility.

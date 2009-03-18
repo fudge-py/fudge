@@ -597,6 +597,26 @@ class TestNextCall(unittest.TestCase):
         
         fudge.verify()
 
+
+class TestExpectsAndProvides(unittest.TestCase):
+    
+    def tearDown(self):
+        fudge.clear_expectations()
+    
+    @raises(FakeDeclarationError)
+    def test_multiple_provides_is_error(self):
+        db = Fake("db").provides("insert").provides("insert")
+        
+    def test_multiple_provides_on_chained_fakes_ok(self):
+        db = Fake("db").provides("insert").returns_fake().provides("insert")
+        
+    @raises(FakeDeclarationError)
+    def test_multiple_expects_is_error(self):
+        db = Fake("db").expects("insert").expects("insert")
+        
+    def test_multiple_expects_on_chained_fakes_ok(self):
+        db = Fake("db").expects("insert").returns_fake().expects("insert")
+
 class TestOrderedCalls(unittest.TestCase):
     
     def tearDown(self):

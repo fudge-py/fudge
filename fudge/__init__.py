@@ -665,7 +665,15 @@ class Fake(object):
             use :func:`fudge.Fake.remember_order`.  When using :func:`fudge.Fake.next_call` 
             after ``expects(...)``, each new call will be part of the expected order
             
+        If you want to modify the next call for an expected method use :func:`fudge.Fake.next_call`
+        
         """
+        if call_name in self._declared_calls:
+            raise FakeDeclarationError(
+                "Cannot declare expects(%r) because it has already been declared.  "
+                "Maybe you meant next_call(for_method=%r) ?" % (
+                        call_name, call_name))
+                        
         self._last_declared_call_name = call_name
         c = ExpectedCall(self, call_name, call_order=self._expected_call_order)
         self._declare_call(call_name, c)
@@ -799,8 +807,16 @@ class Fake(object):
             >>> fudge.clear_calls()
             >>> session.open()
             >>> fudge.verify() # close() not called but no error
+        
+        If you want to modify the next call for a provided method use :func:`fudge.Fake.next_call`
             
         """
+        if call_name in self._declared_calls:
+            raise FakeDeclarationError(
+                "Cannot declare provides(%r) because it has already been declared.  "
+                "Maybe you meant next_call(for_method=%r) ?" % (
+                        call_name, call_name))
+            
         self._last_declared_call_name = call_name
         c = Call(self, call_name)
         self._declare_call(call_name, c)
