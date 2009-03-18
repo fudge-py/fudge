@@ -877,7 +877,7 @@ class Fake(object):
         I.E.::
             
             >>> session = Fake('session')
-            >>> query = session.provides('query').returns_fake()
+            >>> query = session.provides('query').returns_fake(name="Query")
             >>> assert query is not session
             >>> query = query.provides('one').returns(['object'])
             
