@@ -129,7 +129,11 @@ class PatchHandler(object):
     def __init__(self, orig_object, attr_name):
         self.orig_object = orig_object
         self.attr_name = attr_name
-        self.orig_value = getattr(self.orig_object, self.attr_name)
+        lock.acquire()
+        try:
+            self.orig_value = getattr(self.orig_object, self.attr_name)
+        finally:
+            lock.release()
     
     def patch(self, patched_value):
         """Set a new value for the attibute of the object."""
