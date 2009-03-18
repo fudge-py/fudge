@@ -92,7 +92,7 @@ def patch_object(obj, attr_name, patched_value):
     
     Example::
         
-        >>> from fudge.patcher import patch_object
+        >>> from fudge import patch_object
         >>> class Session:
         ...     state = 'clean'
         ... 
