@@ -48,6 +48,12 @@ class TestFake(unittest.TestCase):
         my_obj = fudge.Fake().has_attr(provides='hijacked')
         eq_(my_obj.provides, 'hijacked')
 
+class TestReturnsFake(unittest.TestCase):
+    
+    def test_returns_fake_has_name(self):
+        f = Fake().provides("get_widget").returns_fake()
+        eq_(f._name, "get_widget")
+
 class TestFakeExpectations(unittest.TestCase):
     
     def setUp(self):

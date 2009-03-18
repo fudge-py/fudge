@@ -886,6 +886,7 @@ class Fake(object):
             
         """
         exp = self._get_current_call()
+        kwargs.setdefault("name", exp.call_name)
         fake = self.__class__(*args, **kwargs)
         exp.return_val = fake
         return fake
