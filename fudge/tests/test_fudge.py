@@ -60,6 +60,8 @@ class TestFake(unittest.TestCase):
             "was called unexpectedly with args ()")
         else:
             raise RuntimeError("expected AssertionError")
+
+class TestLongArgValues(unittest.TestCase):
     
     def test_arg_diffs_are_not_shortened(self):
         fake = Fake("widget").provides("set_bits").with_args(
