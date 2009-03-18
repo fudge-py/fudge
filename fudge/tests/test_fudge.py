@@ -613,6 +613,17 @@ class TestOrderedCalls(unittest.TestCase):
         fudge.verify()
     
     @raises(AssertionError)
+    def test_chained_fakes_honor_order(self):
+        Thing = Fake("thing").remember_order().expects("__init__")
+        holder = Thing.expects("get_holder").returns_fake()
+        holder = holder.expects("init")
+        
+        thing = Thing()
+        holder = thing.get_holder()
+        # missing thing.init()
+        fudge.verify()
+    
+    @raises(AssertionError)
     def test_too_many_calls(self):
         db = Fake("db")\
             .remember_order()\
