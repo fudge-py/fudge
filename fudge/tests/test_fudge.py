@@ -47,6 +47,19 @@ class TestFake(unittest.TestCase):
     def test_attributes_can_replace_internals(self):
         my_obj = fudge.Fake().has_attr(provides='hijacked')
         eq_(my_obj.provides, 'hijacked')
+    
+    def test_repr_shortens_long_values(self):
+        fake = Fake("widget").provides("set_bits").with_args(
+            "12345678910111213141516171819202122232425262728293031"
+        )
+        try:
+            fake.set_bits()
+        except AssertionError, exc:
+            eq_(str(exc),
+            "fake:widget.set_bits('123456789101112131415161718192021222324252627...') "
+            "was called unexpectedly with args ()")
+        else:
+            raise RuntimeError("expected AssertionError")
 
 class TestReturnsFake(unittest.TestCase):
     
