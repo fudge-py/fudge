@@ -1,5 +1,5 @@
 
-if (nosejs) {
+if (typeof nosejs !== "undefined") {
     nosejs.requireResource("jquery-1.3.1.js");
     nosejs.requireResource("jquery/qunit-testrunner.js");
     nosejs.requireFile("../fudge.js");
