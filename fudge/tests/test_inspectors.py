@@ -12,8 +12,16 @@ class TestAnyValue(unittest.TestCase):
         fudge.clear_expectations()
     
     def test_any_value(self):
-        db = Fake("db").expects("execute").with_args(arg.anyvalue())
+        db = Fake("db").expects("execute").with_args(arg.any_value())
         db.execute("delete from foo where 1")
+    
+    def test_repr(self):
+        any = inspectors.AnyValue()
+        eq_(repr(any), "arg.any_value()")
+        
+    def test_str(self):
+        any = inspectors.AnyValue()
+        eq_(str(any), "arg.any_value()")
 
 class TestObjectlike(unittest.TestCase):
     

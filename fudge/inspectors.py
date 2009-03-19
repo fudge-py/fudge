@@ -70,8 +70,22 @@ class HasAttr(ValueTest):
                 return False
         
         return True
+
+class AnyValue(ValueTest):
+    arg_method = "any_value"
+    
+    def __eq__(self, other):
+        # will match anything:
+        return True
+        
+    def _repr_argspec(self):
+        return self._make_argspec("")
+    
     
 class ValueInspector(object):
+    
+    def any_value(self):
+        return AnyValue()
     
     def has_attr(self, **attributes):
         return HasAttr(**attributes)
