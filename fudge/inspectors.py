@@ -1,6 +1,8 @@
 
 from fudge.util import fmt_val, fmt_dict_vals
 
+__all__ = ['arg']
+
 class ValueTest(object):
     
     __test__ = False # nose
