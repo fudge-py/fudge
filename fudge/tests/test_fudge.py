@@ -162,6 +162,40 @@ class TestArguments(unittest.TestCase):
         mail = fudge.Fake('mail').expects('send').with_kwarg_count(3) 
         mail.send(to="you", from_="me", msg="hi") # no args should be ok
 
+class TestCallArgEquality(unittest.TestCase):
+    
+    def setUp(self):
+        self.fake = Fake("foo")
+        self.call = Call(self.fake)
+    
+    def test_simple_mismatch_yields_no_reason(self):
+        one = {'num':1}
+        two = {'num':2}
+        eq_(self.call._keywords_are_equal(one, two), (False, ""))
+    
+    def test_simple_match_yields_no_reason(self):
+        one = {'num':1}
+        one = {'num':1}
+        eq_(self.call._keywords_are_equal(one, one), (True, ""))
+    
+    def test_actual_kw_extra_key(self):
+        actual = {'one':1, 'two':2}
+        expected = {'one':1}
+        eq_(self.call._keywords_are_equal(actual, expected), 
+            (False, "keyword 'two' was not expected"))
+    
+    def test_actual_kw_value_inequal(self):
+        actual = {'one':1, 'two':2}
+        expected = {'one':1, 'two':3}
+        eq_(self.call._keywords_are_equal(actual, expected), 
+            (False, "two=2 != two=3"))
+    
+    def test_expected_kw_extra_key(self):
+        actual = {'one':1}
+        expected = {'one':1, 'two':2}
+        eq_(self.call._keywords_are_equal(actual, expected), 
+            (False, "these keywords never showed up: 'two'"))
+
 class TestCall(unittest.TestCase):
     
     def setUp(self):

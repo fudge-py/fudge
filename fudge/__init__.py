@@ -265,6 +265,28 @@ class Call(object):
                         self, len(kwargs.keys()), self.expected_kwarg_count))
         
         return return_value
+    
+    def _keywords_are_equal(self, actual_kwargs, expected_kwargs):
+        expected_keys = set(expected_kwargs.keys())
+        if (len(expected_keys)==1 and len(actual_kwargs.keys())==1):
+            # no need for detailed messages
+            if actual_kwargs == expected_kwargs:
+                return (True, "")
+            else:
+                return (False, "")
+            
+        for k,v in actual_kwargs.items():
+            if k not in expected_keys:
+                return (False, "keyword %r was not expected" % k)
+            if v != expected_kwargs[k]:
+                return (False, "%s=%r != %s=%r" % (k, v, k, expected_kwargs[k]))
+            expected_keys.remove(k)
+        
+        if len(expected_keys):
+            return (False, "these keywords never showed up: %r" % tuple(expected_keys))
+            
+        
+        return (True, "")
 
     def _repr_call(self, expected_args, expected_kwargs, shorten_long_vals=True):
         args = []
