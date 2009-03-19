@@ -29,7 +29,16 @@ class ValueInspector(object):
             ... 
             >>> db.transaction("insert", isolation_level="lock")
             >>> fudge.verify()
+        
+        This also passes:
+        
+        .. doctest::
+            :hide:
+            
             >>> fudge.clear_calls()
+            
+        .. doctest::
+        
             >>> db.transaction("insert", isolation_level="autocommit")
             >>> fudge.verify()
         
@@ -42,6 +51,39 @@ class ValueInspector(object):
         return AnyValue()
     
     def contains(self, part):
+        """Return test if part in value.
+        
+        This is useful for when you just care that a substring or subelement 
+        exists in a value.
+        
+        .. doctest::
+            
+            >>> import fudge
+            >>> from fudge.inspectors import arg
+            >>> addressbook = fudge.Fake().expects("import_").with_args(
+            ...                                     arg.contains("Baba Brooks"))
+            ... 
+            >>> addressbook.import_("Bill Brooks; Baba Brooks; Henry Brooks;")
+            >>> fudge.verify()
+        
+        .. doctest::
+            :hide:
+            
+            >>> fudge.clear_expectations()
+            
+        .. doctest::
+            
+            >>> colorpicker = fudge.Fake("colorpicker")
+            >>> colorpicker = colorpicker.expects("select").with_args(arg.contains("red"))
+            >>> colorpicker.select(["green","red","blue"])
+            >>> fudge.verify()
+        
+        .. doctest::
+            :hide:
+            
+            >>> fudge.clear_expectations()
+            
+        """
         return Contains(part)
     
     def has_attr(self, **attributes):
