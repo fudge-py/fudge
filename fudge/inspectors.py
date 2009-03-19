@@ -1,9 +1,9 @@
 
-"""Value inspectors.
+"""Value inspectors that can be passed to :func:`fudge.Fake.with_args` for more 
+expressive argument matching.  
 
-These inspectors can be passed to :func:`fudge.Fake.with_args` for more 
-expressive argument matching.  As a pneumonic device, 
-an instance of the :class:`fudge.inspector.ValueInspector` is available as "args" :
+As a pneumonic device, 
+an instance of the :class:`fudge.inspectors.ValueInspector` is available as "args" :
 
 .. doctest::
     
@@ -24,15 +24,10 @@ __all__ = ['arg']
 
 class ValueInspector(object):
     """Dispatches tests to inspect values. 
-    
-    An instance of this class is available as a singleton::
-        
-        >>> from fudge.inspectors import arg
-    
     """
     
     def any_value(self):
-        """Return test that matches any value.
+        """Match any value.
         
         This is pretty much just a placeholder for when you 
         want to inspect multiple arguments but don't care about 
@@ -70,9 +65,9 @@ class ValueInspector(object):
         return AnyValue()
     
     def contains(self, part):
-        """Return test if part in value.
+        """Ensure that a value contains some part.
         
-        This is useful for when you just care that a substring or subelement 
+        This is useful for when you only care that a substring or subelement 
         exists in a value.
         
         .. doctest::
@@ -108,61 +103,10 @@ class ValueInspector(object):
         """
         return Contains(part)
     
-    def has_attr(self, **attributes):
-        """Return test to assert the value is an argument with said arguments.
-        
-        This is useful for when a value can be an object but you only 
-        need to test that the object has specific attributes.
-        
-        .. doctest::
-            
-            >>> import fudge
-            >>> from fudge.inspectors import arg
-            >>> db = fudge.Fake("db").expects("update").with_args(arg.has_attr(
-            ...                                                 first_name="Bob",
-            ...                                                 last_name="James" ))
-            ... 
-            >>> class User:
-            ...     first_name = "Bob"
-            ...     last_name = "James"
-            ...     job = "jazz musician"
-            ... 
-            >>> db.update(User())
-            >>> fudge.verify()
-        
-        In case of error, the object will be reproduced:
-        
-        .. doctest::
-            :hide:
-            
-            >>> fudge.clear_calls()
-        
-        .. doctest::
-            
-            >>> class User:
-            ...     first_name = "Bob"
-            ... 
-            ...     def __repr__(self):
-            ...         return str(dict(first_name=self.first_name))
-            ... 
-            >>> db.update(User())
-            Traceback (most recent call last):
-            ...
-            AssertionError: fake:db.update(arg.has_attr(first_name='Bob', last_name='James')) was called unexpectedly with args ({'first_name': 'Bob'})
-            
-            
-        .. doctest::
-            :hide:
-            
-            >>> fudge.clear_expectations()
-            
-        """
-        return HasAttr(**attributes)
-    
     def endswith(self, part):
-        """Return test to assert the value ends with a string.
+        """Ensure that a value ends with some part.
         
-        This is useful for when values with dymaic parts that are hard to replicate.
+        This is useful for when values with dynamic parts that are hard to replicate.
         
         .. doctest::
             
@@ -182,19 +126,69 @@ class ValueInspector(object):
         """
         return Endswith(part)
     
-    def startswith(self, part):
-        """Return test to assert the value starts with a string.
+    def has_attr(self, **attributes):
+        """Ensure that an object value has at least these attributes.
         
-        This is useful for when values with dymaic parts that are hard to replicate.
+        This is useful for testing that an object has specific attributes.
         
         .. doctest::
             
             >>> import fudge
             >>> from fudge.inspectors import arg
-            >>> keygen = fudge.Fake("keygen").expects("generate").with_args(
-            ...                                             arg.startswith("_key"))
+            >>> db = fudge.Fake("db").expects("update").with_args(arg.has_attr(
+            ...                                                       first_name="Bob",
+            ...                                                       last_name="James" ))
             ... 
-            >>> keygen.generate("_key-18657yojgaodfty98618652olkj[oollk]")
+            >>> class User:
+            ...     first_name = "Bob"
+            ...     last_name = "James"
+            ...     job = "jazz musician" # this is ignored
+            ... 
+            >>> db.update(User())
+            >>> fudge.verify()
+        
+        In case of error, the other object's __repr__ will be invoked:
+        
+        .. doctest::
+            :hide:
+            
+            >>> fudge.clear_calls()
+        
+        .. doctest::
+            
+            >>> class User:
+            ...     first_name = "Bob"
+            ... 
+            ...     def __repr__(self):
+            ...         return repr(dict(first_name=self.first_name))
+            ... 
+            >>> db.update(User())
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:db.update(arg.has_attr(first_name='Bob', last_name='James')) was called unexpectedly with args ({'first_name': 'Bob'})
+            
+            
+        .. doctest::
+            :hide:
+            
+            >>> fudge.clear_expectations()
+            
+        """
+        return HasAttr(**attributes)
+    
+    def startswith(self, part):
+        """Ensure that a value starts with some part.
+        
+        This is useful for when values with dynamic parts that are hard to replicate.
+        
+        .. doctest::
+            
+            >>> import fudge
+            >>> from fudge.inspectors import arg
+            >>> keychain = fudge.Fake("keychain").expects("accept_key").with_args(
+            ...                                                     arg.startswith("_key"))
+            ... 
+            >>> keychain.accept_key("_key-18657yojgaodfty98618652olkj[oollk]")
             >>> fudge.verify()
             
         .. doctest::
