@@ -187,7 +187,7 @@ class ValueInspector(object):
         
         .. doctest::
             
-            >>> def is_status(s):
+            >>> def is_valid(s):
             ...     if s in ('active','deleted'):
             ...         return True
             ...     else:
@@ -196,7 +196,7 @@ class ValueInspector(object):
             >>> import fudge
             >>> from fudge.inspector import arg
             >>> system = fudge.Fake("system").expects("set_status").with_args(
-            ...                                     arg.passes_test(is_status))
+            ...                                     arg.passes_test(is_valid))
             ... 
             >>> system.set_status("active")
             >>> fudge.verify()
@@ -214,7 +214,7 @@ class ValueInspector(object):
             >>> system.set_status("sleep") # doctest: +ELLIPSIS
             Traceback (most recent call last):
             ...
-            AssertionError: fake:system.set_status(arg.passes_test(<function is_status at ...>)) was called unexpectedly with args ('sleep')
+            AssertionError: fake:system.set_status(arg.passes_test(<function is_valid at ...>)) was called unexpectedly with args ('sleep')
         
         .. doctest::
             :hide:
