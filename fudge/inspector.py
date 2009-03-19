@@ -2,7 +2,7 @@
 """Value inspector that can be passed to :func:`fudge.Fake.with_args` for more 
 expressive argument matching.  
 
-As a pneumonic device, 
+As a mnemonic device, 
 an instance of the :class:`fudge.inspector.ValueInspector` is available as "arg" :
 
 .. doctest::
