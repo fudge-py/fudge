@@ -23,7 +23,7 @@ class TestAnyValue(unittest.TestCase):
         any = inspector.AnyValue()
         eq_(str(any), "arg.any_value()")
         
-class TestPasses(unittest.TestCase):
+class TestPassesTest(unittest.TestCase):
     
     def tearDown(self):
         fudge.clear_expectations()
@@ -31,14 +31,14 @@ class TestPasses(unittest.TestCase):
     def test_passes(self):
         def isint(v):
             return isinstance(v,int)
-        counter = Fake("counter").expects("increment").with_args(arg.passes(isint))
+        counter = Fake("counter").expects("increment").with_args(arg.passes_test(isint))
         counter.increment(25)
     
     @raises(AssertionError)
     def test_passes_fail(self):
         def is_str(v):
             return isinstance(v,str)
-        counter = Fake("counter").expects("set_name").with_args(arg.passes(is_str))
+        counter = Fake("counter").expects("set_name").with_args(arg.passes_test(is_str))
         counter.set_name(25)
     
     def test_repr(self):
@@ -46,20 +46,20 @@ class TestPasses(unittest.TestCase):
             def __call__(self, v):
                 return isinstance(v,int)
             def __repr__(self):
-                return "test that v is an int"
+                return "v is an int"
                 
-        passes = inspector.Passes(test())
-        eq_(repr(passes), "arg.passes(test that v is an int)")
+        passes = inspector.PassesTest(test())
+        eq_(repr(passes), "arg.passes_test(v is an int)")
     
     def test_str(self):
         class test(object):
             def __call__(self, v):
                 return isinstance(v,int)
             def __repr__(self):
-                return "test that v is an int"
+                return "v is an int"
                 
-        passes = inspector.Passes(test())
-        eq_(str(passes), "arg.passes(test that v is an int)")
+        passes = inspector.PassesTest(test())
+        eq_(str(passes), "arg.passes_test(v is an int)")
 
 class TestObjectlike(unittest.TestCase):
     

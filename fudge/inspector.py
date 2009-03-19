@@ -179,24 +179,24 @@ class ValueInspector(object):
         """
         return HasAttr(**attributes)
     
-    def passes(self, test):
+    def passes_test(self, test):
         """Check that a value passes some test.
         
         For custom assertions you may need to create your own callable 
-        to inspect and verify the value.
+        to inspect and verify a value.
         
         .. doctest::
             
-            >>> import fudge
-            >>> from fudge.inspector import arg
-            >>> def test_status(s):
+            >>> def is_status(s):
             ...     if s in ('active','deleted'):
             ...         return True
             ...     else:
             ...         return False
             ... 
+            >>> import fudge
+            >>> from fudge.inspector import arg
             >>> system = fudge.Fake("system").expects("set_status").with_args(
-            ...                                     arg.passes(test_status))
+            ...                                     arg.passes_test(is_status))
             ... 
             >>> system.set_status("active")
             >>> fudge.verify()
@@ -214,7 +214,7 @@ class ValueInspector(object):
             >>> system.set_status("sleep") # doctest: +ELLIPSIS
             Traceback (most recent call last):
             ...
-            AssertionError: fake:system.set_status(arg.passes(<function test_status at ...>)) was called unexpectedly with args ('sleep')
+            AssertionError: fake:system.set_status(arg.passes_test(<function is_status at ...>)) was called unexpectedly with args ('sleep')
         
         .. doctest::
             :hide:
@@ -222,7 +222,7 @@ class ValueInspector(object):
             >>> fudge.clear_expectations()
             
         """
-        return Passes(test)
+        return PassesTest(test)
     
     def startswith(self, part):
         """Ensure that a value starts with some part.
@@ -342,8 +342,8 @@ class Contains(ValueTest):
         else:
             return False
         
-class Passes(ValueTest):
-    arg_method = "passes"
+class PassesTest(ValueTest):
+    arg_method = "passes_test"
     
     def __init__(self, test):
         self.test = test
