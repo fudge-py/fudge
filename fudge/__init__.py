@@ -13,7 +13,7 @@ import thread
 import warnings
 from fudge.exc import FakeDeclarationError
 from fudge.patcher import *
-from fudge.util import wraps
+from fudge.util import wraps, fmt_val, fmt_dict_vals
 
 __all__ = ['clear_calls', 'verify', 'clear_expectations', 'Fake']
 
@@ -159,29 +159,6 @@ def with_fakes(method):
         method(*args, **kw)
         verify() # if no exceptions
     return apply_clear_and_verify
-
-def fmt_val(val, shorten=True):
-    """Format a value for inclusion in an 
-    informative text string.
-    """
-    val = repr(val)
-    max = 50
-    if shorten:
-        if len(val) > max:
-            close = val[-1]
-            val = val[0:max-4] + "..."
-            if close in (">", "'", '"', ']', '}', ')'):
-                val = val + close
-    return val
-
-def fmt_dict_vals(dict_vals, shorten=True):
-    """Returns list of key=val pairs formatted
-    for inclusion in an informative text string.
-    """
-    items = dict_vals.items()
-    if not items:
-        return [fmt_val(None, shorten=shorten)]
-    return ["%s=%s" % (k, fmt_val(v, shorten=shorten)) for k,v in items]
 
 class Call(object):
     """A call that can be made on a Fake object.

@@ -1,7 +1,8 @@
 
-from nose.tools import eq_
+from nose.tools import eq_, raises
 import unittest
 import fudge
+from fudge import inspectors
 from fudge.inspectors import arg
 from fudge import Fake
 
@@ -26,14 +27,6 @@ class TestArgs(unittest.TestCase):
         db = Fake("db").expects("execute").with_args(arg.endswith("_ending"))
         db.execute(unstringable)
     
-    def test_startswith_ok(self):
-        db = Fake("db").expects("execute").with_args(arg.startswith("insert into"))
-        db.execute("insert into foo values (1,2,3,4)")
-    
-    def test_startswith_ok_uni(self):
-        db = Fake("db").expects("execute").with_args(arg.startswith(u"Ivan_Krsti\u0107"))
-        db.execute(u"Ivan_Krsti\u0107(); foo();")
-    
     def test_any_value(self):
         db = Fake("db").expects("execute").with_args(arg.anyvalue())
         db.execute("delete from foo where 1")
@@ -47,4 +40,39 @@ class TestArgs(unittest.TestCase):
         widget = Fake("widget").expects("configure")\
                                .with_args(arg.has_attr(size=12,color='red'))
         widget.configure(Config())
+
+class TestStringlike(unittest.TestCase):
+    
+    def test_startswith_ok(self):
+        db = Fake("db").expects("execute").with_args(arg.startswith("insert into"))
+        db.execute("insert into foo values (1,2,3,4)")
+    
+    @raises(AssertionError)
+    def test_startswith_fail(self):
+        db = Fake("db").expects("execute").with_args(arg.startswith("insert into"))
+        db.execute("select from")
+    
+    def test_startswith_ok_uni(self):
+        db = Fake("db").expects("execute").with_args(arg.startswith(u"Ivan_Krsti\u0107"))
+        db.execute(u"Ivan_Krsti\u0107(); foo();")
+    
+    def test_unicode(self):
+        p = inspectors.Startswith(u"Ivan_Krsti\u0107")
+        eq_(unicode(p), "arg.startswith(u'Ivan_Krsti\u0107')")
+    
+    def test_repr(self):
+        p = inspectors.Startswith("_ending")
+        eq_(repr(p), "arg.startswith('_ending')")
+    
+    def test_str(self):
+        p = inspectors.Startswith("_ending")
+        eq_(str(p), "arg.startswith('_ending')")
+    
+    def test_str_long_value(self):
+        p = inspectors.Startswith(
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        )
+        eq_(str(p), 
+            "arg.startswith('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...')" )
+    
         
