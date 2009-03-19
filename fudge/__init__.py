@@ -604,7 +604,9 @@ class Fake(object):
     def _get_current_call(self):
         if not self._last_declared_call_name:
             if not self._callable:
-                raise ValueError("Call to a method that expects a predefined call but no such call exists")
+                raise FakeDeclarationError(
+                    "Call to a method that expects a predefined call but no such call exists.  "
+                    "Maybe you forgot expects('method') or provides('method') ?")
             return self._callable.get_call_object()
         exp = self._declared_calls[self._last_declared_call_name].get_call_object()
         return exp

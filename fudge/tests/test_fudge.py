@@ -129,6 +129,14 @@ class TestArguments(unittest.TestCase):
     def test_kwarg_count(self):
         exp = self.fake.expects('__init__').with_kwarg_count(2)
         exp(maybe="yes, maybe")
+    
+    @raises(FakeDeclarationError)
+    def test_with_args_requires_expectation(self):
+        self.fake.with_args('something')
+    
+    # def test_with_args_checks_all(self):
+    #     self.fake.with_args('one', two='two')
+    #     self.fake(two='two')
 
 class TestCall(unittest.TestCase):
     
