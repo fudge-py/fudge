@@ -41,6 +41,9 @@ class ValueInspector(object):
         """
         return AnyValue()
     
+    def contains(self, part):
+        return Contains(part)
+    
     def has_attr(self, **attributes):
         """Return test to assert the value is an argument with said arguments.
         
@@ -222,4 +225,10 @@ class Contains(ValueTest):
     
     def _repr_argspec(self):
         return self._make_argspec(fmt_val(self.part))
+    
+    def __eq__(self, other):
+        if self.part in other:
+            return True
+        else:
+            return False
         

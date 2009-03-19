@@ -142,6 +142,28 @@ class TestContains(unittest.TestCase):
     
     def tearDown(self):
         fudge.clear_expectations()
+    
+    def test_contains_str(self):
+        db = Fake("db").expects("execute").with_args(arg.contains("table foo"))
+        db.execute("select into table foo;")
+        db.execute("select * from table foo where bar = 1")
+        fudge.verify()
+    
+    @raises(AssertionError)
+    def test_contains_fail(self):
+        db = Fake("db").expects("execute").with_args(arg.contains("table foo"))
+        db.execute("select into table notyourmama;")
+        fudge.verify()
+    
+    def test_contains_list(self):
+        db = Fake("db").expects("execute_statements").with_args(
+                                            arg.contains("select * from foo"))
+        db.execute_statements([
+            "update foo",
+            "select * from foo",
+            "drop table foo"
+        ])
+        fudge.verify()
         
     def test_str(self):
         c = inspectors.Contains(":part:")
