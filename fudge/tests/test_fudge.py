@@ -162,26 +162,37 @@ class TestArguments(unittest.TestCase):
         mail = fudge.Fake('mail').expects('send').with_kwarg_count(3) 
         mail.send(to="you", from_="me", msg="hi") # no args should be ok
 
-class TestCallArgEquality(unittest.TestCase):
+class TestArgEquality(unittest.TestCase):
+    
+    def setUp(self):
+        self.fake = Fake("foo")
+        self.call = Call(self.fake)
+    # 
+    # def test_complex_match_yields_no_reason(self):
+    #     actual = ('one','two','three')
+    #     expected = ('one','two','three')
+    #     eq_(self.call._args_are_equal(actual, expected), (True, ""))
+
+class TestKeywordArgEquality(unittest.TestCase):
     
     def setUp(self):
         self.fake = Fake("foo")
         self.call = Call(self.fake)
     
     def test_complex_match_yields_no_reason(self):
-        one = {'num':1, 'two':2, 'three':3}
-        one = {'num':1, 'two':2, 'three':3}
-        eq_(self.call._keywords_are_equal(one, one), (True, ""))
+        actual = {'num':1, 'two':2, 'three':3}
+        expected = {'num':1, 'two':2, 'three':3}
+        eq_(self.call._keywords_are_equal(actual, expected), (True, ""))
     
     def test_simple_mismatch_yields_no_reason(self):
-        one = {'num':1}
-        two = {'num':2}
-        eq_(self.call._keywords_are_equal(one, two), (False, ""))
+        actual = {'num':1}
+        expected = {'num':2}
+        eq_(self.call._keywords_are_equal(actual, expected), (False, ""))
     
     def test_simple_match_yields_no_reason(self):
-        one = {'num':1}
-        one = {'num':1}
-        eq_(self.call._keywords_are_equal(one, one), (True, ""))
+        actual = {'num':1}
+        expected = {'num':1}
+        eq_(self.call._keywords_are_equal(actual, expected), (True, ""))
     
     def test_actual_kw_extra_key(self):
         actual = {'one':1, 'two':2}
