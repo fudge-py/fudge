@@ -1,5 +1,5 @@
 
-"""Value inspector that can be passed to :func:`fudge.Fake.with_args` for more 
+"""Value inspectors that can be passed to :func:`fudge.Fake.with_args` for more 
 expressive argument matching.  
 
 As a mnemonic device, 
@@ -214,6 +214,28 @@ class ValueInspector(object):
             Traceback (most recent call last):
             ...
             AssertionError: fake:system.set_status(arg.passes_test(<function is_valid at ...>)) was called unexpectedly with args ('sleep')
+        
+        .. doctest::
+            :hide:
+            
+            >>> fudge.clear_expectations()
+        
+        If it makes more sense to perform assertions in your test function then 
+        be sure to return True :
+        
+            >>> def is_valid(s):
+            ...     assert s in ('active','deleted'), (
+            ...         "Unexpected status value: %s" % s)
+            ...     return True
+            ... 
+            >>> import fudge
+            >>> from fudge.inspector import arg
+            >>> system = fudge.Fake("system")
+            >>> system = system.expects("set_status").with_args(arg.passes_test(is_valid))
+            >>> system.set_status("sleep")
+            Traceback (most recent call last):
+            ...
+            AssertionError: Unexpected status value: sleep
         
         .. doctest::
             :hide:
