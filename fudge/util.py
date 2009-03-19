@@ -26,12 +26,12 @@ def fmt_val(val, shorten=True):
                 val = val + close
     return val
 
-def fmt_dict_vals(dict_vals, shorten=True, formatter=repr):
+def fmt_dict_vals(dict_vals, shorten=True):
     """Returns list of key=val pairs formatted
     for inclusion in an informative text string.
     """
     items = dict_vals.items()
     if not items:
-        return [fmt_val(None, shorten=shorten, formatter=formatter)]
+        return [fmt_val(None, shorten=shorten)]
     return ["%s=%s" % (k, fmt_val(v, shorten=shorten)) for k,v in items]
     

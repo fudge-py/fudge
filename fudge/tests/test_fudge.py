@@ -139,9 +139,15 @@ class TestArguments(unittest.TestCase):
         self.fake.provides("not_expected").with_args('something')
         self.fake.not_expected() # should still raise arg error
     
-    # def test_with_args_checks_all(self):
-    #     self.fake.with_args('one', two='two')
-    #     self.fake(two='two')
+    @raises(AssertionError)
+    def test_with_args_checks_args(self):
+        self.fake.expects('count').with_args('one', two='two')
+        self.fake.count(two='two')
+        
+    @raises(AssertionError)
+    def test_with_args_checks_kwargs(self):
+        self.fake.expects('count').with_args('one', two='two')
+        self.fake.count('one')
 
 class TestCall(unittest.TestCase):
     
