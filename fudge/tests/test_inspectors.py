@@ -67,6 +67,12 @@ class TestObjectlike(unittest.TestCase):
     def test_objectlike_unicode(self):
         o = inspectors.HasAttr(one=1, ivan=u"Ivan_Krsti\u0107")
         eq_(unicode(o), "arg.has_attr(ivan=u'Ivan_Krsti\\u0107', one=1)")
+    
+    def test_objectlike_repr_long_val(self):
+        o = inspectors.HasAttr(
+                bytes="011110101000101010011111111110000001010100000001110000000011")
+        eq_(repr(o), 
+            "arg.has_attr(bytes='011110101000101010011111111110000001010100000...')")
 
 class TestStringlike(unittest.TestCase):
     
