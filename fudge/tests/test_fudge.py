@@ -131,8 +131,13 @@ class TestArguments(unittest.TestCase):
         exp(maybe="yes, maybe")
     
     @raises(FakeDeclarationError)
-    def test_with_args_requires_expectation(self):
+    def test_with_args_requires_a_method(self):
         self.fake.with_args('something')
+    
+    @raises(AssertionError)
+    def test_with_args_can_operate_on_provision(self):
+        self.fake.provides("not_expected").with_args('something')
+        self.fake.not_expected() # should still raise arg error
     
     # def test_with_args_checks_all(self):
     #     self.fake.with_args('one', two='two')
