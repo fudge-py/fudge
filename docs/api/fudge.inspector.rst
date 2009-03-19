@@ -1,9 +1,9 @@
 
 ----------------
-fudge.inspectors
+fudge.inspector
 ----------------
 
-.. automodule:: fudge.inspectors
+.. automodule:: fudge.inspector
    
-.. autoclass:: fudge.inspectors.ValueInspector
+.. autoclass:: fudge.inspector.ValueInspector
    :members:

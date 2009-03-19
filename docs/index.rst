@@ -85,7 +85,7 @@ Changelog
   - **Changed**: values in failed comparisons are no longer shortened when too long.
   - **Changed**: :func:`fudge.Fake.calls` no longer trumps expectations 
     (i.e. :func:`fudge.Fake.with_args`)
-  - Added :mod:`fudge.inspectors` for :ref:`working-with-arguments`.
+  - Added :mod:`fudge.inspector` for :ref:`working-with-arguments`.
   - Added :func:`fudge.Fake.remember_order` so that order of expected calls can be verified.
   - Added :func:`fudge.Fake.raises` for simulating exceptions
   - Added keyword :func:`fudge.Fake.next_call(for_method="other_call") <fudge.Fake.next_call>` 

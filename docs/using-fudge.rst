@@ -35,7 +35,7 @@ it up:
 .. doctest::
     
     >>> import fudge
-    >>> from fudge.inspectors import arg
+    >>> from fudge.inspector import arg
     >>> SMTP = fudge.Fake('SMTP')
     >>> SMTP = SMTP.expects('__init__')
     >>> SMTP = SMTP.expects('connect')
@@ -398,14 +398,14 @@ Working with Arguments
 
 The :func:`fudge.Fake.with_args` method optionally allows you to declare expectations of 
 how arguments should be sent to your object.  It's usually sufficient to expect an exact 
-argument value but sometimes you need to use :mod:`fudge.inspectors` for dynamic values.
+argument value but sometimes you need to use :mod:`fudge.inspector.arg <fudge.inspector>` for dynamic values.
 
 Here is a short example:
 
 .. doctest::
     
     >>> import fudge
-    >>> from fudge.inspectors import arg
+    >>> from fudge.inspector import arg
     >>> image = fudge.Fake("image").expects("save")
     >>> image = image.with_args("JPEG", arg.endswith(".jpg"), resolution=arg.any_value())
 

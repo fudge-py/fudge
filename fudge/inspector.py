@@ -1,15 +1,18 @@
 
-"""Value inspectors that can be passed to :func:`fudge.Fake.with_args` for more 
+"""Value inspector that can be passed to :func:`fudge.Fake.with_args` for more 
 expressive argument matching.  
 
 As a pneumonic device, 
-an instance of the :class:`fudge.inspectors.ValueInspector` is available as "args" :
+an instance of the :class:`fudge.inspector.ValueInspector` is available as "arg" :
 
 .. doctest::
     
     >>> import fudge
-    >>> from fudge.inspectors import arg
+    >>> from fudge.inspector import arg
     >>> image = fudge.Fake("image").expects("save").with_args(arg.endswith(".jpg"))
+
+In other words, this declares that the first argument to ``image.save()`` 
+should end with the suffix ".jpg"
     
 .. doctest::
     :hide:
@@ -36,7 +39,7 @@ class ValueInspector(object):
         .. doctest::
             
             >>> import fudge
-            >>> from fudge.inspectors import arg
+            >>> from fudge.inspector import arg
             >>> db = fudge.Fake("db")
             >>> db = db.expects("transaction").with_args(
             ...             "insert", isolation_level=arg.any_value())
@@ -73,7 +76,7 @@ class ValueInspector(object):
         .. doctest::
             
             >>> import fudge
-            >>> from fudge.inspectors import arg
+            >>> from fudge.inspector import arg
             >>> addressbook = fudge.Fake().expects("import_").with_args(
             ...                                     arg.contains("Baba Brooks"))
             ... 
@@ -111,7 +114,7 @@ class ValueInspector(object):
         .. doctest::
             
             >>> import fudge
-            >>> from fudge.inspectors import arg
+            >>> from fudge.inspector import arg
             >>> tmpfile = fudge.Fake("tempfile").expects("mkname").with_args(
             ...                                             arg.endswith(".tmp"))
             ... 
@@ -134,7 +137,7 @@ class ValueInspector(object):
         .. doctest::
             
             >>> import fudge
-            >>> from fudge.inspectors import arg
+            >>> from fudge.inspector import arg
             >>> db = fudge.Fake("db").expects("update").with_args(arg.has_attr(
             ...                                                       first_name="Bob",
             ...                                                       last_name="James" ))
@@ -185,7 +188,7 @@ class ValueInspector(object):
         .. doctest::
             
             >>> import fudge
-            >>> from fudge.inspectors import arg
+            >>> from fudge.inspector import arg
             >>> def test_status(s):
             ...     if s in ('active','deleted'):
             ...         return True
@@ -229,7 +232,7 @@ class ValueInspector(object):
         .. doctest::
             
             >>> import fudge
-            >>> from fudge.inspectors import arg
+            >>> from fudge.inspector import arg
             >>> keychain = fudge.Fake("keychain").expects("accept_key").with_args(
             ...                                                     arg.startswith("_key"))
             ... 

@@ -2,8 +2,8 @@
 from nose.tools import eq_, raises
 import unittest
 import fudge
-from fudge import inspectors
-from fudge.inspectors import arg
+from fudge import inspector
+from fudge.inspector import arg
 from fudge import Fake
 
 class TestAnyValue(unittest.TestCase):
@@ -16,11 +16,11 @@ class TestAnyValue(unittest.TestCase):
         db.execute("delete from foo where 1")
     
     def test_repr(self):
-        any = inspectors.AnyValue()
+        any = inspector.AnyValue()
         eq_(repr(any), "arg.any_value()")
         
     def test_str(self):
-        any = inspectors.AnyValue()
+        any = inspector.AnyValue()
         eq_(str(any), "arg.any_value()")
         
 class TestPasses(unittest.TestCase):
@@ -48,7 +48,7 @@ class TestPasses(unittest.TestCase):
             def __repr__(self):
                 return "test that v is an int"
                 
-        passes = inspectors.Passes(test())
+        passes = inspector.Passes(test())
         eq_(repr(passes), "arg.passes(test that v is an int)")
     
     def test_str(self):
@@ -58,7 +58,7 @@ class TestPasses(unittest.TestCase):
             def __repr__(self):
                 return "test that v is an int"
                 
-        passes = inspectors.Passes(test())
+        passes = inspector.Passes(test())
         eq_(str(passes), "arg.passes(test that v is an int)")
 
 class TestObjectlike(unittest.TestCase):
@@ -95,19 +95,19 @@ class TestObjectlike(unittest.TestCase):
         widget.configure(Config())
     
     def test_objectlike_str(self):
-        o = inspectors.HasAttr(one=1, two="two")
+        o = inspector.HasAttr(one=1, two="two")
         eq_(str(o), "arg.has_attr(one=1, two='two')")
     
     def test_objectlike_repr(self):
-        o = inspectors.HasAttr(one=1, two="two")
+        o = inspector.HasAttr(one=1, two="two")
         eq_(repr(o), "arg.has_attr(one=1, two='two')")
     
     def test_objectlike_unicode(self):
-        o = inspectors.HasAttr(one=1, ivan=u"Ivan_Krsti\u0107")
+        o = inspector.HasAttr(one=1, ivan=u"Ivan_Krsti\u0107")
         eq_(unicode(o), "arg.has_attr(ivan=u'Ivan_Krsti\\u0107', one=1)")
     
     def test_objectlike_repr_long_val(self):
-        o = inspectors.HasAttr(
+        o = inspector.HasAttr(
                 bytes="011110101000101010011111111110000001010100000001110000000011")
         eq_(repr(o), 
             "arg.has_attr(bytes='011110101000101010011111111110000001010100000...')")
@@ -131,7 +131,7 @@ class TestStringlike(unittest.TestCase):
         db.execute(u"Ivan_Krsti\u0107(); foo();")
     
     def test_startswith_unicode(self):
-        p = inspectors.Startswith(u"Ivan_Krsti\u0107")
+        p = inspector.Startswith(u"Ivan_Krsti\u0107")
         eq_(unicode(p), "arg.startswith(u'Ivan_Krsti\u0107')")
     
     def test_endswith_ok(self):
@@ -143,34 +143,34 @@ class TestStringlike(unittest.TestCase):
         db.execute(u"select Ivan Krsti\u0107")
         
     def test_endswith_unicode(self):
-        p = inspectors.Endswith(u"Ivan_Krsti\u0107")
+        p = inspector.Endswith(u"Ivan_Krsti\u0107")
         eq_(unicode(p), "arg.endswith(u'Ivan_Krsti\u0107')")
     
     def test_startswith_repr(self):
-        p = inspectors.Startswith("_start")
+        p = inspector.Startswith("_start")
         eq_(repr(p), "arg.startswith('_start')")
     
     def test_endswith_repr(self):
-        p = inspectors.Endswith("_ending")
+        p = inspector.Endswith("_ending")
         eq_(repr(p), "arg.endswith('_ending')")
     
     def test_startswith_str(self):
-        p = inspectors.Startswith("_start")
+        p = inspector.Startswith("_start")
         eq_(str(p), "arg.startswith('_start')")
     
     def test_endswith_str(self):
-        p = inspectors.Endswith("_ending")
+        p = inspector.Endswith("_ending")
         eq_(str(p), "arg.endswith('_ending')")
     
     def test_startswith_str_long_value(self):
-        p = inspectors.Startswith(
+        p = inspector.Startswith(
             "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
         )
         eq_(str(p), 
             "arg.startswith('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...')" )
     
     def test_endswith_str_long_value(self):
-        p = inspectors.Endswith(
+        p = inspector.Endswith(
             "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
         )
         eq_(str(p), 
@@ -204,20 +204,20 @@ class TestContains(unittest.TestCase):
         fudge.verify()
         
     def test_str(self):
-        c = inspectors.Contains(":part:")
+        c = inspector.Contains(":part:")
         eq_(str(c), "arg.contains(':part:')")
         
     def test_str_long_val(self):
-        c = inspectors.Contains(
+        c = inspector.Contains(
             "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
         eq_(str(c), "arg.contains('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...')")
         
     def test_repr(self):
-        c = inspectors.Contains(":part:")
+        c = inspector.Contains(":part:")
         eq_(repr(c), "arg.contains(':part:')")
         
     def test_unicode(self):
-        c = inspectors.Contains(u"Ivan_Krsti\u0107")
+        c = inspector.Contains(u"Ivan_Krsti\u0107")
         eq_(repr(c), "arg.contains(u'Ivan_Krsti\u0107')")
         
         
