@@ -30,5 +30,13 @@ What about all the other mock frameworks for Python?  I *really* didn't want to 
   
   - This also uses the record / playback technique but with a DSL (domain specific language).  It was brought to my attention after creating Fudge but thought it was worth mentioning.
 
+- `mocker <http://labix.org/mocker>`_ (based on `EasyMock`_ and others)
+  
+  - This was also `pointed out to me <http://farmdev.com/thoughts/70/fudge-another-python-mock-framework/>`_ after developing Fudge.
+  - Mocker is another record / playback implementation but seems to have a cleaner interface than most.  I still do not see the practicality of record / playback.  How do you write tests in record mode?  I am probably missing it but nowhere in the docs do I see practical examples for creating test code.  Instead the examples are interactive sessions which is not how I typically write tests.
+  - The docs for mocker, like docs for other tools, do not focus on any real-world problem that a mock framework can solve.  This is hard for my brain.  It is hard for me to look at code such as obj.hello() and imagine that this would be useful for, say, mocking out sendmail(). 
+  - However, mocker certainly looks like it has more features than Fudge so it is worth checking out.
+  
+
 .. _jMock: http://www.jmock.org/
 .. _EasyMock: http://www.easymock.org/
