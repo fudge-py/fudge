@@ -5,10 +5,29 @@ __all__ = ['arg']
 
 class ValueTest(object):
     
+    arg_method = None
     __test__ = False # nose
     
     def __eq__(self, other):
         raise NotImplementedError()
+    
+    def _repr_argspec(self):
+        raise NotImplementedError()
+    
+    def __str__(self):
+        return self._repr_argspec()
+    
+    def __unicode__(self):
+        return self._repr_argspec()
+    
+    def __repr__(self):
+        return self._repr_argspec()
+    
+    def _make_argspec(self, arg):
+        if self.arg_method is None:
+            raise NotImplementedError(
+                "%r must have set attribute arg_method" % self.__class__)
+        return "arg." + self.arg_method + "(" + arg + ")"
 
 class Stringlike(ValueTest):
     
@@ -16,11 +35,7 @@ class Stringlike(ValueTest):
         self.part = part
         
     def _repr_argspec(self):
-        return "arg." + self.str_method + "(" + fmt_val(self.part) + ")"
-        
-    __str__ = _repr_argspec
-    __unicode__ = _repr_argspec
-    __repr__ = _repr_argspec
+        return self._make_argspec(fmt_val(self.part))
     
     def stringlike(self, value):
         if isinstance(value, (str, unicode)):
@@ -29,16 +44,29 @@ class Stringlike(ValueTest):
             return str(value)
     
     def __eq__(self, other):
-        check_stringlike = getattr(self.stringlike(other), self.str_method)
+        check_stringlike = getattr(self.stringlike(other), self.arg_method)
         return check_stringlike(self.part)
 
 class Startswith(Stringlike):
-    str_method = "startswith"
+    arg_method = "startswith"
     
 class Endswith(Stringlike):
-    str_method = "endswith"
+    arg_method = "endswith"
+
+class HasAttr(ValueTest):
+    arg_method = "has_attr"
+    
+    def __init__(self, **attributes):
+        self.attributes = attributes
+        
+    def _repr_argspec(self):
+        return self._make_argspec(", ".join(sorted(fmt_dict_vals(self.attributes))))
+    
     
 class ValueInspector(object):
+    
+    def has_attr(self, **attributes):
+        return HasAttr(**attributes)
     
     def endswith(self, part):
         return Endswith(part)

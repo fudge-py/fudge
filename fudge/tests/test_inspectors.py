@@ -18,19 +18,16 @@ class TestArgs(unittest.TestCase):
     def test_endswith_ok_uni(self):
         db = Fake("db").expects("execute").with_args(arg.endswith(u"Ivan Krsti\u0107"))
         db.execute(u"select Ivan Krsti\u0107")
-        
-    def test_endswith_not_str(self):
-        class unstringable(object):
-            def __str__():
-                raise TypeError()
-            
-        db = Fake("db").expects("execute").with_args(arg.endswith("_ending"))
-        db.execute(unstringable)
     
     def test_any_value(self):
         db = Fake("db").expects("execute").with_args(arg.anyvalue())
         db.execute("delete from foo where 1")
-        
+
+class TestObjectlike(unittest.TestCase):
+    
+    def tearDown(self):
+        fudge.clear_expectations()
+    
     def test_has_attr(self):
         class Config(object):
             size = 12
@@ -40,8 +37,23 @@ class TestArgs(unittest.TestCase):
         widget = Fake("widget").expects("configure")\
                                .with_args(arg.has_attr(size=12,color='red'))
         widget.configure(Config())
+    
+    def test_objectlike_str(self):
+        o = inspectors.HasAttr(one=1, two="two")
+        eq_(str(o), "arg.has_attr(one=1, two='two')")
+    
+    def test_objectlike_repr(self):
+        o = inspectors.HasAttr(one=1, two="two")
+        eq_(str(o), "arg.has_attr(one=1, two='two')")
+    
+    def test_objectlike_unicode(self):
+        o = inspectors.HasAttr(one=1, ivan=u"Ivan_Krsti\u0107")
+        eq_(str(o), "arg.has_attr(ivan=u'Ivan_Krsti\\u0107', one=1)")
 
 class TestStringlike(unittest.TestCase):
+    
+    def tearDown(self):
+        fudge.clear_expectations()
     
     def test_startswith_ok(self):
         db = Fake("db").expects("execute").with_args(arg.startswith("insert into"))
