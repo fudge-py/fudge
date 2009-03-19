@@ -13,7 +13,7 @@ class ValueInspector(object):
     """
     
     def any_value(self):
-        """return test that matches any value.
+        """Return test that matches any value.
         
         This is pretty much just a placeholder for when you 
         want to inspect multiple arguments but don't care about 
@@ -42,7 +42,7 @@ class ValueInspector(object):
         return AnyValue()
     
     def has_attr(self, **attributes):
-        """return test to assert the value is an argument with said arguments.
+        """Return test to assert the value is an argument with said arguments.
         
         This is useful for when a value can be an object but you only 
         need to test that the object has specific attributes.
@@ -89,9 +89,49 @@ class ValueInspector(object):
         return HasAttr(**attributes)
     
     def endswith(self, part):
+        """Return test to assert the value ends with a string.
+        
+        This is useful for when values with dymaic parts that are hard to replicate.
+        
+        .. doctest::
+            
+            >>> import fudge
+            >>> from fudge.inspectors import arg
+            >>> tmpfile = fudge.Fake("tempfile").expects("mkname").with_args(
+            ...                                             arg.endswith(".tmp"))
+            ... 
+            >>> tmpfile.mkname("7AakkkLazUUKHKJgh908JKjlkh.tmp")
+            >>> fudge.verify()
+            
+        .. doctest::
+            :hide:
+            
+            >>> fudge.clear_expectations()
+            
+        """
         return Endswith(part)
     
     def startswith(self, part):
+        """Return test to assert the value starts with a string.
+        
+        This is useful for when values with dymaic parts that are hard to replicate.
+        
+        .. doctest::
+            
+            >>> import fudge
+            >>> from fudge.inspectors import arg
+            >>> keygen = fudge.Fake("keygen").expects("generate").with_args(
+            ...                                             arg.startswith("_key"))
+            ... 
+            >>> keygen.generate("_key-18657yojgaodfty98618652olkj[oollk]")
+            >>> fudge.verify()
+            
+        .. doctest::
+            :hide:
+            
+            >>> fudge.clear_expectations()
+            
+        """
         return Startswith(part)
 
 arg = ValueInspector()
