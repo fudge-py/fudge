@@ -62,6 +62,14 @@ class HasAttr(ValueTest):
     def _repr_argspec(self):
         return self._make_argspec(", ".join(sorted(fmt_dict_vals(self.attributes))))
     
+    def __eq__(self, other):
+        for name, value in self.attributes.items():
+            if not hasattr(other, name):
+                return False
+            if getattr(other, name) != value:
+                return False
+        
+        return True
     
 class ValueInspector(object):
     

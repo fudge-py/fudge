@@ -11,14 +11,6 @@ class TestArgs(unittest.TestCase):
     def tearDown(self):
         fudge.clear_expectations()
     
-    def test_endswith_ok(self):
-        db = Fake("db").expects("execute").with_args(arg.endswith("values (1,2,3,4)"))
-        db.execute("insert into foo values (1,2,3,4)")
-    
-    def test_endswith_ok_uni(self):
-        db = Fake("db").expects("execute").with_args(arg.endswith(u"Ivan Krsti\u0107"))
-        db.execute(u"select Ivan Krsti\u0107")
-    
     def test_any_value(self):
         db = Fake("db").expects("execute").with_args(arg.anyvalue())
         db.execute("delete from foo where 1")
@@ -28,7 +20,7 @@ class TestObjectlike(unittest.TestCase):
     def tearDown(self):
         fudge.clear_expectations()
     
-    def test_has_attr(self):
+    def test_has_attr_ok(self):
         class Config(object):
             size = 12
             color = 'red'
@@ -36,6 +28,24 @@ class TestObjectlike(unittest.TestCase):
             
         widget = Fake("widget").expects("configure")\
                                .with_args(arg.has_attr(size=12,color='red'))
+        widget.configure(Config())
+    
+    @raises(AssertionError)
+    def test_has_attr_fail(self):
+        class Config(object):
+            color = 'red'
+            
+        widget = Fake("widget").expects("configure")\
+                               .with_args(arg.has_attr(size=12))
+        widget.configure(Config())
+    
+    @raises(AssertionError)
+    def test_has_attr_fail_wrong_value(self):
+        class Config(object):
+            color = 'red'
+            
+        widget = Fake("widget").expects("configure")\
+                               .with_args(arg.has_attr(color="green"))
         widget.configure(Config())
     
     def test_objectlike_str(self):
@@ -71,6 +81,14 @@ class TestStringlike(unittest.TestCase):
     def test_startswith_unicode(self):
         p = inspectors.Startswith(u"Ivan_Krsti\u0107")
         eq_(unicode(p), "arg.startswith(u'Ivan_Krsti\u0107')")
+    
+    def test_endswith_ok(self):
+        db = Fake("db").expects("execute").with_args(arg.endswith("values (1,2,3,4)"))
+        db.execute("insert into foo values (1,2,3,4)")
+    
+    def test_endswith_ok_uni(self):
+        db = Fake("db").expects("execute").with_args(arg.endswith(u"Ivan Krsti\u0107"))
+        db.execute(u"select Ivan Krsti\u0107")
         
     def test_endswith_unicode(self):
         p = inspectors.Endswith(u"Ivan_Krsti\u0107")
