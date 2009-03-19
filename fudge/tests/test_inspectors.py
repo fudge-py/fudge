@@ -6,7 +6,7 @@ from fudge import inspectors
 from fudge.inspectors import arg
 from fudge import Fake
 
-class TestArgs(unittest.TestCase):
+class TestAnyValue(unittest.TestCase):
     
     def tearDown(self):
         fudge.clear_expectations()
@@ -54,11 +54,11 @@ class TestObjectlike(unittest.TestCase):
     
     def test_objectlike_repr(self):
         o = inspectors.HasAttr(one=1, two="two")
-        eq_(str(o), "arg.has_attr(one=1, two='two')")
+        eq_(repr(o), "arg.has_attr(one=1, two='two')")
     
     def test_objectlike_unicode(self):
         o = inspectors.HasAttr(one=1, ivan=u"Ivan_Krsti\u0107")
-        eq_(str(o), "arg.has_attr(ivan=u'Ivan_Krsti\\u0107', one=1)")
+        eq_(unicode(o), "arg.has_attr(ivan=u'Ivan_Krsti\\u0107', one=1)")
 
 class TestStringlike(unittest.TestCase):
     
