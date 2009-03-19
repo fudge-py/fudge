@@ -137,5 +137,27 @@ class TestStringlike(unittest.TestCase):
         )
         eq_(str(p), 
             "arg.endswith('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...')" )
+
+class TestContains(unittest.TestCase):
     
+    def tearDown(self):
+        fudge.clear_expectations()
+        
+    def test_str(self):
+        c = inspectors.Contains(":part:")
+        eq_(str(c), "arg.contains(':part:')")
+        
+    def test_str_long_val(self):
+        c = inspectors.Contains(
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        eq_(str(c), "arg.contains('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...')")
+        
+    def test_repr(self):
+        c = inspectors.Contains(":part:")
+        eq_(repr(c), "arg.contains(':part:')")
+        
+    def test_unicode(self):
+        c = inspectors.Contains(u"Ivan_Krsti\u0107")
+        eq_(repr(c), "arg.contains(u'Ivan_Krsti\u0107')")
+        
         

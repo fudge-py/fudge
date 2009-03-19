@@ -214,4 +214,12 @@ class AnyValue(ValueTest):
     def _repr_argspec(self):
         return self._make_argspec("")
 
+class Contains(ValueTest):
+    arg_method = "contains"
+    
+    def __init__(self, part):
+        self.part = part
+    
+    def _repr_argspec(self):
+        return self._make_argspec(fmt_val(self.part))
         
