@@ -3,6 +3,22 @@ from fudge.util import fmt_val, fmt_dict_vals
 
 __all__ = ['arg']
 
+class ValueInspector(object):
+    
+    def any_value(self):
+        return AnyValue()
+    
+    def has_attr(self, **attributes):
+        return HasAttr(**attributes)
+    
+    def endswith(self, part):
+        return Endswith(part)
+    
+    def startswith(self, part):
+        return Startswith(part)
+
+arg = ValueInspector()
+
 class ValueTest(object):
     
     arg_method = None
@@ -80,21 +96,5 @@ class AnyValue(ValueTest):
         
     def _repr_argspec(self):
         return self._make_argspec("")
-    
-    
-class ValueInspector(object):
-    
-    def any_value(self):
-        return AnyValue()
-    
-    def has_attr(self, **attributes):
-        return HasAttr(**attributes)
-    
-    def endswith(self, part):
-        return Endswith(part)
-    
-    def startswith(self, part):
-        return Startswith(part)
 
-arg = ValueInspector()
         
