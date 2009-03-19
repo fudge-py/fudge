@@ -56,23 +56,42 @@ class TestStringlike(unittest.TestCase):
         db = Fake("db").expects("execute").with_args(arg.startswith(u"Ivan_Krsti\u0107"))
         db.execute(u"Ivan_Krsti\u0107(); foo();")
     
-    def test_unicode(self):
+    def test_startswith_unicode(self):
         p = inspectors.Startswith(u"Ivan_Krsti\u0107")
         eq_(unicode(p), "arg.startswith(u'Ivan_Krsti\u0107')")
+        
+    def test_endswith_unicode(self):
+        p = inspectors.Endswith(u"Ivan_Krsti\u0107")
+        eq_(unicode(p), "arg.endswith(u'Ivan_Krsti\u0107')")
     
-    def test_repr(self):
-        p = inspectors.Startswith("_ending")
-        eq_(repr(p), "arg.startswith('_ending')")
+    def test_startswith_repr(self):
+        p = inspectors.Startswith("_start")
+        eq_(repr(p), "arg.startswith('_start')")
     
-    def test_str(self):
-        p = inspectors.Startswith("_ending")
-        eq_(str(p), "arg.startswith('_ending')")
+    def test_endswith_repr(self):
+        p = inspectors.Endswith("_ending")
+        eq_(repr(p), "arg.endswith('_ending')")
     
-    def test_str_long_value(self):
+    def test_startswith_str(self):
+        p = inspectors.Startswith("_start")
+        eq_(str(p), "arg.startswith('_start')")
+    
+    def test_endswith_str(self):
+        p = inspectors.Endswith("_ending")
+        eq_(str(p), "arg.endswith('_ending')")
+    
+    def test_startswith_str_long_value(self):
         p = inspectors.Startswith(
             "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
         )
         eq_(str(p), 
             "arg.startswith('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...')" )
+    
+    def test_endswith_str_long_value(self):
+        p = inspectors.Endswith(
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        )
+        eq_(str(p), 
+            "arg.endswith('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...')" )
     
         
