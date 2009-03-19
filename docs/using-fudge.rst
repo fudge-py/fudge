@@ -391,6 +391,8 @@ A descriptive error is printed if you call things out of order:
     
     >>> fudge.clear_expectations()
 
+.. _working-with-arguments:
+
 Working with Arguments
 ======================
 
