@@ -10,7 +10,10 @@ class Startswith(ValueTest):
         self.part = part
     
     def stringlike(self, value):
-        return str(value)
+        if isinstance(value, (str, unicode)):
+            return value
+        else:
+            return str(value)
     
     def __eq__(self, other):
         return self.stringlike(other).startswith(self.part)

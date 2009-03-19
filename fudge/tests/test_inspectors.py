@@ -45,6 +45,6 @@ class TestArgs(unittest.TestCase):
             weight = 'heavy'
             
         widget = Fake("widget").expects("configure")\
-                               .with_args(arg.has_keys(size=12,color='red'))
+                               .with_args(arg.has_attr(size=12,color='red'))
         widget.configure(Config())
         
