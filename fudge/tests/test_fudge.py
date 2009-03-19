@@ -88,8 +88,8 @@ class TestLongArgValues(unittest.TestCase):
         except AssertionError, exc:
             eq_(str(exc),
             "fake:widget.set_bits(newbits='123456789101112131415161718192021222324252627...') "
-            "was called unexpectedly with keyword args "
-            "newbits='99999999999999999999999999999999999999999999999999999999'")
+            "was called unexpectedly with args "
+            "(newbits='99999999999999999999999999999999999999999999999999999999')")
         else:
             raise RuntimeError("expected AssertionError")
 
@@ -154,28 +154,13 @@ class TestArguments(unittest.TestCase):
         db = Fake("db").expects("execute").with_args(bind={'one':1})
         db.execute("select foozilate()", bind={'one':1}) # unexpected statement arg
     
-    def test_zero_keywords_error(self):
-        
-        # temporary test to debug doctest
-        # was raising confusing error:
-        # AssertionError: fake:SMTP.sendmail() was called with 0 keyword arg(s) but expected None
-        
-        SMTP = fudge.Fake()
-        SMTP = SMTP.expects('__init__')
-        SMTP = SMTP.expects('connect')
-        SMTP = SMTP.expects('sendmail').with_arg_count(3)
-        SMTP = SMTP.expects('close')
-        
-        recipients = ["kumar.mcmillan@gmail.com"]
-        sender= "you@yourhouse.com"
-        msg = "Mmmm, fudge"
-        
-        msg = ("From: %s\r\nTo: %s\r\n\r\n%s" % (
-                sender, ", ".join(recipients), msg))
-        s = SMTP()
-        s.connect()
-        s.sendmail(sender, recipients, msg)
-        s.close()
+    def test_zero_keywords_ok(self):
+        mail = fudge.Fake('mail').expects('send').with_arg_count(3) 
+        mail.send("you", "me", "hi") # no kw args should be ok
+    
+    def test_zero_args_ok(self):
+        mail = fudge.Fake('mail').expects('send').with_kwarg_count(3) 
+        mail.send(to="you", from_="me", msg="hi") # no args should be ok
 
 class TestCall(unittest.TestCase):
     

@@ -398,7 +398,7 @@ Working with Arguments
 
 The :func:`fudge.Fake.with_args` method optionally allows you to declare expectations of 
 how arguments should be sent to your object.  It's usually sufficient to expect an exact 
-argument value but sometimes you need to use :mod:`fudge.inspector.arg <fudge.inspector>` for dynamic values.
+argument value but sometimes you need to use :mod:`fudge.inspector` functions for dynamic values.
 
 Here is a short example:
 

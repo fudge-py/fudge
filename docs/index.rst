@@ -85,6 +85,11 @@ Changelog
   - **Changed**: values in failed comparisons are no longer shortened when too long.
   - **Changed**: :func:`fudge.Fake.calls` no longer trumps expectations 
     (i.e. :func:`fudge.Fake.with_args`)
+  - **Changed**: :func:`fudge.Fake.with_args` is more strict.  You will now see an error 
+    when arguments are not expected yet keyword arguments were expected and vice versa.  
+    This was technically a bug but is listed under 
+    changes in case you need to update your code.  Note that you can work 
+    with arguments more expressively using the new :mod:`fudge.inspector` functions.
   - Added :mod:`fudge.inspector` for :ref:`working-with-arguments`.
   - Added :func:`fudge.Fake.remember_order` so that order of expected calls can be verified.
   - Added :func:`fudge.Fake.raises` for simulating exceptions

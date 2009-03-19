@@ -233,8 +233,9 @@ class Call(object):
                 self.expected_kwargs = {} # empty **kw
             if kwargs != self.expected_kwargs:
                 raise AssertionError(
-                    "%s was called unexpectedly with keyword args %s" % (
-                                self, ", ".join(fmt_dict_vals(kwargs, shorten=False))))  
+                    "%s was called unexpectedly with args %s" % (
+                            self, 
+                            self._repr_call(args, kwargs, shorten_long_vals=False)))
             
             if self.expected_args is None:
                 self.expected_args = tuple([]) # empty *args
@@ -242,18 +243,22 @@ class Call(object):
                 raise AssertionError(
                     "%s was called unexpectedly with args %s" % (
                             self, 
-                            self._repr_call(args, kwargs, shorten_long_vals=False)))      
+                            self._repr_call(args, kwargs, shorten_long_vals=False)))
                             
         # determine whether we should inspect argument counts or not:
         with_arg_counts = (self.expected_arg_count is not None or 
                            self.expected_kwarg_count is not None)
         
         if with_arg_counts: 
+            if self.expected_arg_count is None:
+                self.expected_arg_count = 0
             if len(args) != self.expected_arg_count:
                 raise AssertionError(
                     "%s was called with %s arg(s) but expected %s" % (
                         self, len(args), self.expected_arg_count))
-                    
+            
+            if self.expected_kwarg_count is None:
+                self.expected_kwarg_count = 0
             if len(kwargs.keys()) != self.expected_kwarg_count:
                 raise AssertionError(
                     "%s was called with %s keyword arg(s) but expected %s" % (
@@ -949,13 +954,57 @@ class Fake(object):
     def with_args(self, *args, **kwargs):
         """Set the last call to expect specific arguments.
         
-        I.E.::
+        .. doctest::
             
-            >>> counter = Fake('counter').expects('increment').with_args(25, table='hits')
+            >>> import fudge
+            >>> counter = fudge.Fake('counter').expects('increment').with_args(25, table='hits')
             >>> counter.increment(24, table='clicks')
             Traceback (most recent call last):
             ...
             AssertionError: fake:counter.increment(25, table='hits') was called unexpectedly with args (24, table='clicks')
+        
+        If you need to work with dynamic argument values 
+        consider using :mod:`fudge.inspector` functions.  Here is an example of providing 
+        a more flexible ``with_args()`` declaration :
+        
+        .. doctest::
+            :hide:
+            
+            >>> fudge.clear_expectations()
+        
+        .. doctest::
+            
+            >>> import fudge
+            >>> from fudge.inspector import arg
+            >>> counter = fudge.Fake('counter')
+            >>> counter = counter.expects('increment').with_args(
+            ...                                         arg.any_value(), 
+            ...                                         table=arg.endswith("hits"))
+            ... 
+        
+        The above declaration would allow you to call counter like this:
+        
+        .. doctest::
+            
+            >>> counter.increment(999, table="image_hits")
+            >>> fudge.verify()
+        
+        .. doctest::
+            :hide:
+            
+            >>> fudge.clear_calls()
+        
+        Or like this:
+        
+        .. doctest::
+            
+            >>> counter.increment(22, table="user_profile_hits")
+            >>> fudge.verify()
+            
+        .. doctest::
+            :hide:
+            
+            >>> fudge.clear_expectations()
             
         """
         exp = self._get_current_call()
