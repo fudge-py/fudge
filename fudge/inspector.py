@@ -195,9 +195,8 @@ class ValueInspector(object):
             ... 
             >>> import fudge
             >>> from fudge.inspector import arg
-            >>> system = fudge.Fake("system").expects("set_status").with_args(
-            ...                                     arg.passes_test(is_valid))
-            ... 
+            >>> system = fudge.Fake("system")
+            >>> system = system.expects("set_status").with_args(arg.passes_test(is_valid))
             >>> system.set_status("active")
             >>> fudge.verify()
             
