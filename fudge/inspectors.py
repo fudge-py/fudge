@@ -13,11 +13,11 @@ class ValueInspector(object):
     """
     
     def any_value(self):
-        """dispatch value test that matches any value.
+        """return test that matches any value.
         
         This is pretty much just a placeholder for when you 
         want to inspect multiple arguments but don't care about 
-        all of them 
+        all of them.
         
         .. doctest::
             
@@ -42,6 +42,50 @@ class ValueInspector(object):
         return AnyValue()
     
     def has_attr(self, **attributes):
+        """return test to assert the value is an argument with said arguments.
+        
+        This is useful for when a value can be an object but you only 
+        need to test that the object has specific attributes.
+        
+        .. doctest::
+            
+            >>> import fudge
+            >>> from fudge.inspectors import arg
+            >>> db = fudge.Fake("db").expects("update").with_args(arg.has_attr(
+            ...                                                 first_name="Bob",
+            ...                                                 last_name="James" ))
+            ... 
+            >>> class User:
+            ...     first_name = "Bob"
+            ...     last_name = "James"
+            ...     job = "jazz musician"
+            ... 
+            >>> db.update(User())
+            >>> fudge.verify()
+        
+        In case of error, the object will be reproduced:
+        
+        .. doctest::
+            
+            >>> class User:
+            ...     first_name = "Bob"
+            ... 
+            ...     def __repr__(self):
+            ...         return str(dict(first_name=self.first_name))
+            ... 
+            >>> fudge.clear_calls()
+            >>> db.update(User())
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:db.update(arg.has_attr(first_name='Bob', last_name='James')) was called unexpectedly with args ({'first_name': 'Bob'})
+            
+            
+        .. doctest::
+            :hide:
+            
+            >>> fudge.clear_expectations()
+            
+        """
         return HasAttr(**attributes)
     
     def endswith(self, part):
