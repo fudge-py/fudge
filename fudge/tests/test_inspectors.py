@@ -34,6 +34,13 @@ class TestPasses(unittest.TestCase):
         counter = Fake("counter").expects("increment").with_args(arg.passes(isint))
         counter.increment(25)
     
+    @raises(AssertionError)
+    def test_passes_fail(self):
+        def is_str(v):
+            return isinstance(v,str)
+        counter = Fake("counter").expects("set_name").with_args(arg.passes(is_str))
+        counter.set_name(25)
+    
     def test_repr(self):
         class test(object):
             def __call__(self, v):

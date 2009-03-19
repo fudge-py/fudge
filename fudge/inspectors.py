@@ -177,6 +177,48 @@ class ValueInspector(object):
         return HasAttr(**attributes)
     
     def passes(self, test):
+        """Check that a value passes some test.
+        
+        For custom assertions you may need to create your own callable 
+        to inspect and verify the value.
+        
+        .. doctest::
+            
+            >>> import fudge
+            >>> from fudge.inspectors import arg
+            >>> def test_status(s):
+            ...     if s in ('active','deleted'):
+            ...         return True
+            ...     else:
+            ...         return False
+            ... 
+            >>> system = fudge.Fake("system").expects("set_status").with_args(
+            ...                                     arg.passes(test_status))
+            ... 
+            >>> system.set_status("active")
+            >>> fudge.verify()
+            
+        .. doctest::
+            :hide:
+            
+            >>> fudge.clear_calls()
+        
+        The callable you pass takes one argument, the value, and should return 
+        True if it's an acceptable value or False if not.
+        
+        .. doctest::
+            
+            >>> system.set_status("sleep") # doctest: +ELLIPSIS
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:system.set_status(arg.passes(<function test_status at ...>)) was called unexpectedly with args ('sleep')
+        
+        .. doctest::
+            :hide:
+            
+            >>> fudge.clear_expectations()
+            
+        """
         return Passes(test)
     
     def startswith(self, part):
