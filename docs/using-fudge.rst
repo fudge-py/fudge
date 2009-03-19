@@ -13,15 +13,15 @@ to send email:
 
 .. doctest::
 
-    >>> def send_email(recipient, sender, msg):
+    >>> def send_email(recipients, sender, msg):
     ...     import smtplib
     ...     msg = ("From: %s\r\nTo: %s\r\n\r\n%s" % (
-    ...             sender, ", ".join(recipient), msg))
+    ...             sender, ", ".join(recipients), msg))
     ...     s = smtplib.SMTP()
     ...     s.connect()
-    ...     s.sendmail(sender, recipient, msg)
+    ...     s.sendmail(sender, recipients, msg)
     ...     s.close()
-    ...     print "Sent an email to %s" % recipient
+    ...     print "Sent an email to %s" % recipients
     ... 
     >>> 
 
@@ -35,10 +35,14 @@ it up:
 .. doctest::
     
     >>> import fudge
+    >>> from fudge.inspectors import arg
     >>> SMTP = fudge.Fake('SMTP')
     >>> SMTP = SMTP.expects('__init__')
     >>> SMTP = SMTP.expects('connect')
-    >>> SMTP = SMTP.expects('sendmail').with_arg_count(3)
+    >>> SMTP = SMTP.expects('sendmail').with_args(
+    ...             "you@yourhouse.com",
+    ...             ["kumar@hishouse.com"],
+    ...             arg.contains("To: %s" % "kumar@hishouse.com"))
     >>> SMTP = SMTP.expects('close')
 
 Next, patch the module temporarily with your fake:
@@ -57,10 +61,10 @@ Run the code you want to test:
 
 .. doctest::
 
-    >>> send_email( "kumar@hishouse.com", "you@yourhouse.com", 
-    ...                                   "hi, I'm reading about Fudge!")
+    >>> send_email( ["kumar@hishouse.com"], "you@yourhouse.com", 
+    ...                                     "hi, I'm reading about Fudge!")
     ... 
-    Sent an email to kumar@hishouse.com
+    Sent an email to ['kumar@hishouse.com']
 
 Call :func:`fudge.verify` to make sure all expectations were met:
 
@@ -85,12 +89,12 @@ The above code could also be written as a test function, compatible with `Nose`_
     >>> @fudge.with_fakes
     ... @fudge.with_patched_object("smtplib", "SMTP", SMTP)
     ... def test_email():
-    ...     send_email( "kumar@hishouse.com", 
+    ...     send_email( ["kumar@hishouse.com"], 
     ...                 "you@yourhouse.com", 
     ...                 "Mmmm, fudge")
     ... 
     >>> test_email()
-    Sent an email to kumar@hishouse.com
+    Sent an email to ['kumar@hishouse.com']
 
 You can also patch code using the `with statement <http://www.python.org/dev/peps/pep-0343/>`_; see :func:`fudge.patcher.patched_context`.
 
@@ -112,14 +116,14 @@ The same test above can be written using the standard ``unittest.TestCase`` modu
     ...         self.patched.restore()
     ...     
     ...     def test_email(self):
-    ...         send_email( "kumar@hishouse.com", 
+    ...         send_email( ["kumar@hishouse.com"], 
     ...                     "you@yourhouse.com", 
     ...                     "Mmmm, fudge")
     ...         fudge.verify()
     ... 
     >>> test = TestEmail('test_email')
     >>> test.run()
-    Sent an email to kumar@hishouse.com
+    Sent an email to ['kumar@hishouse.com']
 
 Notice how :func:`fudge.verify` is called within the test itself, not in tearDown().  This is because :func:`fudge.verify` might raise errors about failed expectations, which is part of your test.
 
@@ -137,7 +141,7 @@ AssertionError when those expectations are not met.  For example:
     >>> s.sendmail("whoops")
     Traceback (most recent call last):
     ...
-    AssertionError: fake:SMTP.sendmail() was called with 1 arg(s) but expected 3
+    AssertionError: fake:SMTP.sendmail(...) was called unexpectedly with args ('whoops')
 
 If your code forgets to call an important method, that would be an error too:
 
@@ -149,7 +153,7 @@ If your code forgets to call an important method, that would be an error too:
     >>> fudge.verify()
     Traceback (most recent call last):
     ...
-    AssertionError: fake:SMTP.sendmail() was not called
+    AssertionError: fake:SMTP.sendmail(...) was not called
 
 Clearing Expectations
 =====================
@@ -194,7 +198,7 @@ your test module:
     >>> @fudge.with_fakes
     ... @fudge.with_patched_object("smtplib", "SMTP", SMTP)
     ... def test_email():
-    ...     send_email( "kumar.mcmillan@gmail.com", 
+    ...     send_email( ["kumar.mcmillan@gmail.com"], 
     ...                 "you@yourhouse.com", 
     ...                 "Mmmm, fudge")
     ... 
@@ -207,7 +211,7 @@ The above test module will be executed as follows:
     ...     test_email()
     ... finally:
     ...     teardown_module()
-    Sent an email to kumar.mcmillan@gmail.com
+    Sent an email to ['kumar.mcmillan@gmail.com']
 
 Stubs Without Expectations
 ==========================
