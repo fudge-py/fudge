@@ -176,6 +176,9 @@ class ValueInspector(object):
         """
         return HasAttr(**attributes)
     
+    def passes(self, test):
+        return Passes(test)
+    
     def startswith(self, part):
         """Ensure that a value starts with some part.
         
@@ -293,4 +296,16 @@ class Contains(ValueTest):
             return True
         else:
             return False
+        
+class Passes(ValueTest):
+    arg_method = "passes"
+    
+    def __init__(self, test):
+        self.test = test
+    
+    def __eq__(self, other):
+        return self.test(other)
+    
+    def _repr_argspec(self):
+        return self._make_argspec(repr(self.test))
         

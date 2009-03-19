@@ -22,6 +22,37 @@ class TestAnyValue(unittest.TestCase):
     def test_str(self):
         any = inspectors.AnyValue()
         eq_(str(any), "arg.any_value()")
+        
+class TestPasses(unittest.TestCase):
+    
+    def tearDown(self):
+        fudge.clear_expectations()
+    
+    def test_passes(self):
+        def isint(v):
+            return isinstance(v,int)
+        counter = Fake("counter").expects("increment").with_args(arg.passes(isint))
+        counter.increment(25)
+    
+    def test_repr(self):
+        class test(object):
+            def __call__(self, v):
+                return isinstance(v,int)
+            def __repr__(self):
+                return "test that v is an int"
+                
+        passes = inspectors.Passes(test())
+        eq_(repr(passes), "arg.passes(test that v is an int)")
+    
+    def test_str(self):
+        class test(object):
+            def __call__(self, v):
+                return isinstance(v,int)
+            def __repr__(self):
+                return "test that v is an int"
+                
+        passes = inspectors.Passes(test())
+        eq_(str(passes), "arg.passes(test that v is an int)")
 
 class TestObjectlike(unittest.TestCase):
     
