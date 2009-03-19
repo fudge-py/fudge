@@ -1,4 +1,23 @@
 
+"""Value inspectors.
+
+These inspectors can be passed to :func:`fudge.Fake.with_args` for more 
+expressive argument matching.  As a pneumonic device, 
+an instance of the :class:`fudge.inspector.ValueInspector` is available as "args" :
+
+.. doctest::
+    
+    >>> import fudge
+    >>> from fudge.inspectors import arg
+    >>> image = fudge.Fake("image").expects("save").with_args(arg.endswith(".jpg"))
+    
+.. doctest::
+    :hide:
+    
+    >>> fudge.clear_expectations()
+
+"""
+
 from fudge.util import fmt_val, fmt_dict_vals
 
 __all__ = ['arg']
@@ -70,7 +89,10 @@ class ValueInspector(object):
             :hide:
             
             >>> fudge.clear_expectations()
-            
+        
+        Since contains() just invokes the __in__() method, checking that a list 
+        item is present works as expected :
+        
         .. doctest::
             
             >>> colorpicker = fudge.Fake("colorpicker")
@@ -111,6 +133,11 @@ class ValueInspector(object):
         In case of error, the object will be reproduced:
         
         .. doctest::
+            :hide:
+            
+            >>> fudge.clear_calls()
+        
+        .. doctest::
             
             >>> class User:
             ...     first_name = "Bob"
@@ -118,7 +145,6 @@ class ValueInspector(object):
             ...     def __repr__(self):
             ...         return str(dict(first_name=self.first_name))
             ... 
-            >>> fudge.clear_calls()
             >>> db.update(User())
             Traceback (most recent call last):
             ...
