@@ -42,7 +42,7 @@ it up:
     >>> SMTP = SMTP.expects('sendmail').with_args(
     ...             "you@yourhouse.com",
     ...             ["kumar@hishouse.com"],
-    ...             arg.contains("To: %s" % "kumar@hishouse.com"))
+    ...             arg.contains("kumar@hishouse.com")) # To: <name>
     >>> SMTP = SMTP.expects('close')
 
 Next, patch the module temporarily with your fake:
@@ -51,7 +51,7 @@ Next, patch the module temporarily with your fake:
 
     >>> patched_smtplib = fudge.patch_object("smtplib", "SMTP", SMTP)
 
-Now you can run the code with the fake object.  Begin each test with :func:`fudge.clear_calls` so that call history is reset:
+Now you can test against the fake object.  Begin each test with :func:`fudge.clear_calls` so that call history is reset:
 
 .. doctest::
     
@@ -101,13 +101,15 @@ You can also patch code using the `with statement <http://www.python.org/dev/pep
 A unittest.TestCase
 ===================
 
-The same test above can be written using the standard ``unittest.TestCase`` module like this:
+With a little more code, you can write the test above
+using a standard ``unittest.TestCase`` like this:
 
 .. doctest::
     
     >>> import fudge
     >>> import unittest
     >>> class TestEmail(unittest.TestCase):
+    ... 
     ...     def setUp(self):
     ...         self.patched = fudge.patch_object("smtplib", "SMTP", SMTP)
     ...         fudge.clear_calls()
@@ -115,17 +117,18 @@ The same test above can be written using the standard ``unittest.TestCase`` modu
     ...     def tearDown(self):
     ...         self.patched.restore()
     ...     
+    ...     @fudge.with_fakes
     ...     def test_email(self):
     ...         send_email( ["kumar@hishouse.com"], 
     ...                     "you@yourhouse.com", 
     ...                     "Mmmm, fudge")
-    ...         fudge.verify()
     ... 
     >>> test = TestEmail('test_email')
     >>> test.run()
     Sent an email to ['kumar@hishouse.com']
 
-Notice how :func:`fudge.verify` is called within the test itself, not in tearDown().  This is because :func:`fudge.verify` might raise errors about failed expectations, which is part of your test.
+Be sure to apply the decorator :func:`fudge.with_fakes` to any test method that 
+might use fake objects.  This will ensure that :func:`fudge.clear_calls` and :func:`fudge.verify`.
 
 Failed Expectations
 ===================
@@ -146,8 +149,12 @@ AssertionError when those expectations are not met.  For example:
 If your code forgets to call an important method, that would be an error too:
 
 .. doctest::
+    :hide:
     
     >>> fudge.clear_calls()
+    
+.. doctest::
+    
     >>> s = SMTP()
     >>> s.connect()
     >>> fudge.verify()
@@ -172,7 +179,7 @@ to clear the SMTP expectations before testing with the fake database.
     >>> fudge.clear_expectations()
 
 This is different from :func:`fudge.clear_calls`, which only 
-clears the actual calls made to your objects.
+clears the actual calls made to your objects during a test.
 
 A Complete Test Module
 ======================
