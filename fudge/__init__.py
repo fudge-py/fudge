@@ -223,25 +223,37 @@ class Call(object):
             # but it is intuitive to otherwise 
             # return the replacement's return:
             return_value = replacement_return
+        
+        # determine whether we should inspect arguments or not:
+        with_args = (self.expected_args or self.expected_kwargs)
+        
+        if with_args: 
+            # check keyword args first because of python arg coercion...
+            if self.expected_kwargs is None:
+                self.expected_kwargs = {} # empty **kw
+            if kwargs != self.expected_kwargs:
+                raise AssertionError(
+                    "%s was called unexpectedly with keyword args %s" % (
+                                self, ", ".join(fmt_dict_vals(kwargs, shorten=False))))  
             
-        if self.expected_args:
+            if self.expected_args is None:
+                self.expected_args = tuple([]) # empty *args
             if args != self.expected_args:
                 raise AssertionError(
                     "%s was called unexpectedly with args %s" % (
                             self, 
-                            self._repr_call(args, kwargs, shorten_long_vals=False)))
-        elif self.expected_arg_count is not None:
+                            self._repr_call(args, kwargs, shorten_long_vals=False)))      
+                            
+        # determine whether we should inspect argument counts or not:
+        with_arg_counts = (self.expected_arg_count is not None or 
+                           self.expected_kwarg_count is not None)
+        
+        if with_arg_counts: 
             if len(args) != self.expected_arg_count:
                 raise AssertionError(
                     "%s was called with %s arg(s) but expected %s" % (
                         self, len(args), self.expected_arg_count))
                     
-        if self.expected_kwargs:
-            if kwargs != self.expected_kwargs:
-                raise AssertionError(
-                    "%s was called unexpectedly with keyword args %s" % (
-                                self, ", ".join(fmt_dict_vals(kwargs, shorten=False))))
-        elif self.expected_kwarg_count is not None:
             if len(kwargs.keys()) != self.expected_kwarg_count:
                 raise AssertionError(
                     "%s was called with %s keyword arg(s) but expected %s" % (
