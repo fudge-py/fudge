@@ -4,8 +4,41 @@ from fudge.util import fmt_val, fmt_dict_vals
 __all__ = ['arg']
 
 class ValueInspector(object):
+    """Dispatches tests to inspect values. 
+    
+    An instance of this class is available as a singleton::
+        
+        >>> from fudge.inspectors import arg
+    
+    """
     
     def any_value(self):
+        """dispatch value test that matches any value.
+        
+        This is pretty much just a placeholder for when you 
+        want to inspect multiple arguments but don't care about 
+        all of them 
+        
+        .. doctest::
+            
+            >>> import fudge
+            >>> from fudge.inspectors import arg
+            >>> db = fudge.Fake("db")
+            >>> db = db.expects("transaction").with_args(
+            ...             "insert", isolation_level=arg.any_value())
+            ... 
+            >>> db.transaction("insert", isolation_level="lock")
+            >>> fudge.verify()
+            >>> fudge.clear_calls()
+            >>> db.transaction("insert", isolation_level="autocommit")
+            >>> fudge.verify()
+        
+        .. doctest::
+            :hide:
+            
+            >>> fudge.clear_expectations()
+        
+        """
         return AnyValue()
     
     def has_attr(self, **attributes):
