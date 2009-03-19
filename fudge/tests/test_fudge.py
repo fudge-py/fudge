@@ -99,18 +99,13 @@ class TestReturnsFake(unittest.TestCase):
         f = Fake().provides("get_widget").returns_fake()
         eq_(f._name, "get_widget")
 
-class TestFakeExpectations(unittest.TestCase):
+class TestArguments(unittest.TestCase):
     
     def setUp(self):
         self.fake = fudge.Fake()
     
     def tearDown(self):
         fudge.clear_expectations()
-    
-    @raises(AssertionError)
-    def test_nocall(self):
-        exp = self.fake.expects('something')
-        fudge.verify()
     
     @raises(AssertionError)
     def test_wrong_args(self):
@@ -254,8 +249,8 @@ class TestFakeCallables(unittest.TestCase):
         self.fake()
     
     def test_callable(self):
-        self.fake = fudge.Fake(callable=True)
-        self.fake() # allow the call
+        fake = fudge.Fake(callable=True)
+        fake() # allow the call
         fudge.verify() # no error
     
     @raises(AttributeError)
@@ -602,6 +597,12 @@ class TestExpectsAndProvides(unittest.TestCase):
     
     def tearDown(self):
         fudge.clear_expectations()
+    
+    @raises(AssertionError)
+    def test_nocall(self):
+        fake = fudge.Fake()
+        exp = fake.expects('something')
+        fudge.verify()
     
     @raises(FakeDeclarationError)
     def test_multiple_provides_is_error(self):
