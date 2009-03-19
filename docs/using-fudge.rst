@@ -390,8 +390,42 @@ A descriptive error is printed if you call things out of order:
     :hide:
     
     >>> fudge.clear_expectations()
+
+Working with Arguments
+======================
+
+The :func:`fudge.Fake.with_args` method optionally allows you to declare expectations of 
+how arguments should be sent to your object.  It's usually sufficient to expect an exact 
+argument value but sometimes you need to use :mod:`fudge.inspectors` for dynamic values.
+
+Here is a short example:
+
+.. doctest::
+    
+    >>> import fudge
+    >>> from fudge.inspectors import arg
+    >>> image = fudge.Fake("image").expects("save")
+    >>> image = image.with_args("JPEG", arg.endswith(".jpg"), resolution=arg.any_value())
+
+This declaration is very flexible; it allow the following arguments to be sent :
+
+.. doctest::
+
+    >>> image.save("JPEG", "/tmp/unicorns-and-rainbows.jpg", resolution=72)
+    >>> image.save("JPEG", "/tmp/very-serious-avatar.jpg", resolution=96)
+
+.. doctest::
+    :hide:
+    
+    >>> fudge.verify()
+    >>> fudge.clear_expectations()
     
 .. _Nose: http://somethingaboutorange.com/mrl/projects/nose/
 .. _py.test: http://codespeak.net/py/dist/test.html
 
-That's it!  See the :ref:`fudge API <fudge-api>` for details.
+That's it!  See the fudge API for details:
+
+.. toctree::
+    :glob:
+    
+    api/*
