@@ -265,8 +265,16 @@ class Call(object):
                         self, len(kwargs.keys()), self.expected_kwarg_count))
         
         return return_value
+        
+    def _args_are_equal(self, actual_args, expected_args):
+        pass
     
     def _keywords_are_equal(self, actual_kwargs, expected_kwargs):
+        """returns (True or False, reason)
+        
+        First value is True if keywords matched.  The second value is 
+        the reason.  It might be a blank string.
+        """
         expected_keys = set(expected_kwargs.keys())
         if (len(expected_keys)==1 and len(actual_kwargs.keys())==1):
             # no need for detailed messages
@@ -282,9 +290,10 @@ class Call(object):
                 return (False, "%s=%r != %s=%r" % (k, v, k, expected_kwargs[k]))
             expected_keys.remove(k)
         
-        if len(expected_keys):
-            return (False, "these keywords never showed up: %r" % tuple(expected_keys))
-            
+        exp_key_len = len(expected_keys)
+        if exp_key_len:
+            these = exp_key_len==1 and "this keyword" or "these keywords"
+            return (False, "%s never showed up: %r" % (these, tuple(expected_keys)))
         
         return (True, "")
 
