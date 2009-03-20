@@ -167,11 +167,11 @@ class TestArgEquality(unittest.TestCase):
     def setUp(self):
         self.fake = Fake("foo")
         self.call = Call(self.fake)
-    # 
-    # def test_complex_match_yields_no_reason(self):
-    #     actual = ('one','two','three')
-    #     expected = ('one','two','three')
-    #     eq_(self.call._args_are_equal(actual, expected), (True, ""))
+    
+    def test_complex_match_yields_no_reason(self):
+        actual = ('one','two','three')
+        expected = ('one','two','three')
+        eq_(self.call._args_are_equal(actual, expected), (True, ""))
 
 class TestKeywordArgEquality(unittest.TestCase):
     
@@ -183,8 +183,9 @@ class TestKeywordArgEquality(unittest.TestCase):
         eq_(self.call._keywords_are_equal({}, {}), (True, ""))
     
     def test_one_empty(self):
-        eq_(self.call._keywords_are_equal({}, {'something':'here'}), 
-            (False, "this keyword never showed up: ('something',)"))
+        eq_(self.call._keywords_are_equal({}, 
+            {'something':'here','another':'there'}), 
+            (False, "these keywords never showed up: ('something', 'another')"))
     
     def test_complex_match_yields_no_reason(self):
         actual = {'num':1, 'two':2, 'three':3}

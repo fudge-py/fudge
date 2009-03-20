@@ -267,7 +267,7 @@ class Call(object):
         return return_value
         
     def _args_are_equal(self, actual_args, expected_args):
-        pass
+        actual_args_set = set(actual_args)
     
     def _keywords_are_equal(self, actual_kwargs, expected_kwargs):
         """returns (True or False, reason)
@@ -276,7 +276,7 @@ class Call(object):
         the reason.  It might be a blank string.
         """
         expected_keys = set(expected_kwargs.keys())
-        if (len(expected_keys)==1 and len(actual_kwargs.keys())==1):
+        if (len(expected_keys)<=1 and len(actual_kwargs.keys())<=1):
             # no need for detailed messages
             if actual_kwargs == expected_kwargs:
                 return (True, "")
