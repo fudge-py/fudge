@@ -265,37 +265,39 @@ class Call(object):
                         self, len(kwargs.keys()), self.expected_kwarg_count))
         
         return return_value
-        
-    def _args_are_equal(self, actual_args, expected_args):
-        actual_args_set = set(actual_args)
     
-    def _keywords_are_equal(self, actual_kwargs, expected_kwargs):
-        """returns (True or False, reason)
+    ## hmmm, arg diffing (for Call().__call__()) needs more thought
         
-        First value is True if keywords matched.  The second value is 
-        the reason.  It might be a blank string.
-        """
-        expected_keys = set(expected_kwargs.keys())
-        if (len(expected_keys)<=1 and len(actual_kwargs.keys())<=1):
-            # no need for detailed messages
-            if actual_kwargs == expected_kwargs:
-                return (True, "")
-            else:
-                return (False, "")
-            
-        for k,v in actual_kwargs.items():
-            if k not in expected_keys:
-                return (False, "keyword %r was not expected" % k)
-            if v != expected_kwargs[k]:
-                return (False, "%s=%r != %s=%r" % (k, v, k, expected_kwargs[k]))
-            expected_keys.remove(k)
-        
-        exp_key_len = len(expected_keys)
-        if exp_key_len:
-            these = exp_key_len==1 and "this keyword" or "these keywords"
-            return (False, "%s never showed up: %r" % (these, tuple(expected_keys)))
-        
-        return (True, "")
+    # def _arg_diff(self, actual_args, expected_args):
+    #     """return differnce between keywords"""
+    #     if len(actual_args) > len(expected_args):
+    #         pass
+    #             
+    # 
+    # def _keyword_diff(self, actual_kwargs, expected_kwargs):
+    #     """returns difference between keywords.
+    #     """
+    #     expected_keys = set(expected_kwargs.keys())
+    #     if (len(expected_keys)<=1 and len(actual_kwargs.keys())<=1):
+    #         # no need for detailed messages
+    #         if actual_kwargs == expected_kwargs:
+    #             return (True, "")
+    #         else:
+    #             return (False, "")
+    #         
+    #     for k,v in actual_kwargs.items():
+    #         if k not in expected_keys:
+    #             return (False, "keyword %r was not expected" % k)
+    #         if v != expected_kwargs[k]:
+    #             return (False, "%s=%r != %s=%r" % (k, v, k, expected_kwargs[k]))
+    #         expected_keys.remove(k)
+    #     
+    #     exp_key_len = len(expected_keys)
+    #     if exp_key_len:
+    #         these = exp_key_len==1 and "this keyword" or "these keywords"
+    #         return (False, "%s never showed up: %r" % (these, tuple(expected_keys)))
+    #     
+    #     return (True, "")
 
     def _repr_call(self, expected_args, expected_kwargs, shorten_long_vals=True):
         args = []
