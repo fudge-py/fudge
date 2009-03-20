@@ -267,6 +267,13 @@ class Call(object):
         return return_value
         
     def _args_are_equal(self, actual_args, expected_args):
+        if (len(actual_args)<=1 and len(expected_args)<=1):
+            # no need for detailed messages
+            if actual_args == expected_args:
+                return (True, "")
+            else:
+                return (False, "")
+                
         actual_args_set = set(actual_args)
     
     def _keywords_are_equal(self, actual_kwargs, expected_kwargs):
