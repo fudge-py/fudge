@@ -1,3 +1,4 @@
+import optparse
 import logging, time, os
 from wsgiref import simple_server
 log = logging.getLogger(__name__)
@@ -32,11 +33,13 @@ def fileapp(environ, start_response):
     return [body]
     
 def main():
+    p = optparse.OptionParser(usage="%prog")
+    p.add_option("--port", help="Port to run server on.  Default: %default", default=8090, type=int)
+    (options, args) = p.parse_args()
     logging.basicConfig(level=logging.DEBUG,
                         format='[%(asctime)s] %(message)s')
-    port = 8000
-    log.info("starting test server on port %s", port)
-    httpd = simple_server.WSGIServer(('',port), simple_server.WSGIRequestHandler)
+    log.info("starting test server on port %s", options.port)
+    httpd = simple_server.WSGIServer(('', options.port), simple_server.WSGIRequestHandler)
     httpd.set_app(fileapp)
     httpd.serve_forever()
 
