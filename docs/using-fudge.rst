@@ -36,14 +36,15 @@ it up:
     
     >>> import fudge
     >>> from fudge.inspector import arg
-    >>> SMTP = fudge.Fake('SMTP')
-    >>> SMTP = SMTP.expects('__init__')
-    >>> SMTP = SMTP.expects('connect')
-    >>> SMTP = SMTP.expects('sendmail').with_args(
-    ...             "you@yourhouse.com",
-    ...             ["kumar@hishouse.com"],
-    ...             arg.contains("kumar@hishouse.com")) # To: <name>
-    >>> SMTP = SMTP.expects('close')
+    >>> SMTP = (fudge.Fake('SMTP')
+    ...              .expects('__init__')
+    ...              .expects('connect')
+    ...              .expects('sendmail').with_args(
+    ...                     "you@yourhouse.com",
+    ...                     ["kumar@hishouse.com"],
+    ...                     arg.contains("To: kumar@hishouse.com"))
+    ...              .expects('close'))
+    ... 
 
 Next, patch the module temporarily with your fake:
     
@@ -193,12 +194,12 @@ your test module:
 .. doctest::
     
     >>> import fudge
-    >>> SMTP = fudge.Fake()
-    >>> SMTP = SMTP.expects('__init__')
-    >>> SMTP = SMTP.expects('connect')
-    >>> SMTP = SMTP.expects('sendmail').with_arg_count(3)
-    >>> SMTP = SMTP.expects('close')
-    
+    >>> SMTP = (fudge.Fake()
+    ...              .expects('__init__')
+    ...              .expects('connect')
+    ...              .expects('sendmail').with_arg_count(3)
+    ...              .expects('close'))
+    ... 
     >>> def teardown_module():
     ...     fudge.clear_expectations()
     ... 
@@ -364,10 +365,10 @@ Just preface any calls to :func:`fudge.Fake.expects` with :func:`fudge.Fake.reme
 .. doctest::
     
     >>> import fudge
-    >>> session = fudge.Fake("session").remember_order()\
-    ...                                .expects("get_count").returns(0)\
-    ...                                .expects("set_count").with_args(5)\
-    ...                                .next_call(for_method="get_count").returns(5)
+    >>> session = (fudge.Fake("session").remember_order()
+    ...                                 .expects("get_count").returns(0)
+    ...                                 .expects("set_count").with_args(5)
+    ...                                 .next_call(for_method="get_count").returns(5))
     ... 
     >>> session.get_count()
     0
