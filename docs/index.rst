@@ -82,7 +82,8 @@ Changelog
 
 - 0.9.3
     
-  - Added ``with_args()`` to JavaScript port.
+  - Fixed ``returns_fake()`` in JavaScript Fudge.
+  - Added ``with_args()`` to JavaScript Fudge.
 
 - 0.9.2
   

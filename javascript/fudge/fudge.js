@@ -269,38 +269,42 @@ fudge = function() {
             config = {};
         }
         this._name = name;
-    
-        if (name) {
-            var parts = name.split(".");
-            if (parts.length === 0) {
-                // empty string?
-                throw new Error("Fake('" + name + "'): invalid name");
-            }   
-            // descend into dot-separated object.
-            //  i.e.
-            //  foo.bar.baz
-            //      window[foo]
-            //      foo[bar]
-            //      baz
-            var last_parent = window;
-            for (var i=0; i<parts.length; i++) {
-                var new_part = parts[i];
-                if (!last_parent[new_part]) {
-                    // lazily create mock objects that don't exist:
-                    last_parent[new_part] = {};
-                }
-                last_parent = last_parent[new_part];
-            }
-            this._object = last_parent;
-    
-            if (!this._object) {
-                throw new Error(
-                    "Fake('" + name + "'): name must be the name of a " + 
-                    "global variable assigned to window (it is: " + this._object + ")");
-            }
+        
+        if (config.object) {
+            this._object = config.object;
         } else {
-            // anonymous Fake, like for returns_fake()
-            this._object = {};
+            // object is a global by name
+            if (name) {
+                var parts = name.split(".");
+                if (parts.length === 0) {
+                    // empty string?
+                    throw new Error("Fake('" + name + "'): invalid name");
+                }   
+                // descend into dot-separated object.
+                //  i.e.
+                //  foo.bar.baz
+                //      window[foo]
+                //      foo[bar]
+                //      baz
+                var last_parent = window;
+                for (var i=0; i<parts.length; i++) {
+                    var new_part = parts[i];
+                    if (!last_parent[new_part]) {
+                        // lazily create mock objects that don't exist:
+                        last_parent[new_part] = {};
+                    }
+                    last_parent = last_parent[new_part];
+                }
+                this._object = last_parent;
+    
+                if (!this._object) {
+                    throw new Error(
+                        "Fake('" + name + "'): name must be the name of a " + 
+                        "global variable assigned to window (it is: " + this._object + ")");
+                }
+            } else {
+                throw new Error("Can only call Fake(name) or Fake({object: object})")
+            }
         }
     
         this._declared_calls = {};
@@ -440,7 +444,14 @@ fudge = function() {
      * @return Object
      */
     Fake.prototype.returns_fake = function() {
-        return this.returns(new Fake());
+        // make an anonymous object ...
+        var return_val = {};
+        var fake = new Fake(this._name, {
+            "object": return_val
+        });
+        // ... then attach it to the return value of the last declared method
+        this.returns(return_val);
+        return fake;
     };
     
     /**
