@@ -107,16 +107,23 @@ fudge = function() {
         this.fake = fake;
         this.call_name = call_name;
         this.call_replacement = null;
+        this.expected_arguments = null;
         this.expected_arg_count = null;
         this.expected_kwarg_count = null;
-        this.expected_args = null;
-        this.expected_kwargs = null;
         this.return_val = null;
         this.was_called = false;
     
         var expector = this;
         this.fake._object[call_name] = function() {
             expector.was_called = true;
+            if (expector.expected_arguments !== null) {
+                if (arguments != expector.expected_arguments) {
+                    throw(new AssertionError(
+                                expector.fake + 
+                                " was called unexpectedly with arguments: " + 
+                                repr_call_args(arguments)));
+                }
+            }
             return expector.return_val;
         };
     };
@@ -169,6 +176,47 @@ fudge = function() {
         if (!this.was_called) {
             throw(new AssertionError(this.fake._name + "." + this.call_name + "() was not called"));
         }
+    };
+    
+    var fmt_val = function(val) {
+        switch (typeof val) {
+            case "object":
+                // i.e. {'debug': true, 'throttle': 1}
+                var f_val = "{";
+                var f_last_key = null;
+                for (var k in val) {
+                    if (f_last_key !== null) {
+                        f_val += ", ";
+                    }
+                    f_val += fmt_val(k) + ": " + fmt_val(val[k]);
+                    f_last_key = k;
+                }
+                f_val += "}";
+                val = f_val;
+                break;
+            case "string":
+                // i.e. 'yeah\'s'
+                val = "'" + val.replace("'","\\'") + "'";
+                break
+            default:
+                break;
+        }
+        return val;
+    }
+    
+    var repr_call_args = function(call_args) {
+        var call = "(";
+        var last = null;
+        for (var i=0; i<call_args.length; i++) {
+            if (last !== null) {
+                call += ", ";
+            }
+            var arg = fmt_val(call_args[i]);
+            call += arg;
+            last = arg;
+        }
+        call += ")";
+        return call;
     };
 
     /**
@@ -260,6 +308,10 @@ fudge = function() {
         this._allows_any_call = config.allows_any_call;
         this._stub = null;
         this._callable = config.callable || config.allows_any_call;
+    };
+    
+    Fake.prototype.toString = function() {
+        return "fake:" + this._name;
     };
 
     Fake.prototype.__getattr__ = function(name) {
@@ -398,16 +450,9 @@ fudge = function() {
      * @return Object
      */
     Fake.prototype.with_args = function() {
-        /*
-        def with_args(self, *args, **kwargs):
-            """Expect specific arguments."""
-            exp = self._get_current_call()
-            if args:
-                exp.expected_args = args
-            if kwargs:
-                exp.expected_kwargs = kwargs
-            return self
-        */
+        var exp = this._get_current_call();
+        exp.expected_arguments = arguments;
+        return this;
     };
     
     /**
@@ -444,13 +489,15 @@ fudge = function() {
     
     // fill fudge.* namespace :
     return {
-        '__version__': '0.9.2',
+        '__version__': '0.9.3',
+        AssertionError: AssertionError,
         clear_expectations: function() { return registry.clear_expectations(); },
         ExpectedCall: ExpectedCall,
         Fake: Fake,
         registry: registry,
         clear_calls: function() { return registry.clear_calls(); },
-        verify: function() { return registry.verify(); }
+        verify: function() { return registry.verify(); },
+        repr_call_args: repr_call_args
     };
     
 }(); // end fudge namespace

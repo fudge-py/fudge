@@ -14,7 +14,7 @@ function raises(exception_name, func) {
         equals(e.name, exception_name, e);
     }
     if (!caught) {
-        throw new AssertionError("expected to catch " + exception_name);
+        throw new fudge.AssertionError("expected to catch " + exception_name);
     }
 }
 
@@ -23,6 +23,10 @@ function init_test() {
 }
     
 module("Test Fake");
+
+test("Fake().toString", function() {
+    equals(new fudge.Fake("something").toString(), "fake:something");
+});
 
 test("can find objects", function() {
     
@@ -99,6 +103,25 @@ test("returns fake", function() {
     ice_skates.go();
     raises("AssertionError", function() { 
         fudge.verify();
+    });
+});
+
+test("expected arguments are set", function() {
+    init_test(); 
+    fudge.clear_expectations();
+    var fake = new fudge.Fake("Session").expects("add").with_args("one", {"debug":false});
+    var call = fudge.registry.expected_calls[0];
+    equals(call.expected_arguments[0], "one");
+    equals(call.expected_arguments[1].debug, false);
+});
+
+test("expected arguments raises error", function() {
+    init_test(); 
+    fudge.clear_expectations();
+    fudge.clear_calls();
+    var fake = new fudge.Fake("session").expects("add").with_args("one", {"debug":false});
+    raises("AssertionError", function() { 
+        session.add();
     });
 });
 
@@ -221,3 +244,9 @@ test("global clear expectations", function() {
     equals(fudge.registry.expected_calls.length, 0, "clear_expectations() should reset expectations");
 });
 
+module("utilities");
+
+test("reproduce call args", function() {
+    equals(fudge.repr_call_args(new Array("yeah's", {debug:true, when:'now'})), 
+            "('yeah\\'s', {'debug': true, 'when': 'now'})");
+});

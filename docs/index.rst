@@ -80,6 +80,10 @@ Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contri
 Changelog
 =========
 
+- 0.9.3
+    
+  - Added ``with_args()`` to JavaScript port.
+
 - 0.9.2
   
   - **Changed**: values in failed comparisons are no longer shortened when too long.
