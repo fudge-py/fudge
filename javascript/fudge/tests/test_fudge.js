@@ -112,6 +112,14 @@ test("returns fake creates calls", function() {
     ice_skates.foo().bar();
 });
 
+test("returns fake maintains expectations", function() {
+    init_test();
+    var fake = new fudge.Fake("ice_skates");
+    fake.expects("go").returns_fake().expects("show_off");
+    ice_skates.go().show_off();
+    fudge.verify();
+});
+
 test("expected arguments are set", function() {
     init_test(); 
     fudge.clear_expectations();
