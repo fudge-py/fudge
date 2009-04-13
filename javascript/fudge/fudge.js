@@ -95,6 +95,38 @@ fudge = function() {
             this.expected_calls.push(expected_call);
         };
     };
+    
+    var args_are_equal = function(array, test_array) {
+        if (array.length != test_array.length) {
+            return false;
+        }
+        for (var i = 0; i < test_array.length; i++) {
+            var val = array[i];
+            var test_val = test_array[i];
+            
+            switch (typeof val) {
+                case "object":
+                    for (var k in val) {
+                        if (test_val[k] === 'undefined' || test_val[k] !== val[k]) {
+                            return false;
+                        }
+                    }
+                    for (var k in test_val) {
+                        if (val[k] === 'undefined' || val[k] !== test_val[k]) {
+                            return false;
+                        }
+                    }
+                    break;
+                case "string":
+                default:
+                    if ( val !== test_val) {
+                        return false;
+                    }
+                    break;
+            }
+        }
+        return true;
+    };
 
     var AnyCall = function(fake, call_name) {
         /*
@@ -117,11 +149,13 @@ fudge = function() {
         this.fake._object[call_name] = function() {
             expector.was_called = true;
             if (expector.expected_arguments !== null) {
-                if (arguments != expector.expected_arguments) {
+                
+                if ( ! args_are_equal(arguments, expector.expected_arguments) ) {
                     throw(new AssertionError(
                                 expector.fake + 
                                 " was called unexpectedly with arguments: " + 
-                                repr_call_args(arguments)));
+                                repr_call_args(arguments) + 
+                                " -- expected: " + repr_call_args(expector.expected_arguments)));
                 }
             }
             return expector.return_val;

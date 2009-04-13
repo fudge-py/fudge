@@ -139,6 +139,15 @@ test("expected arguments raises error", function() {
     });
 });
 
+test("expected arguments pass", function() {
+    init_test(); 
+    fudge.clear_expectations();
+    fudge.clear_calls();
+    console.log("arg test");
+    var fake = new fudge.Fake("session").expects("add").with_args("one", {"debug":false});
+    session.add("one", {"debug":false});
+});
+
 module("Test ExpectedCall");
 
 test("ExpectedCall properties", function() {
