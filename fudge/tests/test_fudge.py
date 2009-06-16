@@ -148,6 +148,19 @@ class TestArguments(unittest.TestCase):
     def test_with_args_checks_kwargs(self):
         self.fake.expects('count').with_args('one', two='two')
         self.fake.count('one')
+
+    @raises(AssertionError)
+    def test_raises_does_not_obscure_with_kwargs(self):
+        # previously, this test failed because the raises(exc) 
+        # was raised too early.  Issue 6
+        self.fake.expects('count').with_args(two='two').raises(RuntimeError('bork'))
+        self.fake.count('one') # wrong kwargs
+
+    @raises(AssertionError)
+    def test_raises_does_not_obscure_with_args(self):
+        # Issue 6
+        self.fake.expects('count').with_args('one').raises(RuntimeError('bork'))
+        self.fake.count(two='two') # wrong args
     
     @raises(AssertionError)
     def test_too_many_args(self):

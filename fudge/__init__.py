@@ -201,9 +201,6 @@ class Call(object):
             self.call_order.add_actual_call(self)
             self.call_order.assert_order_met(finalize=False)
         
-        if self.exception_to_raise is not None:
-            raise self.exception_to_raise
-        
         # make sure call count doesn't go over :
         if self.expected_times_called is not None and \
                 self.actual_times_called > self.expected_times_called:
@@ -263,6 +260,9 @@ class Call(object):
                 raise AssertionError(
                     "%s was called with %s keyword arg(s) but expected %s" % (
                         self, len(kwargs.keys()), self.expected_kwarg_count))
+        
+        if self.exception_to_raise is not None:
+            raise self.exception_to_raise
         
         return return_value
     

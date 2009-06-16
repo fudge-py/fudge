@@ -81,9 +81,10 @@ Changelog
 =========
 
 - 0.9.3
-    
-  - Fixed ``returns_fake()`` in JavaScript Fudge.
+  
   - Added ``with_args()`` to JavaScript Fudge.
+  - Fixed bug where :func:`fudge.Fake.raises` obscured :func:`fudge.Fake.with_args` (Issue 6)
+  - Fixed ``returns_fake()`` in JavaScript Fudge.
 
 - 0.9.2
   
