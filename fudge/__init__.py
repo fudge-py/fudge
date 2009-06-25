@@ -507,7 +507,7 @@ class Fake(object):
     
     **expect_call=True**
         When True, the Fake() acts like a callable that must be called (implies callable=True).
-        Use this when replace a single method that must be called.  See example below.
+        Use this when replacing a single method that must be called.  See example below.
     
     Short example::
     
