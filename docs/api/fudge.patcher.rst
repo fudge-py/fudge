@@ -1,4 +1,6 @@
 
+.. _fudge.patcher
+
 -------------
 fudge.patcher
 -------------
