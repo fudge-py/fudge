@@ -82,7 +82,7 @@ Changelog
 
 - 0.9.3
   
-  - Added ``with_args()`` to JavaScript Fudge.
+  - Added ``with_args()`` to :ref:`JavaScript Fudge <javascript-fudge>`.
   - Fixed bug where argument values that overloaded __eq__ might cause declared expectations to fail (patch from Michael Williamson, Issue 9)
   - Fixed bug where :func:`fudge.Fake.raises` obscured :func:`fudge.Fake.with_args` (Issue 6)
   - Fixed ``returns_fake()`` in JavaScript Fudge.
