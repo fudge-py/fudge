@@ -1,10 +1,5 @@
 #!/bin/sh
 # todo: make a nose plugin that executes sphinx doctests :)
-pushd docs
-make doctest
-
-if [ $? -ne 0 ]; then
-    exit 1
-fi
-popd
+set -e
+make -C docs doctest
 nosetests --with-doctest $@

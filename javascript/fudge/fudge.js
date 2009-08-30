@@ -95,6 +95,38 @@ fudge = function() {
             this.expected_calls.push(expected_call);
         };
     };
+    
+    var args_are_equal = function(array, test_array) {
+        if (array.length != test_array.length) {
+            return false;
+        }
+        for (var i = 0; i < test_array.length; i++) {
+            var val = array[i];
+            var test_val = test_array[i];
+            
+            switch (typeof val) {
+                case "object":
+                    for (var k in val) {
+                        if (test_val[k] === 'undefined' || test_val[k] !== val[k]) {
+                            return false;
+                        }
+                    }
+                    for (var k in test_val) {
+                        if (val[k] === 'undefined' || val[k] !== test_val[k]) {
+                            return false;
+                        }
+                    }
+                    break;
+                case "string":
+                default:
+                    if ( val !== test_val) {
+                        return false;
+                    }
+                    break;
+            }
+        }
+        return true;
+    };
 
     var AnyCall = function(fake, call_name) {
         /*
@@ -107,16 +139,25 @@ fudge = function() {
         this.fake = fake;
         this.call_name = call_name;
         this.call_replacement = null;
+        this.expected_arguments = null;
         this.expected_arg_count = null;
         this.expected_kwarg_count = null;
-        this.expected_args = null;
-        this.expected_kwargs = null;
         this.return_val = null;
         this.was_called = false;
     
         var expector = this;
         this.fake._object[call_name] = function() {
             expector.was_called = true;
+            if (expector.expected_arguments !== null) {
+                
+                if ( ! args_are_equal(arguments, expector.expected_arguments) ) {
+                    throw(new AssertionError(
+                                expector.fake + 
+                                " was called unexpectedly with arguments: " + 
+                                repr_call_args(arguments) + 
+                                " -- expected: " + repr_call_args(expector.expected_arguments)));
+                }
+            }
             return expector.return_val;
         };
     };
@@ -170,6 +211,47 @@ fudge = function() {
             throw(new AssertionError(this.fake._name + "." + this.call_name + "() was not called"));
         }
     };
+    
+    var fmt_val = function(val) {
+        switch (typeof val) {
+            case "object":
+                // i.e. {'debug': true, 'throttle': 1}
+                var f_val = "{";
+                var f_last_key = null;
+                for (var k in val) {
+                    if (f_last_key !== null) {
+                        f_val += ", ";
+                    }
+                    f_val += fmt_val(k) + ": " + fmt_val(val[k]);
+                    f_last_key = k;
+                }
+                f_val += "}";
+                val = f_val;
+                break;
+            case "string":
+                // i.e. 'yeah\'s'
+                val = "'" + val.replace("'","\\'") + "'";
+                break
+            default:
+                break;
+        }
+        return val;
+    }
+    
+    var repr_call_args = function(call_args) {
+        var call = "(";
+        var last = null;
+        for (var i=0; i<call_args.length; i++) {
+            if (last !== null) {
+                call += ", ";
+            }
+            var arg = fmt_val(call_args[i]);
+            call += arg;
+            last = arg;
+        }
+        call += ")";
+        return call;
+    };
 
     /**
      * <p>
@@ -221,38 +303,42 @@ fudge = function() {
             config = {};
         }
         this._name = name;
-    
-        if (name) {
-            var parts = name.split(".");
-            if (parts.length === 0) {
-                // empty string?
-                throw new Error("Fake('" + name + "'): invalid name");
-            }   
-            // descend into dot-separated object.
-            //  i.e.
-            //  foo.bar.baz
-            //      window[foo]
-            //      foo[bar]
-            //      baz
-            var last_parent = window;
-            for (var i=0; i<parts.length; i++) {
-                var new_part = parts[i];
-                if (!last_parent[new_part]) {
-                    // lazily create mock objects that don't exist:
-                    last_parent[new_part] = {};
-                }
-                last_parent = last_parent[new_part];
-            }
-            this._object = last_parent;
-    
-            if (!this._object) {
-                throw new Error(
-                    "Fake('" + name + "'): name must be the name of a " + 
-                    "global variable assigned to window (it is: " + this._object + ")");
-            }
+        
+        if (config.object) {
+            this._object = config.object;
         } else {
-            // anonymous Fake, like for returns_fake()
-            this._object = {};
+            // object is a global by name
+            if (name) {
+                var parts = name.split(".");
+                if (parts.length === 0) {
+                    // empty string?
+                    throw new Error("Fake('" + name + "'): invalid name");
+                }   
+                // descend into dot-separated object.
+                //  i.e.
+                //  foo.bar.baz
+                //      window[foo]
+                //      foo[bar]
+                //      baz
+                var last_parent = window;
+                for (var i=0; i<parts.length; i++) {
+                    var new_part = parts[i];
+                    if (!last_parent[new_part]) {
+                        // lazily create mock objects that don't exist:
+                        last_parent[new_part] = {};
+                    }
+                    last_parent = last_parent[new_part];
+                }
+                this._object = last_parent;
+    
+                if (!this._object) {
+                    throw new Error(
+                        "Fake('" + name + "'): name must be the name of a " + 
+                        "global variable assigned to window (it is: " + this._object + ")");
+                }
+            } else {
+                throw new Error("Can only call Fake(name) or Fake({object: object})")
+            }
         }
     
         this._declared_calls = {};
@@ -260,6 +346,10 @@ fudge = function() {
         this._allows_any_call = config.allows_any_call;
         this._stub = null;
         this._callable = config.callable || config.allows_any_call;
+    };
+    
+    Fake.prototype.toString = function() {
+        return "fake:" + this._name;
     };
 
     Fake.prototype.__getattr__ = function(name) {
@@ -388,7 +478,14 @@ fudge = function() {
      * @return Object
      */
     Fake.prototype.returns_fake = function() {
-        return this.returns(new Fake());
+        // make an anonymous object ...
+        var return_val = {};
+        var fake = new Fake(this._name, {
+            "object": return_val
+        });
+        // ... then attach it to the return value of the last declared method
+        this.returns(return_val);
+        return fake;
     };
     
     /**
@@ -398,16 +495,9 @@ fudge = function() {
      * @return Object
      */
     Fake.prototype.with_args = function() {
-        /*
-        def with_args(self, *args, **kwargs):
-            """Expect specific arguments."""
-            exp = self._get_current_call()
-            if args:
-                exp.expected_args = args
-            if kwargs:
-                exp.expected_kwargs = kwargs
-            return self
-        */
+        var exp = this._get_current_call();
+        exp.expected_arguments = arguments;
+        return this;
     };
     
     /**
@@ -444,13 +534,15 @@ fudge = function() {
     
     // fill fudge.* namespace :
     return {
-        '__version__': '0.9.2',
+        '__version__': '0.9.3',
+        AssertionError: AssertionError,
         clear_expectations: function() { return registry.clear_expectations(); },
         ExpectedCall: ExpectedCall,
         Fake: Fake,
         registry: registry,
         clear_calls: function() { return registry.clear_calls(); },
-        verify: function() { return registry.verify(); }
+        verify: function() { return registry.verify(); },
+        repr_call_args: repr_call_args
     };
     
 }(); // end fudge namespace

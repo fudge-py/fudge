@@ -16,7 +16,7 @@ This module is designed for two specific situations:
   - Declare expectations about what methods should be 
     called and what arguments should be sent.
 
-Fudge was inspired by `Mocha <http://mocha.rubyforge.org/>`_ (Ruby) which is a simpler version of `jMock <http://www.jmock.org/>`_ (Java).
+Fudge was inspired by `Mocha <http://mocha.rubyforge.org/>`_ which is a simpler version of `jMock <http://www.jmock.org/>`_.  But unlike Mocha, Fudge does not automatically hijack real objects; you explicitly `patch them <fudge.patcher>`_ in your test setup.  And unlike jMock, Fudge is only as strict about expectations as you want it to be.  If you just want to expect a method call without worrying about its arguments or the type of the arguments then you can.
 
 Download / Install
 ==================
@@ -79,6 +79,12 @@ Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contri
 
 Changelog
 =========
+
+- 0.9.3
+  
+  - Added ``with_args()`` to JavaScript Fudge.
+  - Fixed bug where :func:`fudge.Fake.raises` obscured :func:`fudge.Fake.with_args` (Issue 6)
+  - Fixed ``returns_fake()`` in JavaScript Fudge.
 
 - 0.9.2
   
