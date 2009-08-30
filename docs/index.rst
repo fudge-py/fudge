@@ -75,7 +75,7 @@ Please submit `bugs and patches <http://bitbucket.org/kumar303/fudge/issues/>`_,
 Credits
 =======
 
-Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contributions by Cristian Esquivias.
+Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contributions by Cristian Esquivias and Michael Williamson.
 
 Changelog
 =========
@@ -83,6 +83,7 @@ Changelog
 - 0.9.3
   
   - Added ``with_args()`` to JavaScript Fudge.
+  - Fixed bug where argument values that overloaded __eq__ might cause declared expectations to fail (patch from Michael Williamson, Issue 9)
   - Fixed bug where :func:`fudge.Fake.raises` obscured :func:`fudge.Fake.with_args` (Issue 6)
   - Fixed ``returns_fake()`` in JavaScript Fudge.
 

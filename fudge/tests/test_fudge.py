@@ -2,6 +2,7 @@
 import unittest
 import fudge
 from nose.tools import eq_, raises
+from fudge.inspector import arg
 from fudge import (
     Fake, Registry, ExpectedCall, ExpectedCallOrder, Call, CallStack, FakeDeclarationError)
 
@@ -174,6 +175,22 @@ class TestArguments(unittest.TestCase):
     def test_zero_args_ok(self):
         mail = fudge.Fake('mail').expects('send').with_kwarg_count(3) 
         mail.send(to="you", from_="me", msg="hi") # no args should be ok
+        
+    def test_with_args_with_object_that_is_never_equal_to_anything(self):
+        class NeverEqual(object):
+            def __eq__(self, other):
+                return False
+        obj = NeverEqual()
+        self.fake.expects('save').with_args(arg.any_value())
+        self.fake.save(obj) # this should pass but was failing prior to issue 9
+
+    def test_with_kwargs_with_object_that_is_never_equal_to_anything(self):
+        class NeverEqual(object):
+            def __eq__(self, other):
+                return False
+        obj = NeverEqual()
+        self.fake.expects('save').with_args(foo=arg.any_value())
+        self.fake.save(foo=obj) # this should pass but was failing prior to issue 9
 
 ## hmm, arg diffing needs more thought
 
