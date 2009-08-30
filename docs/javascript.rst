@@ -33,13 +33,11 @@ Here is a quick example:
     
     // if you had e.g. a session object that looked something like:
     yourapp = {};
-    yourapp.Session = function() {
-        // ...
-    };
-    yourapp.Session.prototype.set = function(key, value) {
-        // ...
-    };
-    yourapp.session = new yourapp.Session();
+    yourapp.session = {
+        set: function(key, value) {
+            // ...
+        }
+    }
     yourapp.startup = function() {
         yourapp.session.set('saw_landing_page',true);
     };
