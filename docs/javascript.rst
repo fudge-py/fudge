@@ -46,7 +46,7 @@ Here is a quick example:
     
     // and if you wanted to test the startup() method above, then you could 
     // declare a fake object for a test:
-    var fake_session = fudge.Fake('session').expects('set').with_args('saw_landing_page',true);
+    var fake_session = new fudge.Fake('session').expects('set').with_args('saw_landing_page',true);
     
     // patch your production code:
     yourapp.session = fake_session;
