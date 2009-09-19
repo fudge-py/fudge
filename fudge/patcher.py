@@ -121,9 +121,8 @@ class PatchHandler(object):
     
     .. note::
         
-        This is not thread safe.  However, it is probably sufficient enough for "stubbing" a 
-        piece of middleware in a multi-threaded development server.  
-        Threading locks are acquired and released when patching objects.
+        This may produce unexpected results in a multi-threaded environment if you are 
+        patching global module variables.
         
     """
     def __init__(self, orig_object, attr_name):
