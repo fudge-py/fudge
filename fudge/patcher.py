@@ -102,6 +102,36 @@ def patch_object(obj, attr_name, patched_value):
         >>> patched_session.restore()
         >>> Session.state
         'clean'
+    
+    Here is another example showing how to patch multiple objects at once::
+        
+        >>> class Session:
+        ...     state = 'clean'
+        ... 
+        >>> class config:
+        ...     session_strategy = 'database'
+        ... 
+        >>> patches = [
+        ...     patch_object(config, "session_strategy", "filesystem"),
+        ...     patch_object(Session, "state", "dirty")
+        ... ]
+        >>> try:
+        ...     # your app under test would run here ...
+        ...     print "(while patched)"
+        ...     print "config.session_strategy=%r" % config.session_strategy
+        ...     print "Session.state=%r" % Session.state
+        ... finally:
+        ...     for p in patches:
+        ...         p.restore()
+        ...     print "(patches restored)"
+        (while patched)
+        config.session_strategy='filesystem'
+        Session.state='dirty'
+        (patches restored)
+        >>> config.session_strategy
+        'database'
+        >>> Session.state
+        'clean'
         
     """
     if isinstance(obj, (str, unicode)):
