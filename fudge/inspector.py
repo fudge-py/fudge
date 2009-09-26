@@ -374,4 +374,4 @@ class PassesTest(ValueTest):
     
     def _repr_argspec(self):
         return self._make_argspec(repr(self.test))
-        
+
