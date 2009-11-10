@@ -80,6 +80,11 @@ Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contri
 Changelog
 =========
 
+- 0.9.4
+  
+  - Fixed bug where __init__ would always return the Fake instance of itself.  
+    Now you can return a custom object if you want.
+
 - 0.9.3
   
   - Added ``with_args()`` to JavaScript Fudge.

@@ -588,8 +588,13 @@ class Fake(object):
         if '__init__' in self._declared_calls:
             # special case, simulation of __init__():
             call = self._declared_calls['__init__']
-            call(*args, **kwargs)
-            return self
+            result = call(*args, **kwargs)
+            if result is None:
+                # assume more calls were expected / provided by the same fake
+                return self
+            else:
+                # a new custom object has been declared
+                return result
         elif self._callable:
             return self._callable(*args, **kwargs)
         else:

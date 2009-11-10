@@ -478,6 +478,15 @@ class TestReplacementCalls(unittest.TestCase):
         # with_args() expectation should not get lost:
         fake = fudge.Fake().provides("something").calls(something).with_args(1,2)
         eq_(fake.something(), "hijacked")
+    
+    def test_replace_init(self):
+        
+        class custom_object:
+            def hello(self):
+                return "hi"
+            
+        fake = fudge.Fake().provides("__init__").returns(custom_object())
+        eq_(fake().hello(), "hi")
         
 class TestFakeTimesCalled(unittest.TestCase):
     
