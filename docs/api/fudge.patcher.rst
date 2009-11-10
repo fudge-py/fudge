@@ -1,5 +1,5 @@
 
-.. _fudge.patcher
+.. _fudge.patcher:
 
 -------------
 fudge.patcher

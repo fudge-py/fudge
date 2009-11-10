@@ -34,4 +34,3 @@ def fmt_dict_vals(dict_vals, shorten=True):
     if not items:
         return [fmt_val(None, shorten=shorten)]
     return ["%s=%s" % (k, fmt_val(v, shorten=shorten)) for k,v in items]
-    

@@ -1,4 +1,6 @@
 
+.. _javascript-fudge:
+
 ====================
 Fudge For JavaScript
 ====================
@@ -24,3 +26,31 @@ Usage
 =====
 
 Refer to :ref:`using-fudge` in Python to get an idea for how to use the JavaScript version.  As mentioned before, the JavaScript port is not yet fully implemented.
+
+Here is a quick example:
+
+.. code-block:: javascript
+    
+    // if you had e.g. a session object that looked something like:
+    yourapp = {};
+    yourapp.session = {
+        set: function(key, value) {
+            // ...
+        }
+    }
+    yourapp.startup = function() {
+        yourapp.session.set('saw_landing_page',true);
+    };
+    
+    // and if you wanted to test the startup() method above, then you could 
+    // declare a fake object for a test:
+    var fake_session = new fudge.Fake('session').expects('set').with_args('saw_landing_page',true);
+    
+    // patch your production code:
+    yourapp.session = fake_session;
+    
+    // and run a test:
+    fudge.clear_calls();
+    yourapp.startup();
+    fudge.verify();
+    

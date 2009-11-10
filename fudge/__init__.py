@@ -228,7 +228,7 @@ class Call(object):
             # check keyword args first because of python arg coercion...
             if self.expected_kwargs is None:
                 self.expected_kwargs = {} # empty **kw
-            if kwargs != self.expected_kwargs:
+            if self.expected_kwargs != kwargs:
                 raise AssertionError(
                     "%s was called unexpectedly with args %s" % (
                             self, 
@@ -236,7 +236,7 @@ class Call(object):
             
             if self.expected_args is None:
                 self.expected_args = tuple([]) # empty *args
-            if args != self.expected_args:
+            if self.expected_args != args:
                 raise AssertionError(
                     "%s was called unexpectedly with args %s" % (
                             self, 
@@ -507,7 +507,7 @@ class Fake(object):
     
     **expect_call=True**
         When True, the Fake() acts like a callable that must be called (implies callable=True).
-        Use this when replace a single method that must be called.  See example below.
+        Use this when replacing a single method that must be called.  See example below.
     
     Short example::
     
