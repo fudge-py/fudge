@@ -5,54 +5,48 @@
 Using Fudge
 ===========
 
-Fudging Email
-=============
+Fudging A Web Service
+=====================
 
-Say you have a method that uses Python's standard `smtplib <http://docs.python.org/library/smtplib.html#module-smtplib>`_ module 
-to send email:
+If you're unit testing code that uses a Web Service you wouldn't want to rely on the Internet because it would slow you down.  This is a good scenario in which to use mock objects.
+
+Say you have a Twitter bot that looks something like this:
 
 .. doctest::
 
-    >>> def send_email(recipients, sender, msg):
-    ...     import smtplib
-    ...     msg = ("From: %s\r\nTo: %s\r\n\r\n%s" % (
-    ...             sender, ", ".join(recipients), msg))
-    ...     s = smtplib.SMTP()
-    ...     s.connect()
-    ...     s.sendmail(sender, recipients, msg)
-    ...     s.close()
-    ...     print "Sent an email to %s" % recipients
+    >>> import twython
+    >>> def post_msg_to_twitter(msg):
+    ...     api = twython.setup(username='kumar303', password='no')
+    ...     api.updateStatus(msg)
     ... 
     >>> 
 
-You don't want to send an email each time you run a test but you want to be 
-sure that your code is able to send email.  Fudge recommends this strategy: 
-Since you trust that the SMTP class works, expect that your application 
-under test uses the SMTP class correctly.  If the application calls the wrong 
-method or forgets to call a method then your test should fail.  Here's how to set 
-it up:
+Since the `twython`_ module is tested independently, you can trust that your code will work as long as it calls the right methods.  To set this up in Fudge you **declare an expectation** of how twython should be used like this:
+
+.. _twython: http://github.com/ryanmcgrath/twython
 
 .. doctest::
     
     >>> import fudge
-    >>> from fudge.inspector import arg
-    >>> SMTP = (fudge.Fake('SMTP')
-    ...              .expects('__init__')
-    ...              .expects('connect')
-    ...              .expects('sendmail').with_args(
-    ...                     "you@yourhouse.com",
-    ...                     ["kumar@hishouse.com"],
-    ...                     arg.contains("To: kumar@hishouse.com"))
-    ...              .expects('close'))
+    >>> fake_api = fudge.Fake('twython.setup', 
+    ...                           expect_call=True).with_args(
+    ...                                                username='kumar303', 
+    ...                                                password='no')
+    >>> api_calls = (fake_api.returns_fake()
+    ...                      .expects('updateStatus')
+    ...                      .with_arg_count(1))
     ... 
 
-Next, patch the module temporarily with your fake:
+Unlike some other tools, Fudge lets you declare expectations as loose or as tight as you want.  If you don't care about the exact arguments, you can leave off the call to :meth:`fudge.Fake.with_args`.  If you don't care if a method is actually called you can use :meth:`fudge.Fake.provides` instead of :meth:`fudge.Fake.expects`.  Likewise, :meth:`fudge.Fake.with_arg_count` is only a loose expectation for how updateStatus() should be called.
+
+To install this declarative mock object, patch the module temporarily with your fake:
     
 .. doctest::
+    
+    >>> import twython
+    >>> patched_api = fudge.patch_object(twython, "setup", fake_api)
 
-    >>> patched_smtplib = fudge.patch_object("smtplib", "SMTP", SMTP)
-
-Now you can test against the fake object.  Begin each test with :func:`fudge.clear_calls` so that call history is reset:
+Now you can run code against the fake.  Begin each test with :func:`fudge.clear_calls` so that call history is reset:
 
 .. doctest::
     
@@ -62,10 +56,7 @@ Run the code you want to test:
 
 .. doctest::
 
-    >>> send_email( ["kumar@hishouse.com"], "you@yourhouse.com", 
-    ...                                     "hi, I'm reading about Fudge!")
-    ... 
-    Sent an email to ['kumar@hishouse.com']
+    >>> post_msg_to_twitter("I love testing")
 
 Call :func:`fudge.verify` to make sure all expectations were met:
 
@@ -73,60 +64,53 @@ Call :func:`fudge.verify` to make sure all expectations were met:
 
     >>> fudge.verify()
 
-And, finally, restore your patches:
+And, finally, restore the original object for sanity:
 
 .. doctest::
 
-    >>> patched_smtplib.restore()
+    >>> patched_api.restore()
     
 A Simple Test Case
 ==================
 
-The above code could also be written as a test function, compatible with `Nose`_ or `py.test`_:
+The above code could also be written as a test function, compatible with `Nose`_ or `py.test`_.  To make things easier, you wrap your test in the :func:`fudge.with_fakes` decorator to ensure that :func:`fudge.clear_calls` and :func:`fudge.verify` are executed.
 
 .. doctest::
     
     >>> import fudge
     >>> @fudge.with_fakes
-    ... @fudge.with_patched_object("smtplib", "SMTP", SMTP)
-    ... def test_email():
-    ...     send_email( ["kumar@hishouse.com"], 
-    ...                 "you@yourhouse.com", 
-    ...                 "Mmmm, fudge")
+    ... @fudge.with_patched_object(twython, "setup", fake_api)
+    ... def test_post_msg_to_twitter():
+    ...     post_msg_to_twitter("mmm, fudge")
     ... 
-    >>> test_email()
-    Sent an email to ['kumar@hishouse.com']
+    >>> test_post_msg_to_twitter()
 
 You can also patch code using the `with statement <http://www.python.org/dev/peps/pep-0343/>`_; see :func:`fudge.patcher.patched_context`.
 
 A unittest.TestCase
 ===================
 
-With a little more code, you can write the test above
-using a standard ``unittest.TestCase`` like this:
+You can write the same exact test using a standard ``unittest.TestCase`` like this:
 
 .. doctest::
     
     >>> import fudge
     >>> import unittest
-    >>> class TestEmail(unittest.TestCase):
+    >>> class TestPostMsgToTwitter(unittest.TestCase):
     ... 
     ...     def setUp(self):
-    ...         self.patched = fudge.patch_object("smtplib", "SMTP", SMTP)
+    ...         self.patched = fudge.patch_object(twython, "setup", fake_api)
     ...         fudge.clear_calls()
+    ...     
+    ...     @fudge.with_fakes
+    ...     def test_post_msg_to_twitter(self):
+    ...         post_msg_to_twitter("mmm, fudge")
     ... 
     ...     def tearDown(self):
     ...         self.patched.restore()
-    ...     
-    ...     @fudge.with_fakes
-    ...     def test_email(self):
-    ...         send_email( ["kumar@hishouse.com"], 
-    ...                     "you@yourhouse.com", 
-    ...                     "Mmmm, fudge")
     ... 
-    >>> test = TestEmail('test_email')
+    >>> test = TestPostMsgToTwitter('test_post_msg_to_twitter')
     >>> test.run()
-    Sent an email to ['kumar@hishouse.com']
 
 Be sure to apply the decorator :func:`fudge.with_fakes` to any test method that 
 might use fake objects.  This will ensure that :func:`fudge.clear_calls` and :func:`fudge.verify`.
@@ -135,17 +119,20 @@ Failed Expectations
 ===================
 
 Since the previous code declared expectations for how the 
-sendmail() method should be called, your test will raise an 
+twython module should be used, your test will raise an 
 AssertionError when those expectations are not met.  For example:
 
 .. doctest::
+    :hide:
     
-    >>> s = SMTP()
-    >>> s.connect()
-    >>> s.sendmail("whoops")
+    >>> patched_api = fudge.patch_object(twython, "setup", fake_api)
+    
+.. doctest::
+    
+    >>> api = twython.setup(username='kumar303')
     Traceback (most recent call last):
     ...
-    AssertionError: fake:SMTP.sendmail(...) was called unexpectedly with args ('whoops')
+    AssertionError: fake:twython.setup(username='kumar303', password='no') was called unexpectedly with args (username='kumar303', password='sekret')
 
 If your code forgets to call an important method, that would be an error too:
 
@@ -156,13 +143,19 @@ If your code forgets to call an important method, that would be an error too:
     
 .. doctest::
     
-    >>> s = SMTP()
-    >>> s.connect()
+    >>> api = twython.setup(username='kumar303', password='no')
     >>> fudge.verify()
     Traceback (most recent call last):
     ...
-    AssertionError: fake:SMTP.sendmail(...) was not called
+    AssertionError: fake:twython.setup.updateStatus() was not called
 
+.. doctest::
+    :hide:
+    
+    >>> patched_api.restore()
+
+A lot of effort has gone into the design of Fudge so that it reports the best possible exception messages in your tests.
+    
 Clearing Expectations
 =====================
 
@@ -181,45 +174,6 @@ to clear the SMTP expectations before testing with the fake database.
 
 This is different from :func:`fudge.clear_calls`, which only 
 clears the actual calls made to your objects during a test.
-
-A Complete Test Module
-======================
-
-If you're using a test framework like `Nose`_ or `py.test`_ that supports 
-module level setup / teardown hooks, one strategy is to declare all Fake 
-objects at the top of your test module and clear expectations after all tests 
-are run on your Fake objects.  Here is an example of how you could lay out 
-your test module:
-
-.. doctest::
-    
-    >>> import fudge
-    >>> SMTP = (fudge.Fake()
-    ...              .expects('__init__')
-    ...              .expects('connect')
-    ...              .expects('sendmail').with_arg_count(3)
-    ...              .expects('close'))
-    ... 
-    >>> def teardown_module():
-    ...     fudge.clear_expectations()
-    ... 
-    >>> @fudge.with_fakes
-    ... @fudge.with_patched_object("smtplib", "SMTP", SMTP)
-    ... def test_email():
-    ...     send_email( ["kumar.mcmillan@gmail.com"], 
-    ...                 "you@yourhouse.com", 
-    ...                 "Mmmm, fudge")
-    ... 
-
-The above test module will be executed as follows:
-    
-.. doctest::
-
-    >>> try:
-    ...     test_email()
-    ... finally:
-    ...     teardown_module()
-    Sent an email to ['kumar.mcmillan@gmail.com']
 
 Stubs Without Expectations
 ==========================
