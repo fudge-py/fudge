@@ -8,7 +8,7 @@ Using Fudge
 Fudging A Web Service
 =====================
 
-If you're unit testing code that uses a Web Service you wouldn't want to rely on the Internet because it would slow you down.  This is a good scenario in which to use mock objects.
+If you're testing code that uses a Web Service you wouldn't want to rely on the Internet because it would slow you down.  This is a good scenario in which to use mock objects.
 
 Say you have a Twitter bot that looks something like this:
 
@@ -32,21 +32,26 @@ Since the `twython`_ module is tested independently, you can trust that your cod
     ...                           expect_call=True).with_args(
     ...                                                username='kumar303', 
     ...                                                password='no')
+
+This says that the setup() method should be called with some specific arguments.  Since setup() returns another object for further API calls, you can chain together further expectations:
+
+.. doctest::
+
     >>> api_calls = (fake_api.returns_fake()
     ...                      .expects('updateStatus')
     ...                      .with_arg_count(1))
     ... 
 
-Unlike some other tools, Fudge lets you declare expectations as loose or as tight as you want.  If you don't care about the exact arguments, you can leave off the call to :meth:`fudge.Fake.with_args`.  If you don't care if a method is actually called you can use :meth:`fudge.Fake.provides` instead of :meth:`fudge.Fake.expects`.  Likewise, :meth:`fudge.Fake.with_arg_count` is only a loose expectation for how updateStatus() should be called.
+Fudge lets you declare expectations as loose or as tight as you want.  If you don't care about the exact arguments, you can leave off the call to :meth:`fudge.Fake.with_args`.  If you don't care if a method is actually called you can use :meth:`fudge.Fake.provides` instead of :meth:`fudge.Fake.expects`.  Likewise, :meth:`fudge.Fake.with_arg_count` can be used when you don't want to worry about argument values.  There are `argument inspectors <working-with-arguments>`_ for checking values in other ways.
 
-To install this declarative mock object, patch the module temporarily with your fake:
+To activate the declarative mock created above, :func:`patch <fudge.patcher.patch_object>` the module temporarily with your fake:
     
 .. doctest::
     
     >>> import twython
     >>> patched_api = fudge.patch_object(twython, "setup", fake_api)
 
-Now you can run code against the fake.  Begin each test with :func:`fudge.clear_calls` so that call history is reset:
+Now you can run code against the fake.  Begin each test with :func:`fudge.clear_calls` to reset call history from previous tests:
 
 .. doctest::
     
@@ -56,9 +61,9 @@ Run the code you want to test:
 
 .. doctest::
 
-    >>> post_msg_to_twitter("I love testing")
+    >>> post_msg_to_twitter("hey there fellow testing freaks!")
 
-Call :func:`fudge.verify` to make sure all expectations were met:
+Call :func:`fudge.verify` to make sure all expectations were met.  You probably want this at the end of your test but not in a tearDown().
 
 .. doctest::
 
@@ -113,7 +118,7 @@ You can write the same exact test using a standard ``unittest.TestCase`` like th
     >>> test.run()
 
 Be sure to apply the decorator :func:`fudge.with_fakes` to any test method that 
-might use fake objects.  This will ensure that :func:`fudge.clear_calls` and :func:`fudge.verify`.
+might use fake objects.  This will ensure that :func:`fudge.clear_calls` and :func:`fudge.verify` are executed.
 
 Failed Expectations
 ===================
@@ -129,12 +134,12 @@ AssertionError when those expectations are not met.  For example:
     
 .. doctest::
     
-    >>> api = twython.setup(username='kumar303')
+    >>> api = twython.setup(username='kumar303', password='12345')
     Traceback (most recent call last):
     ...
-    AssertionError: fake:twython.setup(username='kumar303', password='no') was called unexpectedly with args (username='kumar303', password='sekret')
+    AssertionError: fake:twython.setup(username='kumar303', password='no') was called unexpectedly with args (username='kumar303', password='12345')
 
-If your code forgets to call an important method, that would be an error too:
+If your code forgets to call an important method, that would raise an error at verification time:
 
 .. doctest::
     :hide:
@@ -164,9 +169,9 @@ you will use the Fake object in more than one test.  For this reason,
 you'll need to clear the expectation registry explicitly if you 
 want to start testing with another fake object.
 
-In other words, if one test uses a fake SMTP but some test later on 
+In other words, if one test uses a fake Twitter API but some test later on 
 uses a fake database and has nothing to do with email then you'll need 
-to clear the SMTP expectations before testing with the fake database.
+to clear the Twitter API expectations before testing with the fake database.
 
 .. doctest::
 
@@ -174,6 +179,8 @@ to clear the SMTP expectations before testing with the fake database.
 
 This is different from :func:`fudge.clear_calls`, which only 
 clears the actual calls made to your objects during a test.
+
+Typically, this would be done at a module level setup() hook supported by `Nose`_ or `py.test`_.
 
 Stubs Without Expectations
 ==========================
