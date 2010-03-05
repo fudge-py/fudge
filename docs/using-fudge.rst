@@ -28,7 +28,7 @@ Since the `twython`_ module is tested independently, you can trust that your cod
 .. doctest::
     
     >>> import fudge
-    >>> fake_api = fudge.Fake('twython.setup', 
+    >>> fake_setup = fudge.Fake('twython.setup', 
     ...                           expect_call=True).with_args(
     ...                                                username='kumar303', 
     ...                                                password='no')
@@ -37,7 +37,7 @@ This says that the setup() method should be called with some specific arguments.
 
 .. doctest::
 
-    >>> api_calls = (fake_api.returns_fake()
+    >>> fake_api = (fake_setup.returns_fake()
     ...                      .expects('updateStatus')
     ...                      .with_arg_count(1))
     ... 
@@ -49,7 +49,7 @@ To activate the declarative mock created above, :func:`patch <fudge.patcher.patc
 .. doctest::
     
     >>> import twython
-    >>> patched_api = fudge.patch_object(twython, "setup", fake_api)
+    >>> patched_api = fudge.patch_object(twython, "setup", fake_setup)
 
 Now you can run code against the fake.  Begin each test with :func:`fudge.clear_calls` to reset call history from previous tests:
 
@@ -84,7 +84,7 @@ The above code could also be written as a test function, compatible with `Nose`_
     
     >>> import fudge
     >>> @fudge.with_fakes
-    ... @fudge.with_patched_object(twython, "setup", fake_api)
+    ... @fudge.with_patched_object(twython, "setup", fake_setup)
     ... def test_post_msg_to_twitter():
     ...     post_msg_to_twitter("mmm, fudge")
     ... 
@@ -104,8 +104,15 @@ You can write the same exact test using a standard ``unittest.TestCase`` like th
     >>> class TestPostMsgToTwitter(unittest.TestCase):
     ... 
     ...     def setUp(self):
-    ...         self.patched = fudge.patch_object(twython, "setup", fake_api)
-    ...         fudge.clear_calls()
+    ...         fudge.clear_expectations() # from previous tests
+    ...         fake_setup = fudge.Fake('twython.setup', 
+    ...                           expect_call=True).with_args(
+    ...                                                username='kumar303', 
+    ...                                                password='no')
+    ...         fake_api = (fake_setup.returns_fake()
+    ...                             .expects('updateStatus')
+    ...                             .with_arg_count(1))
+    ...         self.patched = fudge.patch_object(twython, "setup", fake_setup)
     ...     
     ...     @fudge.with_fakes
     ...     def test_post_msg_to_twitter(self):
@@ -130,7 +137,7 @@ AssertionError when those expectations are not met.  For example:
 .. doctest::
     :hide:
     
-    >>> patched_api = fudge.patch_object(twython, "setup", fake_api)
+    >>> patched_api = fudge.patch_object(twython, "setup", fake_setup)
     
 .. doctest::
     
