@@ -38,8 +38,8 @@ This says that the setup() method should be called with some specific arguments.
 .. doctest::
 
     >>> fake_api = (fake_setup.returns_fake()
-    ...                      .expects('updateStatus')
-    ...                      .with_arg_count(1))
+    ...                       .expects('updateStatus')
+    ...                       .with_arg_count(1))
     ... 
 
 Fudge lets you declare expectations as loose or as tight as you want.  If you don't care about the exact arguments, you can leave off the call to :meth:`fudge.Fake.with_args`.  If you don't care if a method is actually called you can use :meth:`fudge.Fake.provides` instead of :meth:`fudge.Fake.expects`.  Likewise, :meth:`fudge.Fake.with_arg_count` can be used when you don't want to worry about argument values.  There are `argument inspectors <working-with-arguments>`_ for checking values in other ways.
@@ -166,7 +166,7 @@ If your code forgets to call an important method, that would raise an error at v
     
     >>> patched_api.restore()
 
-A lot of effort has gone into the design of Fudge so that it reports the best possible exception messages in your tests.
+A lot of effort has gone into the design of Fudge so that it reports the best possible exception messages in your tests.  However, if you prefer to declare fakes in the setUp() of your test case (like the previous example) then you can safely call clear_expectations() at the beginning of setUp().
     
 Clearing Expectations
 =====================
