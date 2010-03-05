@@ -16,7 +16,7 @@ Say you have a Twitter bot that looks something like this:
 
     >>> import twython
     >>> def post_msg_to_twitter(msg):
-    ...     api = twython.setup(username='kumar303', password='no')
+    ...     api = twython.setup(username='kumar303', password='paszword')
     ...     api.updateStatus(msg)
     ... 
     >>> 
@@ -31,7 +31,7 @@ Since the `twython`_ module is tested independently, you can trust that your cod
     >>> fake_setup = fudge.Fake('twython.setup', 
     ...                           expect_call=True).with_args(
     ...                                                username='kumar303', 
-    ...                                                password='no')
+    ...                                                password='paszword')
 
 This says that the setup() method should be called with some specific arguments.  Since setup() returns another object for further API calls, you can chain together further expectations:
 
@@ -108,7 +108,7 @@ You can write the same exact test using a standard ``unittest.TestCase`` like th
     ...         fake_setup = fudge.Fake('twython.setup', 
     ...                           expect_call=True).with_args(
     ...                                                username='kumar303', 
-    ...                                                password='no')
+    ...                                                password='paszword')
     ...         fake_api = (fake_setup.returns_fake()
     ...                             .expects('updateStatus')
     ...                             .with_arg_count(1))
@@ -144,7 +144,7 @@ AssertionError when those expectations are not met.  For example:
     >>> api = twython.setup(username='kumar303', password='12345')
     Traceback (most recent call last):
     ...
-    AssertionError: fake:twython.setup(username='kumar303', password='no') was called unexpectedly with args (username='kumar303', password='12345')
+    AssertionError: fake:twython.setup(username='kumar303', password='paszword') was called unexpectedly with args (username='kumar303', password='12345')
 
 If your code forgets to call an important method, that would raise an error at verification time:
 
@@ -155,7 +155,7 @@ If your code forgets to call an important method, that would raise an error at v
     
 .. doctest::
     
-    >>> api = twython.setup(username='kumar303', password='no')
+    >>> api = twython.setup(username='kumar303', password='paszword')
     >>> fudge.verify()
     Traceback (most recent call last):
     ...
