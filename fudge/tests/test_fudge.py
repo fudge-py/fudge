@@ -776,6 +776,19 @@ class TestExpectsAndProvides(unittest.TestCase):
         
     def test_multiple_expects_on_chained_fakes_ok(self):
         db = Fake("db").expects("insert").returns_fake().expects("insert")
+        
+    def test_callable_expectation(self):
+        fake_setup = fudge.Fake('setup', expect_call=True)
+        fake_setup()
+        # was called so verification should pass:
+        fudge.verify()
+        
+    def test_callable_expectation_with_args(self):
+        fake_setup = (fudge.Fake('setup', expect_call=True)
+                            .with_args('<db>'))
+        fake_setup('<db>')
+        # was called so verification should pass:
+        fudge.verify()
 
 class TestOrderedCalls(unittest.TestCase):
     
