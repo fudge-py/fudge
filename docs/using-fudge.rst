@@ -166,7 +166,7 @@ If your code forgets to call an important method, that would raise an error at v
     
     >>> patched_api.restore()
 
-A lot of effort has gone into the design of Fudge so that it reports the best possible exception messages in your tests.  However, if you prefer to declare fakes in the setUp() of your test case (like the previous example) then you can safely call clear_expectations() at the beginning of setUp().
+A lot of effort has gone into the design of Fudge so that it reports the best possible exception messages in your tests.
     
 Clearing Expectations
 =====================
