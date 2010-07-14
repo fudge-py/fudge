@@ -9,8 +9,8 @@ Documentation is available at http://farmdev.com/projects/fudge/ or else, you ca
 
 then open _build/html/index.html in your web browser.
 
-To run tests, you need Sphinx and Nose::
+To run tests, you can use tox for all supported versions of Python::
     
-    $ easy_install Sphinx nose
-    $ ./run_tests.sh
+    $ pip install tox
+    $ tox
 

@@ -4,6 +4,7 @@ syntax: glob
 build
 _build
 _env
+.tox
 .DS_Store
 *.egg-info
 _tmp_src
