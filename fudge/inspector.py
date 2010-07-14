@@ -213,7 +213,7 @@ class ValueInspector(object):
             >>> system.set_status("sleep") # doctest: +ELLIPSIS
             Traceback (most recent call last):
             ...
-            AssertionError: fake:system.set_status(arg.passes_test(<function is_valid at ...>)) was called unexpectedly with args ('sleep')
+            AssertionError: fake:system.set_status(arg.passes_test(<function is_valid at...)) was called unexpectedly with args ('sleep')
         
         .. doctest::
             :hide:
