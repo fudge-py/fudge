@@ -682,7 +682,7 @@ class TestNextCall(unittest.TestCase):
         eq_(self.fake.something(), 2)
         eq_(self.fake.other(), 3)
         eq_(self.fake.other(), 4)
-        
+    
     def test_stacked_calls_do_not_collide(self):
         self.fake = fudge.Fake().provides("something")
         self.fake = self.fake.returns(1)
@@ -812,17 +812,9 @@ class TestExpectsAndProvides(unittest.TestCase):
         fake = fudge.Fake()
         exp = fake.expects('something')
         fudge.verify()
-    
-    @raises(FakeDeclarationError)
-    def test_multiple_provides_is_error(self):
-        db = Fake("db").provides("insert").provides("insert")
         
     def test_multiple_provides_on_chained_fakes_ok(self):
         db = Fake("db").provides("insert").returns_fake().provides("insert")
-        
-    @raises(FakeDeclarationError)
-    def test_multiple_expects_is_error(self):
-        db = Fake("db").expects("insert").expects("insert")
         
     def test_multiple_expects_on_chained_fakes_ok(self):
         db = Fake("db").expects("insert").returns_fake().expects("insert")
@@ -839,6 +831,58 @@ class TestExpectsAndProvides(unittest.TestCase):
         fake_setup('<db>')
         # was called so verification should pass:
         fudge.verify()
+        
+    def test_multiple_expects_act_like_next_call(self):
+        self.fake = fudge.Fake().expects("something")
+        self.fake = self.fake.returns(1)
+        self.fake = self.fake.expects("something")
+        self.fake = self.fake.returns(2)
+        
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 2)
+        
+    def test_multiple_provides_act_like_next_call(self):
+        self.fake = fudge.Fake().provides("something")
+        self.fake = self.fake.returns(1)
+        self.fake = self.fake.provides("something")
+        self.fake = self.fake.returns(2)
+        
+        eq_(self.fake.something(), 1)
+        eq_(self.fake.something(), 2)
+        
+    def test_multiple_expects_for_sep_methods(self):
+        self.fake = (fudge.Fake()
+                        .expects("marco")
+                        .returns(1)
+                        .expects("polo")
+                        .returns('A')
+                        .expects("marco")
+                        .returns(2)
+                        .expects("polo")
+                        .returns('B')
+        )
+        
+        eq_(self.fake.marco(), 1)
+        eq_(self.fake.marco(), 2)
+        eq_(self.fake.polo(), 'A')
+        eq_(self.fake.polo(), 'B')
+        
+    def test_multiple_provides_for_sep_methods(self):
+        self.fake = (fudge.Fake()
+                        .provides("marco")
+                        .returns(1)
+                        .provides("polo")
+                        .returns('A')
+                        .provides("marco")
+                        .returns(2)
+                        .provides("polo")
+                        .returns('B')
+        )
+        
+        eq_(self.fake.marco(), 1)
+        eq_(self.fake.marco(), 2)
+        eq_(self.fake.polo(), 'A')
+        eq_(self.fake.polo(), 'B')
 
 class TestOrderedCalls(unittest.TestCase):
     

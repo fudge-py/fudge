@@ -82,6 +82,9 @@ Changelog
 
 - 0.9.5
   
+  - **Change**: multiple calls to :func:`fudge.Fake.expects` behave just like 
+    :func:`fudge.Fake.next_call`.  The same goes for :func:`fudge.Fake.provides`.
+    You probably won't need to update any old code for this change.
   - Added :func:`fudge.Fake.with_matching_args` so that expected 
     arguments can be declared more loosely
 
