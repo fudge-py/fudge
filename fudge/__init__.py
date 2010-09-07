@@ -5,7 +5,7 @@ See :ref:`using-fudge` for common scenarios.
 
 """
 
-__version__ = '0.9.4'
+__version__ = '0.9.5'
 import os
 import re
 import sys
@@ -185,6 +185,8 @@ class Call(object):
         self.expected_kwarg_count = None
         self.expected_args = None
         self.expected_kwargs = None
+        self.expected_matching_args = None
+        self.expected_matching_kwargs = None
         self.index = index
         self.exception_to_raise = None
         self.return_val = None
@@ -237,6 +239,28 @@ class Call(object):
             if self.expected_args is None:
                 self.expected_args = tuple([]) # empty *args
             if self.expected_args != args:
+                raise AssertionError(
+                    "%s was called unexpectedly with args %s" % (
+                            self, 
+                            self._repr_call(args, kwargs, shorten_long_vals=False)))
+        
+        # now check for matching keyword args.
+        # i.e. keyword args that are only checked if the call provided them
+        if self.expected_matching_kwargs:
+            for expected_arg, expected_value in self.expected_matching_kwargs.items():
+                if expected_arg in kwargs:
+                    if expected_value != kwargs[expected_arg]:
+                        raise AssertionError(
+                            "%s was called unexpectedly with args %s" % (
+                                    self, 
+                                    self._repr_call(args, {expected_arg: kwargs[expected_arg]}, 
+                                                                        shorten_long_vals=False))
+                        )
+        
+        # now check for matching args.
+        # i.e. args that are only checked if the call provided them
+        if self.expected_matching_args:
+            if self.expected_matching_args != args:
                 raise AssertionError(
                     "%s was called unexpectedly with args %s" % (
                             self, 
@@ -990,7 +1014,10 @@ class Fake(object):
         return self
     
     def with_args(self, *args, **kwargs):
-        """Set the last call to expect specific arguments.
+        """Set the last call to expect specific argument values.
+        
+        The app under test must send all declared arguments and keyword arguments
+        otherwise your test will raise an AssertionError.  For example:
         
         .. doctest::
             
@@ -1002,8 +1029,9 @@ class Fake(object):
             AssertionError: fake:counter.increment(25, table='hits') was called unexpectedly with args (24, table='clicks')
         
         If you need to work with dynamic argument values 
-        consider using :mod:`fudge.inspector` functions.  Here is an example of providing 
-        a more flexible ``with_args()`` declaration :
+        consider using :func:`fudge.Fake.with_matching_args` to make looser declarations.
+        You can also use :mod:`fudge.inspector` functions.  Here is an example of providing 
+        a more flexible ``with_args()`` declaration using inspectors:
         
         .. doctest::
             :hide:
@@ -1050,6 +1078,46 @@ class Fake(object):
             exp.expected_args = args
         if kwargs:
             exp.expected_kwargs = kwargs
+        return self
+    
+    def with_matching_args(self, *args, **kwargs):
+        """Set the last call to expect specific argument values if those arguments exist.
+        
+        Unlike :func:`fudge.Fake.with_args` use this if you want to only declare 
+        expectations about matching arguments.  Any unknown keyword arguments 
+        used by the app under test will be allowed. 
+        
+        For example, you can declare positional arguments but ignore keyword arguments:
+        
+        .. doctest::
+            
+            >>> import fudge
+            >>> db = fudge.Fake('db').expects('transaction').with_matching_args('insert')
+        
+        With this declaration, any keyword argument is allowed:
+        
+        .. doctest::
+        
+            >>> db.transaction('insert', isolation_level='lock')
+            >>> db.transaction('insert', isolation_level='shared')
+            >>> db.transaction('insert', retry_on_error=True)
+            
+        .. doctest::
+            :hide:
+            
+            >>> fudge.clear_expectations()
+        
+        .. note:: 
+        
+            you may get more mileage out of :mod:`fudge.inspector` functions as 
+            described in :func:`fudge.Fake.with_args`
+            
+        """
+        exp = self._get_current_call()
+        if args:
+            exp.expected_matching_args = args
+        if kwargs:
+            exp.expected_matching_kwargs = kwargs
         return self
     
     def with_arg_count(self, count):

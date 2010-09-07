@@ -191,6 +191,56 @@ class TestArguments(unittest.TestCase):
         obj = NeverEqual()
         self.fake.expects('save').with_args(foo=arg.any_value())
         self.fake.save(foo=obj) # this should pass but was failing prior to issue 9
+    
+    def test_with_matching_positional_args(self):
+        db = self.fake
+        db.expects('transaction').with_matching_args('insert')
+        db.transaction("insert", isolation_level="lock")
+        fudge.verify()
+    
+    def test_with_matching_keyword_args(self):
+        db = self.fake
+        db.expects('transaction').with_matching_args(isolation_level="lock")
+        db.transaction("insert", isolation_level="lock")
+        fudge.verify()
+    
+    @raises(AssertionError)
+    def test_with_non_matching_positional_args(self):
+        db = self.fake
+        db.expects('transaction').with_matching_args('update')
+        db.transaction("insert", isolation_level="lock")
+        fudge.verify()
+    
+    @raises(AssertionError)
+    def test_with_too_many_non_matching_positional_args(self):
+        # this may be unintuitve but specifying too many 
+        # arguments constitutes as non-matching.  Why?  
+        # Because how else is it possible to implement, by index?
+        db = self.fake
+        db.expects('transaction').with_matching_args('update')
+        db.transaction("update", "delete", isolation_level="lock")
+        fudge.verify()
+    
+    @raises(AssertionError)
+    def test_with_non_matching_keyword_args(self):
+        db = self.fake
+        db.expects('transaction').with_matching_args(isolation_level="read")
+        db.transaction("insert", isolation_level="lock")
+        fudge.verify()
+    
+    @raises(AssertionError)
+    def test_missing_matching_positional_args_is_not_ok(self):
+        # this is awkward to implement so I think it should not be supported
+        db = self.fake
+        db.expects('transaction').with_matching_args("update")
+        db.transaction()
+        fudge.verify()
+    
+    def test_missing_matching_keyword_args_is_ok(self):
+        db = self.fake
+        db.expects('transaction').with_matching_args(isolation_level="read")
+        db.transaction()
+        fudge.verify()
 
 ## hmm, arg diffing needs more thought
 

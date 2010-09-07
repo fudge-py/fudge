@@ -80,6 +80,11 @@ Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contri
 Changelog
 =========
 
+- 0.9.5
+  
+  - Added :func:`fudge.Fake.with_matching_args` so that expected 
+    arguments can be declared more loosely
+
 - 0.9.4
   
   - Fixed bug where __init__ would always return the Fake instance of itself.  
