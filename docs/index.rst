@@ -4,19 +4,9 @@ Fudge Documentation
 
 Fudge is a Python module for using fake objects (mocks, stubs, etc) to test real ones.
 
-This module is designed for two specific situations:
+In readable Python code, you declare what methods are available on your fake and how they should be called then you inject that into your application and start testing.  This declarative approach means you don't have to record and playback actions and you don't have to inspect your fakes after running code.  If the fake object was used incorrectly then you'll see an informative exception message.
 
-- Replace an object
-  
-  - Temporarily return a canned value for a 
-    method or allow a method to be called without affect.
-
-- Ensure an object is used correctly
-
-  - Declare expectations about what methods should be 
-    called and what arguments should be sent.
-
-Fudge was inspired by `Mocha <http://mocha.rubyforge.org/>`_ which is a simpler version of `jMock <http://www.jmock.org/>`_.  But unlike Mocha, Fudge does not automatically hijack real objects; you explicitly :ref:`patch them <fudge.patcher>` in your test setup.  And unlike jMock, Fudge is only as strict about expectations as you want it to be.  If you just want to expect a method call without worrying about its arguments or the type of the arguments then you can.
+Fudge was inspired by `Mocha <http://mocha.rubyforge.org/>`_ which is a simpler version of `jMock <http://www.jmock.org/>`_.  But unlike Mocha, Fudge does not automatically hijack real objects; you explicitly :ref:`patch them <fudge.patcher>` in your test setup.  And unlike jMock, Fudge is only as strict about expectations as you want it to be.  If the type of arguments sent to the fake method aren't important then you don't have to declare an expectation for them.
 
 Download / Install
 ==================
@@ -25,7 +15,7 @@ Just type::
 
     $ pip install fudge
 
-You can download and install the `pip command here`_.  Fudge requires Python 2.4 or higher.
+You can get the `pip command here`_.  Fudge requires Python 2.4 or higher.
 
 .. _pip command here: http://pip.openplans.org/
 
@@ -38,7 +28,7 @@ As of version 0.9.5, Fudge supports Python 3.  Just install `distribute`_ and ty
     
     $ python3.x setup.py install
 
-This step will convert Fudge using the 2to3 tool.
+This step will convert the Fudge source code using the 2to3 tool.
 
 .. _distribute: http://packages.python.org/distribute/
 
@@ -47,11 +37,13 @@ This step will convert Fudge using the 2to3 tool.
 Source
 ======
 
-The Fudge source can be downloaded as a tar.gz file from http://pypi.python.org/pypi/fudge
+The Fudge source can be downloaded as a tar.gz file from http://pypi.python.org/pypi/fudge  
 
-To checkout the Fudge source, install `Mercurial <http://www.selenic.com/mercurial/wiki/>`_ and type::
-    
-    $ hg clone http://bitbucket.org/kumar303/fudge/
+Using `Mercurial <http://www.selenic.com/mercurial/wiki/>`_ you can clone the source from http://bitbucket.org/kumar303/fudge/  
+
+Fudge is free and open for usage under the `MIT license`_.
+
+.. _MIT license: http://en.wikipedia.org/wiki/MIT_License
 
 Contents
 ========
