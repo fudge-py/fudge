@@ -1,6 +1,9 @@
 
-from nose.tools import eq_, raises
+import re
 import unittest
+
+from nose.tools import eq_, raises
+
 import fudge
 from fudge import inspector
 from fudge.inspector import arg
@@ -104,7 +107,8 @@ class TestObjectlike(unittest.TestCase):
     
     def test_objectlike_unicode(self):
         o = inspector.HasAttr(one=1, ivan=u"Ivan_Krsti\u0107")
-        eq_(unicode(o), "arg.has_attr(ivan=u'Ivan_Krsti\\u0107', one=1)")
+        assert repr(o).startswith("arg.has_attr(ivan=")
+        assert repr(o).endswith("'Ivan_Krsti\u0107', one=1)")
     
     def test_objectlike_repr_long_val(self):
         o = inspector.HasAttr(
@@ -132,7 +136,8 @@ class TestStringlike(unittest.TestCase):
     
     def test_startswith_unicode(self):
         p = inspector.Startswith(u"Ivan_Krsti\u0107")
-        eq_(unicode(p), "arg.startswith(u'Ivan_Krsti\u0107')")
+        assert repr(p).startswith("arg.startswith(")
+        assert repr(p).endswith("'Ivan_Krsti\u0107')")
     
     def test_endswith_ok(self):
         db = Fake("db").expects("execute").with_args(arg.endswith("values (1,2,3,4)"))
@@ -144,7 +149,8 @@ class TestStringlike(unittest.TestCase):
         
     def test_endswith_unicode(self):
         p = inspector.Endswith(u"Ivan_Krsti\u0107")
-        eq_(unicode(p), "arg.endswith(u'Ivan_Krsti\u0107')")
+        assert repr(p).startswith("arg.endswith(")
+        assert repr(p).endswith("'Ivan_Krsti\u0107')")
     
     def test_startswith_repr(self):
         p = inspector.Startswith("_start")
@@ -218,6 +224,7 @@ class TestContains(unittest.TestCase):
         
     def test_unicode(self):
         c = inspector.Contains(u"Ivan_Krsti\u0107")
-        eq_(repr(c), "arg.contains(u'Ivan_Krsti\u0107')")
+        assert repr(c).startswith("arg.contains(")
+        assert repr(c).endswith("'Ivan_Krsti\u0107')")
         
         

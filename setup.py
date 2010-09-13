@@ -1,6 +1,9 @@
 
-from setuptools import setup, find_packages
 import re
+import sys
+
+from setuptools import setup, find_packages
+
 version = None
 for line in open("./fudge/__init__.py"):
     m = re.search("__version__\s*=\s*(.*)", line)
@@ -8,6 +11,11 @@ for line in open("./fudge/__init__.py"):
         version = m.group(1).strip()[1:-1] # quotes
         break
 assert version
+
+extra_setup = {}
+if sys.version_info >= (3,):
+    extra_setup['use_2to3'] = True
+    # extra_setup['use_2to3_fixers'] = ['your.fixers']
 
 setup(
     name='fudge',
@@ -46,4 +54,13 @@ Here is a quick preview of how you can test code that sends email without actual
     tests_require=['nose', 'NoseJS', 'Sphinx'],
     url='http://farmdev.com/projects/fudge/',
     include_package_data=True,
+    classifiers = [
+        'Intended Audience :: Developers',
+        'Natural Language :: English',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Topic :: Software Development :: Testing'
+        ],
+    **extra_setup
     )

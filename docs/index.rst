@@ -23,14 +23,24 @@ Download / Install
 
 Just type::
 
-    $ sudo easy_install fudge
+    $ pip install fudge
 
-If you don't have ``easy_install`` for Python you can get it like this::
+You can download and install the `pip command here`_.  Fudge requires Python 2.4 or higher.
 
-    $ wget http://peak.telecommunity.com/dist/ez_setup.py
-    $ sudo python ez_setup.py
+.. _pip command here: http://pip.openplans.org/
 
-Fudge requires Python 2.4 or higher and is developed primarily against 2.5 and 2.6.
+.. _install-for-python-3:
+
+Installing for Python 3
+=======================
+
+As of version 0.9.5, Fudge supports Python 3.  Just install `distribute`_ and type::
+    
+    $ python3.x setup.py install
+
+This step will convert Fudge using the 2to3 tool.
+
+.. _distribute: http://packages.python.org/distribute/
 
 .. _fudge-source:
 
@@ -42,10 +52,6 @@ The Fudge source can be downloaded as a tar.gz file from http://pypi.python.org/
 To checkout the Fudge source, install `Mercurial <http://www.selenic.com/mercurial/wiki/>`_ and type::
     
     $ hg clone http://bitbucket.org/kumar303/fudge/
-
-You can get updates with::
-    
-    $ hg pull --update
 
 Contents
 ========
@@ -82,11 +88,13 @@ Changelog
 
 - 0.9.5
   
-  - **Change**: multiple calls to :func:`fudge.Fake.expects` behave just like 
+  - **Changed**: multiple calls to :func:`fudge.Fake.expects` behave just like 
     :func:`fudge.Fake.next_call`.  The same goes for :func:`fudge.Fake.provides`.
-    You probably won't need to update any old code for this change.
+    You probably won't need to update any old code for this change, it's just 
+    a convenience.
   - Added :func:`fudge.Fake.with_matching_args` so that expected 
     arguments can be declared more loosely
+  - Added :ref:`support for Python 3 <install-for-python-3>`
 
 - 0.9.4
   
