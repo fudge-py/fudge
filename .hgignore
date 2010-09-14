@@ -9,3 +9,4 @@ _env
 *.egg-info
 _tmp_src
 dist
+*$py.class
