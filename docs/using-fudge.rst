@@ -8,48 +8,50 @@ Using Fudge
 Fudging A Web Service
 =====================
 
-If you're testing code that uses a Web Service you wouldn't want to rely on the Internet because it would slow you down.  This is a good scenario in which to use mock objects.
-
-Say you have a Twitter bot that looks something like this:
+If you're testing code that uses a Web Service you wouldn't want to rely on the Internet because that would slow you down.  This is a good scenario in which to use mock objects.  Say you have a Twitter bot that looks something like this:
 
 .. doctest::
 
-    >>> import twython
+    >>> import oauthtwitter
     >>> def post_msg_to_twitter(msg):
-    ...     api = twython.setup(username='kumar303', password='paszword')
-    ...     api.updateStatus(msg)
+    ...     api = oauthtwitter.OAuthApi(
+    ...         '<consumer_key>', '<consumer_secret>',
+    ...         '<oauth_token>', '<oauth_token_secret>'
+    ...     )
+    ...     api.UpdateStatus(msg)
     ... 
     >>> 
 
-Since the `twython`_ module is tested independently, you can trust that your code will work as long as it calls the right methods.  To set this up in Fudge you **declare an expectation** of how twython should be used like this:
+Since the `oauthtwitter`_ module is maintained independently, you can probably trust that your code will work as long as it calls the right methods (*caveat emptor!*).  To set this up in Fudge you **declare an expectation** of how the OAuthApi class should be used like this:
 
-.. _twython: http://github.com/ryanmcgrath/twython
+.. _oauthtwitter: http://code.google.com/p/oauth-python-twitter/
 
 .. doctest::
     
     >>> import fudge
-    >>> fake_setup = fudge.Fake('twython.setup', 
-    ...                           expect_call=True).with_args(
-    ...                                                username='kumar303', 
-    ...                                                password='paszword')
+    >>> FakeOAuthApi = (fudge.Fake('OAuthApi')
+    ...                     .expects('__init__')
+    ...                     .with_args(
+    ...                         '<consumer_key>', '<consumer_secret>',
+    ...                         '<oauth_token>', '<oauth_token_secret>'
+    ...                     )
+    ... )
+    >>> 
 
-This says that the setup() method should be called with some specific arguments.  Since setup() returns another object for further API calls, you can chain together further expectations:
+This says that the class should be instantiated with four arguments having specific string values.  The returned value of ``__init__`` is a new object instance so you can declare the instance methods like this:
 
 .. doctest::
 
-    >>> fake_api = (fake_setup.returns_fake()
-    ...                       .expects('updateStatus')
-    ...                       .with_arg_count(1))
-    ... 
+    >>> fake_instance = FakeOAuthApi.returns_fake().expects('UpdateStatus').with_arg_count(1)
 
-Fudge lets you declare expectations as loose or as tight as you want.  If you don't care about the exact arguments, you can leave off the call to :meth:`fudge.Fake.with_args`.  If you don't care if a method is actually called you can use :meth:`fudge.Fake.provides` instead of :meth:`fudge.Fake.expects`.  Likewise, :meth:`fudge.Fake.with_arg_count` can be used when you don't want to worry about argument values.  There are `argument inspectors <working-with-arguments>`_ for checking values in other ways.
+Fudge lets you declare expectations as loose or as tight as you want.  If you don't care about the exact arguments, you can leave off the call to :meth:`fudge.Fake.with_args`.  If you don't care if a method is actually called you can use :meth:`fudge.Fake.provides` instead of :meth:`fudge.Fake.expects`.  Likewise, :meth:`fudge.Fake.with_arg_count` can be used when you don't want to worry about the actual argument values.  There are `argument inspectors <working-with-arguments>`_ for checking values in other ways.
 
 To activate the declarative mock created above, :func:`patch <fudge.patcher.patch_object>` the module temporarily with your fake:
     
 .. doctest::
     
-    >>> import twython
-    >>> patched_api = fudge.patch_object(twython, "setup", fake_setup)
+    >>> import oauthtwitter
+    >>> patched_api = fudge.patch_object(oauthtwitter, "OAuthApi", FakeOAuthApi)
 
 Now you can run code against the fake.  Begin each test with :func:`fudge.clear_calls` to reset call history from previous tests:
 
@@ -69,7 +71,7 @@ Call :func:`fudge.verify` to make sure all expectations were met.  You probably 
 
     >>> fudge.verify()
 
-And, finally, restore the original object for sanity:
+Aha, no errors, which means it was successful.  Finally, revert the patched object like this:
 
 .. doctest::
 
@@ -84,13 +86,13 @@ The above code could also be written as a test function, compatible with `Nose`_
     
     >>> import fudge
     >>> @fudge.with_fakes
-    ... @fudge.with_patched_object(twython, "setup", fake_setup)
     ... def test_post_msg_to_twitter():
-    ...     post_msg_to_twitter("mmm, fudge")
+    ...     with fudge.patched_context(oauthtwitter, "OAuthApi", FakeOAuthApi):
+    ...         post_msg_to_twitter("mmm, fudge")
     ... 
     >>> test_post_msg_to_twitter()
 
-You can also patch code using the `with statement <http://www.python.org/dev/peps/pep-0343/>`_; see :func:`fudge.patcher.patched_context`.
+In addition to the with statement, you can also use the :func:`fudge.patcher.with_patched_object` decorator.
 
 A unittest.TestCase
 ===================
@@ -105,14 +107,19 @@ You can write the same exact test using a standard ``unittest.TestCase`` like th
     ... 
     ...     def setUp(self):
     ...         fudge.clear_expectations() # from previous tests
-    ...         fake_setup = fudge.Fake('twython.setup', 
-    ...                           expect_call=True).with_args(
-    ...                                                username='kumar303', 
-    ...                                                password='paszword')
-    ...         fake_api = (fake_setup.returns_fake()
-    ...                             .expects('updateStatus')
-    ...                             .with_arg_count(1))
-    ...         self.patched = fudge.patch_object(twython, "setup", fake_setup)
+    ...         FakeOAuthApi = (fudge.Fake('OAuthApi')
+    ...                             .expects('__init__')
+    ...                             .with_args(
+    ...                                 '<consumer_key>', '<consumer_secret>',
+    ...                                 '<oauth_token>', '<oauth_token_secret>'
+    ...                             )
+    ...         )
+    ...         fake_api = (FakeOAuthApi.returns_fake()
+    ...                             .expects('UpdateStatus')
+    ...                             .with_arg_count(1)
+    ...         )
+    ...
+    ...         self.patched = fudge.patch_object(oauthtwitter, "OAuthApi", FakeOAuthApi)
     ...     
     ...     @fudge.with_fakes
     ...     def test_post_msg_to_twitter(self):
@@ -131,20 +138,31 @@ Failed Expectations
 ===================
 
 Since the previous code declared expectations for how the 
-twython module should be used, your test will raise an 
+oauthtwitter module should be used, your test will raise an 
 AssertionError when those expectations are not met.  For example:
 
 .. doctest::
     :hide:
     
-    >>> patched_api = fudge.patch_object(twython, "setup", fake_setup)
+    >>> fudge.clear_expectations()
+    >>> FakeOAuthApi = (fudge.Fake('OAuthApi')
+    ...                     .expects('__init__')
+    ...                     .with_args(
+    ...                         '<consumer_key>', '<consumer_secret>',
+    ...                         '<oauth_token>', '<oauth_token_secret>'
+    ...                     )
+    ... )
+    >>> fake_api = (FakeOAuthApi.returns_fake()
+    ...                       .expects('UpdateStatus')
+    ... )
+    >>> patched_api = fudge.patch_object(oauthtwitter, "OAuthApi", FakeOAuthApi)
     
 .. doctest::
     
-    >>> api = twython.setup(username='kumar303', password='12345')
+    >>> api = oauthtwitter.OAuthApi('<nope>', '<wrong>')
     Traceback (most recent call last):
     ...
-    AssertionError: fake:twython.setup(username='kumar303', password='paszword') was called unexpectedly with args (username='kumar303', password='12345')
+    AssertionError: fake:OAuthApi.__init__(...) was called unexpectedly with args ('<nope>', '<wrong>')
 
 If your code forgets to call an important method, that would raise an error at verification time:
 
@@ -155,18 +173,20 @@ If your code forgets to call an important method, that would raise an error at v
     
 .. doctest::
     
-    >>> api = twython.setup(username='kumar303', password='paszword')
+    >>> api = oauthtwitter.OAuthApi(
+    ...     '<consumer_key>', '<consumer_secret>', '<oauth_token>', '<oauth_token_secret>'
+    ... )
     >>> fudge.verify()
     Traceback (most recent call last):
     ...
-    AssertionError: fake:twython.setup.updateStatus() was not called
+    AssertionError: fake:__init__.UpdateStatus() was not called
 
 .. doctest::
     :hide:
     
     >>> patched_api.restore()
 
-A lot of effort has gone into the design of Fudge so that it reports the best possible exception messages in your tests.
+Fudge is designed to report the best possible exception messages in your tests.
     
 Clearing Expectations
 =====================
@@ -249,17 +269,20 @@ You can do this with the keyword argument :class:`callable=True <fudge.Fake>`.  
 
 .. doctest::
     
+    >>> import auth
     >>> import fudge
-    >>> login = fudge.Fake(callable=True).with_args("eziekel", "pazzword").returns(True)
     >>> @fudge.with_fakes
-    ... @fudge.with_patched_object("auth", "login", login)
     ... def test_login():
-    ...     import auth
-    ...     logged_in = auth.login("eziekel", "pazzword")
-    ...     if logged_in:
-    ...         print "Welcome!"
-    ...     else:
-    ...         print "Access Denied"
+    ...     login = (fudge.Fake(callable=True)
+    ...                     .with_args("eziekel", "pazzword")
+    ...                     .returns(True)
+    ...     )
+    ...     with fudge.patched_context("auth", "login", login):
+    ...         logged_in = auth.login("eziekel", "pazzword")
+    ...         if logged_in:
+    ...             print "Welcome!"
+    ...         else:
+    ...             print "Access Denied"
     ... 
     >>> test_login()
     Welcome!
@@ -293,11 +316,13 @@ Some objects you might want to work with will support *cascading* which means ea
     
     >>> import fudge
     >>> session = fudge.Fake('session')
-    >>> query = session.provides('query').returns_fake()
-    >>> query = query.provides('order_by').returns(
-    ...             [fudge.Fake('User').has_attr(name='Al', lastname='Capone')]
-    ...         )
-    
+    >>> query = (session.provides('query')
+    ...                 .returns_fake()
+    ...                 .provides('order_by')
+    ...                 .returns(
+    ...                     [fudge.Fake('User').has_attr(name='Al', lastname='Capone')]
+    ...                 )
+    ... )
     >>> from models import User
     >>> for instance in session.query(User).order_by(User.id):
     ...     print instance.name, instance.lastname
@@ -375,15 +400,17 @@ Here is a short example:
     
     >>> import fudge
     >>> from fudge.inspector import arg
-    >>> image = fudge.Fake("image").expects("save")
-    >>> image = image.with_args("JPEG", arg.endswith(".jpg"), resolution=arg.any_value())
+    >>> image = (fudge.Fake("image")
+    ...               .expects("save")
+    ...               .with_args("JPEG", arg.endswith(".jpg"), resolution=arg.any_value())
+    ... )
 
 This declaration is very flexible; it allow the following arguments to be sent :
 
 .. doctest::
 
     >>> image.save("JPEG", "/tmp/unicorns-and-rainbows.jpg", resolution=72)
-    >>> image.save("JPEG", "/tmp/very-serious-avatar.jpg", resolution=96)
+    >>> image.save("JPEG", "/tmp/me-being-serious.jpg", resolution=96)
 
 .. doctest::
     :hide:
