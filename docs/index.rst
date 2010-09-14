@@ -87,6 +87,7 @@ Changelog
   - Added :func:`fudge.Fake.with_matching_args` so that expected 
     arguments can be declared more loosely
   - Added :ref:`support for Python 3 <install-for-python-3>`
+  - Improved support for Jython
 
 - 0.9.4
   

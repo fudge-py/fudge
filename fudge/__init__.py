@@ -649,7 +649,11 @@ class Fake(object):
     
     def _guess_name(self):
         if not hasattr(sys, '_getframe'):
-            # Stackless, Jython?
+            # Stackless?
+            return None
+        if sys.platform.startswith('java'):
+            # frame objects are completely different,
+            # not worth the hassle.
             return None
         
         # get frame where class was instantiated,
