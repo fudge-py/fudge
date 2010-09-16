@@ -10,3 +10,4 @@ _env
 _tmp_src
 dist
 *$py.class
+nosetests*.xml
