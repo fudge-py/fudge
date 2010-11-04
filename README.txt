@@ -9,8 +9,16 @@ Documentation is available at http://farmdev.com/projects/fudge/ or else, you ca
 
 then open _build/html/index.html in your web browser.
 
-To run tests, you can use tox for all supported versions of Python::
+To run tests, you can use tox for all supported versions of Python.
+You can install it with pip::
     
     $ pip install tox
+
+Then execute::
+    
+    $ ./run_tests.sh
+
+Or simply::
+    
     $ tox
 
