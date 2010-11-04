@@ -170,13 +170,18 @@ class PatchHandler(object):
         """Set a new value for the attibute of the object."""
         lock.acquire()
         try:
-            setattr(self.orig_object, self.attr_name, patched_value)
-        except TypeError:
-            proxy_name = 'fudge_proxy_%s_%s_%s' % (self.orig_object.__module__,
-                                                   self.orig_object.__name__,
-                                                   patched_value.__class__.__name__)
-            self.proxy_object = type(proxy_name, (self.orig_object,), { self.attr_name: patched_value })
-            setattr(sys.modules[self.orig_object.__module__], self.orig_object.__name__, self.proxy_object)
+            try:
+                setattr(self.orig_object, self.attr_name, patched_value)
+            except TypeError:
+                proxy_name = 'fudge_proxy_%s_%s_%s' % (
+                                    self.orig_object.__module__,
+                                    self.orig_object.__name__,
+                                    patched_value.__class__.__name__
+                )
+                self.proxy_object = type(proxy_name, (self.orig_object,), { 
+                                            self.attr_name: patched_value })
+                setattr(sys.modules[self.orig_object.__module__], 
+                        self.orig_object.__name__, self.proxy_object)
         finally:
             lock.release()
         
