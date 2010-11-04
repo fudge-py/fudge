@@ -23,6 +23,17 @@ def test_patch_path():
     patched.restore()
     eq_(type(os.path.join), type(orig_join))
 
+def test_patch_builtin():
+    import datetime
+    orig_datetime = datetime.datetime
+    now = datetime.datetime(2010, 11, 4, 8, 19, 11, 28778)
+    fake = fudge.Fake('now', callable=True).returns(now)
+    patched = fudge.patch_object(datetime.datetime, 'now', fake)
+    eq_(datetime.datetime.now(), now)
+    patched.restore()
+    eq_(datetime.datetime.now, orig_datetime.now)
+
+
 def test_decorator_on_def():
     class holder:
         test_called = False
