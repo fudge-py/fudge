@@ -8,6 +8,7 @@ __all__ = ['patch_object', 'with_patched_object', 'PatchHandler', 'patched_conte
 
 from fudge.util import wraps
 from threading import Lock
+import sys
 
 lock = Lock()
 
@@ -158,6 +159,7 @@ class PatchHandler(object):
     def __init__(self, orig_object, attr_name):
         self.orig_object = orig_object
         self.attr_name = attr_name
+        self.proxy_object = None
         lock.acquire()
         try:
             self.orig_value = getattr(self.orig_object, self.attr_name)
@@ -169,6 +171,12 @@ class PatchHandler(object):
         lock.acquire()
         try:
             setattr(self.orig_object, self.attr_name, patched_value)
+        except TypeError:
+            proxy_name = 'fudge_proxy_%s_%s_%s' % (self.orig_object.__module__,
+                                                   self.orig_object.__name__,
+                                                   patched_value.__class__.__name__)
+            self.proxy_object = type(proxy_name, (self.orig_object,), { self.attr_name: patched_value })
+            setattr(sys.modules[self.orig_object.__module__], self.orig_object.__name__, self.proxy_object)
         finally:
             lock.release()
         
@@ -176,6 +184,9 @@ class PatchHandler(object):
         """Restore the saved value for the attribute of the object."""
         lock.acquire()
         try:
-            setattr(self.orig_object, self.attr_name, self.orig_value)
+            if self.proxy_object is None:
+                setattr(self.orig_object, self.attr_name, self.orig_value)
+            else:
+                setattr(sys.modules[self.orig_object.__module__], self.orig_object.__name__, self.orig_object)
         finally:
             lock.release()
