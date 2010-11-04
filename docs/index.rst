@@ -78,6 +78,11 @@ Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contri
 Changelog
 =========
 
+- 0.9.6
+
+  - Added support to patch builtin modules.  Thanks to Luis Fagundes for the 
+    patch.
+
 - 0.9.5
   
   - **Changed**: multiple calls to :func:`fudge.Fake.expects` behave just like 
