@@ -73,7 +73,7 @@ Please submit `bugs and patches <http://bitbucket.org/kumar303/fudge/issues/>`_,
 Credits
 =======
 
-Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contributions by Cristian Esquivias and Michael Williamson.
+Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contributions by Cristian Esquivias, Michael Williamson, and Luis Fagundes.
 
 Changelog
 =========
