@@ -4,13 +4,65 @@
 See :ref:`using-fudge` for common scenarios.
 """
 
-__all__ = ['patch_object', 'with_patched_object', 'PatchHandler', 'patched_context']
+__all__ = ['patch_object', 'with_patched_object', 'PatchHandler',
+           'patched_context', 'patch']
 
-from fudge.util import wraps
-from threading import Lock
 import sys
+from threading import Lock
+
+import fudge
+from fudge.util import wraps
 
 lock = Lock()
+
+
+class patch(object):
+    
+    def __init__(self, *obj_paths):
+        self.obj_paths = obj_paths
+    
+    def __call__(self, fn):
+        @wraps(fn)
+        def caller(*args, **kw):
+            fakes = self.__enter__()
+            if not isinstance(fakes, (tuple, list)):
+                fakes = [fakes]
+            args += tuple(fakes)
+            try:
+                return fn(*args, **kw)
+            finally:
+                self.__exit__(None, None, None)
+        return caller
+    
+    def __enter__(self):
+        fudge.clear_expectations()
+        fudge.clear_calls()
+        self.patches = []
+        all_fakes = []
+        for path in self.obj_paths:
+            try:
+                target, attr = path.rsplit('.', 1)    
+            except (TypeError, ValueError):
+                raise TypeError(
+                    "Need a valid target to patch. You supplied: %r"
+                    % path)
+            fake = fudge.Fake(path)
+            all_fakes.append(fake)
+            self.patches.append(patch_object(target, attr, fake))
+        if len(all_fakes) == 1:
+            return all_fakes[0]
+        else:
+            return all_fakes
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        try:
+            if not exc_type:
+                fudge.verify()
+        finally:
+            for p in self.patches:
+                p.restore()
+            fudge.clear_expectations()
+
 
 def with_patched_object(obj, attr_name, patched_value):
     """Decorator that patches an object before the decorated method 

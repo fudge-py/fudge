@@ -1,4 +1,4 @@
-
+from __future__ import with_statement
 import sys
 import unittest
 
@@ -991,4 +991,63 @@ class TestOrderedCalls(unittest.TestCase):
         eq_(db.set_id(), None)
         # extra :
         eq_(db.get_id(), 1)
+
+
+class TestPatchedFakes(unittest.TestCase):
+    
+    def tearDown(self):
+        fudge.clear_expectations()
+
+    def test_expectations_are_cleared(self):
+
+        class holder:
+            test_called = False
+
+        # Set up decoy expectation:
+        fake = fudge.Fake('db').expects('save')
+
+        @fudge.patch('shutil.copy')
+        def some_test(copy):
+            holder.test_called = True
+
+        some_test()
+        fudge.verify() # should be no errors
+        eq_(holder.test_called, True)
+
+    def test_expectations_are_verified(self):
+
+        class holder:
+            test_called = False
         
+        @raises(AssertionError)
+        @fudge.patch('shutil.copy')
+        def some_test(copy):
+            copy.expects('__call__')
+            holder.test_called = True
+        
+        some_test()
+        eq_(holder.test_called, True)
+
+    def test_with_statement(self):
+
+        class holder:
+            test_called = False
+        
+        @raises(AssertionError)
+        def run_test():
+            with fudge.patch('shutil.copy') as copy:
+                copy.expects('__call__')
+                holder.test_called = True
+        
+        run_test()
+        eq_(holder.test_called, True)
+
+    def test_with_statement_exception(self):
+
+        @raises(RuntimeError)
+        def run_test():
+            with fudge.patch('shutil.copy') as copy:
+                copy.expects('__call__')
+                raise RuntimeError()
+
+        run_test()

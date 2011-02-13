@@ -1,10 +1,15 @@
+from __future__ import with_statement
+import unittest
 
 from nose.exc import SkipTest
 from nose.tools import eq_
+
 import fudge
+
 
 class Freddie(object):
     pass
+
         
 def test_patch_obj():
     class holder:
@@ -100,3 +105,110 @@ def test_patched_context():
     eq_(Boo.fargo, "is right here")
     ctx.__exit__(None, None, None)
     eq_(Boo.fargo, "is over there")
+
+
+class TestPatch(unittest.TestCase):
+
+    def test_decorator_on_def(self):
+
+        class holder:
+            test_called = False
+        
+        @fudge.patch('shutil.copy')
+        def some_test(copy):
+            import shutil
+            holder.test_called = True
+            assert isinstance(copy, fudge.Fake)
+            eq_(copy, shutil.copy)
+    
+        eq_(some_test.__name__, 'some_test')
+        some_test()
+        eq_(holder.test_called, True)
+        import shutil
+        assert not isinstance(shutil.copy, fudge.Fake)
+
+
+    def test_decorator_on_class(self):
+
+        class holder:
+            test_called = False
+    
+        class MyTest(object):
+
+            @fudge.patch('shutil.copy')
+            def some_test(self, copy):
+                import shutil
+                holder.test_called = True
+                assert isinstance(copy, fudge.Fake)
+                eq_(copy, shutil.copy)
+    
+        eq_(MyTest.some_test.__name__, 'some_test')
+        m = MyTest()
+        m.some_test()
+        eq_(holder.test_called, True)
+        import shutil
+        assert not isinstance(shutil.copy, fudge.Fake)
+
+    def test_patch_many(self):
+
+        class holder:
+            test_called = False
+        
+        @fudge.patch('shutil.copy',
+                     'os.remove')
+        def some_test(copy, remove):
+            import shutil
+            import os
+            holder.test_called = True
+            assert isinstance(copy, fudge.Fake)
+            assert isinstance(remove, fudge.Fake)
+            eq_(copy, shutil.copy)
+            eq_(remove, os.remove)
+    
+        eq_(some_test.__name__, 'some_test')
+        some_test()
+        eq_(holder.test_called, True)
+        import shutil
+        assert not isinstance(shutil.copy, fudge.Fake)
+        import os
+        assert not isinstance(os.remove, fudge.Fake)
+
+    def test_with_patch(self):
+
+        class holder:
+            test_called = False
+
+        def run_test():
+            with fudge.patch('shutil.copy') as copy:
+                import shutil
+                assert isinstance(copy, fudge.Fake)
+                eq_(copy, shutil.copy)
+                holder.test_called = True
+        
+        run_test()
+        eq_(holder.test_called, True)
+        import shutil
+        assert not isinstance(shutil.copy, fudge.Fake)
+
+    def test_with_multiple_patches(self):
+
+        class holder:
+            test_called = False
+
+        def run_test():
+            with fudge.patch('shutil.copy', 'os.remove') as fakes:
+                copy, remove = fakes
+                import shutil
+                import os
+                assert isinstance(copy, fudge.Fake)
+                assert isinstance(remove, fudge.Fake)
+                eq_(copy, shutil.copy)
+                eq_(remove, os.remove)
+                holder.test_called = True
+        
+        run_test()
+        eq_(holder.test_called, True)
+        import shutil
+        assert not isinstance(shutil.copy, fudge.Fake)
+        import os
+        assert not isinstance(os.remove, fudge.Fake)
