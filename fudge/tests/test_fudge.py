@@ -992,6 +992,23 @@ class TestOrderedCalls(unittest.TestCase):
         # extra :
         eq_(db.get_id(), 1)
 
+    @raises(AssertionError)
+    def test_expects_call_shortcut(self):
+        remove = Fake("os.remove").expects_call()
+        fudge.verify()
+        assert isinstance(remove, Fake)
+
+    def test_expects_call_shortcut_ok(self):
+        remove = Fake("os.remove").expects_call()
+        remove()
+        fudge.verify()
+        assert isinstance(remove, Fake)
+
+    def test_provides_call_shortcut(self):
+        remove = Fake("os.remove").is_callable()
+        remove()
+        assert isinstance(remove, Fake)
+
 
 class TestPatchedFakes(unittest.TestCase):
     

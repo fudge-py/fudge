@@ -78,6 +78,15 @@ Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contri
 Changelog
 =========
 
+- 1.0.0
+
+  - After extensive usage and community input, the fudge interface has
+    been greatly simplified!
+  - There is now a *way* better pattern for setting up fakes. The old way is
+    still supported but you'll want to write all new code in this pattern once
+    you see how much easier it is.
+  - Added :func:`fudge.Fake.expects_call` and :func:`fudge.Fake.is_callable`
+
 - 0.9.6
 
   - Added support to patch builtin modules.  Thanks to Luis Fagundes for the 

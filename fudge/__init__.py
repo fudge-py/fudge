@@ -5,7 +5,7 @@ See :ref:`using-fudge` for common scenarios.
 
 """
 
-__version__ = '0.9.6'
+__version__ = '1.0.0'
 import os
 import re
 import sys
@@ -511,30 +511,33 @@ class CallStack(object):
 
 class Fake(object):
     """A fake object that replaces a real one while testing.
-    
-    Most calls with a few exceptions return ``self`` so that you can chain them together to 
-    create readable code.
-    
+
+    Most calls with a few exceptions return ``self`` so that you can chain
+    them together to create readable code.
+
     Keyword arguments:
-    
+
     **name=None**
-        Name of the class, module, or function you mean to replace. If not specified, 
-        Fake() will try to guess the name by inspecting the calling frame (if possible).
-    
+        Name of the class, module, or function you mean to replace. If not
+        specified, Fake() will try to guess the name by inspecting the calling
+        frame (if possible).
+
     **allows_any_call=False**
-        When True, any method is allowed to be called on the Fake() instance.  Each method 
-        will be a stub that does nothing if it has not been defined.  Implies callable=True.
-    
+        When True, any method is allowed to be called on the Fake() instance. 
+        Each method will be a stub that does nothing if it has not bee
+        defined.  Implies callable=True.
+
     **callable=False**
-        When True, the Fake() acts like a callable.  Use this if you are replacing a single 
-        method.  See example below.
-    
+        When True, the Fake() acts like a callable.  Use this if you are
+        replacing a single method.  See example below.
+
     **expect_call=True**
-        When True, the Fake() acts like a callable that must be called (implies callable=True).
-        Use this when replacing a single method that must be called.  See example below.
-    
+        When True, the Fake() acts like a callable that must be called
+        (implies callable=True).  Use this when replacing a single method that
+        must be called.  See example below.
+
     Short example::
-    
+
         >>> import fudge
         >>> auth = fudge.Fake('auth').expects('login').with_args('joe_username', 'joes_password')
         >>> auth.login("joe_username", "joes_password") # now works
@@ -561,7 +564,8 @@ class Fake(object):
         
     """
     
-    def __init__(self, name=None, allows_any_call=False, callable=False, expect_call=False):
+    def __init__(self, name=None, allows_any_call=False,
+                 callable=False, expect_call=False):
         self._attributes = {}
         self._declared_calls = {}
         self._name = (name or self._guess_name())
@@ -569,13 +573,13 @@ class Fake(object):
         self._allows_any_call = allows_any_call
         self._call_stack = None
         if expect_call:
-            self._callable = ExpectedCall(self, call_name=name, callable=True)
+            self.expects_call()
         elif callable or allows_any_call:
-            self._callable = Call(self, call_name=name, callable=True)
+            self.is_callable()
         else:
             self._callable = None
         self._expected_call_order = None
-    
+
     def __getattribute__(self, name):
         """Favors stubbed out attributes, falls back to real attributes
         
@@ -693,7 +697,41 @@ class Fake(object):
             return self._callable.get_call_object()
         exp = self._declared_calls[self._last_declared_call_name].get_call_object()
         return exp
-    
+
+    def expects_call(self):
+        """The fake must be called.
+
+        This is useful for when you stub out a function
+        as opposed to a class.  For example::
+
+            >>> import fudge
+            >>> fudge.clear_expectations()
+            >>> remove = fudge.Fake('os.remove').expects_call()
+            >>> fudge.clear_calls()
+            >>> fudge.verify()
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:os.remove() was not called
+        
+        """
+        self._callable = ExpectedCall(self, call_name=self._name,
+                                      callable=True)
+        return self
+
+    def is_callable(self):
+        """The fake can be called.
+
+        This is useful for when you stub out a function
+        as opposed to a class.  For example::
+
+            >>> import fudge
+            >>> remove = Fake('os.remove').is_callable()
+            >>> remove('some/path')
+
+        """
+        self._callable = Call(self, call_name=self._name, callable=True)
+        return self
+
     def calls(self, call):
         """Redefine a call.
         
