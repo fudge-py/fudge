@@ -72,6 +72,25 @@ class TestFake(unittest.TestCase):
         else:
             raise RuntimeError("expected AssertionError")
 
+
+class TestChainedNames(unittest.TestCase):
+
+    def setUp(self):
+        self.fake = fudge.Fake('db.Adapter')
+    
+    def tearDown(self):
+        fudge.clear_expectations()
+
+    def test_basic(self):
+        eq_(repr(self.fake), 'fake:db.Adapter')
+
+    def test_nesting(self):
+        f = self.fake
+        f = f.provides('query').returns_fake().provides('fetchall')
+        eq_(repr(f), 'fake:db.Adapter.query()')
+        f = f.provides('cursor').returns_fake()
+        eq_(repr(f), 'fake:db.Adapter.query().cursor()')
+
 class TestLongArgValues(unittest.TestCase):
     
     def test_arg_diffs_are_not_shortened(self):
@@ -103,12 +122,6 @@ class TestLongArgValues(unittest.TestCase):
             "(newbits='99999999999999999999999999999999999999999999999999999999')")
         else:
             raise RuntimeError("expected AssertionError")
-
-class TestReturnsFake(unittest.TestCase):
-    
-    def test_returns_fake_has_name(self):
-        f = Fake().provides("get_widget").returns_fake()
-        eq_(f._name, "get_widget")
 
 class TestArguments(unittest.TestCase):
     
@@ -349,6 +362,10 @@ class TestCall(unittest.TestCase):
         s = Call(self.fake)
         eq_(repr(s), "fake:SMTP()")
     
+    def test_repr_callable(self):
+        s = Call(self.fake.is_callable())
+        eq_(repr(s), "fake:SMTP()")
+    
     def test_repr_with_args(self):
         s = Call(self.fake)
         s.expected_args = [1,"bad"]
@@ -364,6 +381,12 @@ class TestCall(unittest.TestCase):
         s = Call(self.fake, call_name='connect')
         s.expected_args = [1,"bad"]
         eq_(repr(s), "fake:SMTP.connect(1, 'bad')")
+    
+    def test_nested_named_repr_with_args(self):
+        f = self.fake.provides('get_conn').returns_fake()
+        s = Call(f, call_name='connect')
+        s.expected_args = [1,"bad"]
+        eq_(repr(s), "fake:SMTP.get_conn().connect(1, 'bad')")
     
     def test_named_repr_with_index(self):
         s = Call(self.fake, call_name='connect')

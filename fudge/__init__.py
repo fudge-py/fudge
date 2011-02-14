@@ -994,7 +994,8 @@ class Fake(object):
         
         Take note that this is different from the cascading nature of 
         other methods.  This will return an instance of the *new* Fake, 
-        not self, so you should be careful to store its return value in a new variable.
+        not self, so you should be careful to store its return value in a new 
+        variable.
         
         I.E.::
             
@@ -1008,7 +1009,9 @@ class Fake(object):
             
         """
         exp = self._get_current_call()
-        kwargs.setdefault("name", exp.call_name)
+        endpoint = kwargs.get('name', exp.call_name)
+        name = "%s.%s()" % (self._name, endpoint)
+        kwargs['name'] = name
         fake = self.__class__(*args, **kwargs)
         exp.return_val = fake
         return fake
