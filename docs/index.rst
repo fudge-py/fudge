@@ -2,11 +2,11 @@
 Fudge Documentation
 ===================
 
-Fudge is a Python module for using fake objects (mocks, stubs, etc) to test real ones.
+Fudge is a Python module for using fake objects (mocks and stubs) to test real ones.
 
-In readable Python code, you declare what methods are available on your fake and how they should be called then you inject that into your application and start testing.  This declarative approach means you don't have to record and playback actions and you don't have to inspect your fakes after running code.  If the fake object was used incorrectly then you'll see an informative exception message.
+In readable Python code, you declare what methods are available on your fake and how they should be called.  Then you inject that into your application and start testing.  This declarative approach means you don't have to record and playback actions and you don't have to inspect your fakes after running code.  If the fake object was used incorrectly then you'll see an informative exception message with a traceback that points to the culprit.
 
-Fudge was inspired by `Mocha <http://mocha.rubyforge.org/>`_ which is a simpler version of `jMock <http://www.jmock.org/>`_.  But unlike Mocha, Fudge does not automatically hijack real objects; you explicitly :ref:`patch them <fudge.patcher>` in your test setup.  And unlike jMock, Fudge is only as strict about expectations as you want it to be.  If the type of arguments sent to the fake method aren't important then you don't have to declare an expectation for them.
+Fudge was inspired by `Mocha <http://mocha.rubyforge.org/>`_ which is a simpler version of `jMock <http://www.jmock.org/>`_.  But unlike Mocha, Fudge does not automatically hijack real objects; you explicitly :ref:`patch <using-fudge>` them in your test.  And unlike jMock, Fudge is only as strict about expectations as you want it to be.  If the type of arguments sent to the fake method aren't important then you don't have to declare an expectation for them.
 
 Download / Install
 ==================
@@ -15,7 +15,7 @@ Just type::
 
     $ pip install fudge
 
-You can get the `pip command here`_.  Fudge requires Python 2.4 or higher.
+You can get the `pip command here`_.  Fudge requires Python 2.5 or higher.
 
 .. _pip command here: http://pip.openplans.org/
 
@@ -54,6 +54,7 @@ Contents
    using-fudge
    javascript
    why-fudge
+   migrating-0.9-to-1.0
 
 .. _fudge-api:
 
@@ -75,6 +76,8 @@ Credits
 
 Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contributions by Cristian Esquivias, Michael Williamson, and Luis Fagundes.
 
+.. _fudge-changelog:
+
 Changelog
 =========
 
@@ -86,6 +89,8 @@ Changelog
     still supported but you'll want to write all new code in this pattern once
     you see how much easier it is.
   - Added :func:`fudge.Fake.expects_call` and :func:`fudge.Fake.is_callable`
+  - **Changed**: The tests are no longer maintained in Python 2.4 although 
+    Fudge probably still supports 2.4
 
 - 0.9.6
 
