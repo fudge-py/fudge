@@ -17,6 +17,55 @@ lock = Lock()
 
 
 class patch(object):
+    """A test decorator that patches importable names with :class:`fakes <Fake>`
+    
+    Each fake is exposed as an argument to the test:
+    
+    .. doctest::
+        :hide:
+        
+        >>> import fudge
+
+    .. doctest::
+        
+        >>> @fudge.patch('os.remove')
+        ... def test(fake_remove):
+        ...     fake_remove.expects_call()
+        ...     # do stuff...
+        ... 
+        >>> test()
+        Traceback (most recent call last):
+        ...
+        AssertionError: fake:os.remove() was not called
+    
+    .. doctest::
+        :hide:
+        
+        >>> fudge.clear_expectations()
+    
+    Many paths can be patched at once:
+
+    .. doctest::
+        
+        >>> @fudge.patch('os.remove',
+        ...              'shutil.rmtree')
+        ... def test(fake_remove, fake_rmtree):
+        ...     fake_remove.is_callable()
+        ...     # do stuff...
+        ... 
+        >>> test()
+    
+    For convenience, the patch method calls
+    :func:`fudge.clear_calls`, :func:`fudge.verify`, and :func:`fudge.clear_expectations`.  For that reason, you must manage all your fake objects within the test function itself.
+
+    .. note::
+    
+        If you are using a unittest class, you cannot declare fakes
+        within ``setUp()`` unless you manually clear calls and clear 
+        expectations.  If you do that, you'll want to use the 
+        :func:`fudge.with_fakes` decorator instead of ``@patch``.
+    
+    """
     
     def __init__(self, *obj_paths):
         self.obj_paths = obj_paths

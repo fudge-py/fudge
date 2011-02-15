@@ -15,7 +15,7 @@ from fudge.exc import FakeDeclarationError
 from fudge.patcher import *
 from fudge.util import wraps, fmt_val, fmt_dict_vals
 
-__all__ = ['clear_calls', 'verify', 'clear_expectations', 'Fake']
+__all__ = ['clear_calls', 'verify', 'clear_expectations', 'Fake', 'patch']
 
 class Registry(object):
     """An internal, thread-safe registry of expected calls.
@@ -514,6 +514,8 @@ class Fake(object):
 
     Most calls with a few exceptions return ``self`` so that you can chain
     them together to create readable code.
+    
+    Instance methods will raise either AssertionError or :class:`fudge.FakeDeclarationError`
 
     Keyword arguments:
 
@@ -528,39 +530,10 @@ class Fake(object):
         defined.  Implies callable=True.
 
     **callable=False**
-        When True, the Fake() acts like a callable.  Use this if you are
-        replacing a single method.  See example below.
+        This is **deprecated**.  Use :meth:`Fake.is_callable` instead.
 
     **expect_call=True**
-        When True, the Fake() acts like a callable that must be called
-        (implies callable=True).  Use this when replacing a single method that
-        must be called.  See example below.
-
-    Short example::
-
-        >>> import fudge
-        >>> auth = fudge.Fake('auth').expects('login').with_args('joe_username', 'joes_password')
-        >>> auth.login("joe_username", "joes_password") # now works
-        >>> fudge.clear_expectations()
-    
-    When ``callable=True`` the object acts like a method ::
-        
-        >>> import fudge
-        >>> login = fudge.Fake('login', callable=True)
-        >>> login() # can be called
-    
-    When ``expect_call=True`` the object acts like a method that must be called ::
-    
-        >>> import fudge
-        >>> login = fudge.Fake('login', expect_call=True).times_called(2)
-        >>> login()
-        >>> fudge.verify()
-        Traceback (most recent call last):
-        ...
-        AssertionError: fake:login() was called 1 time(s). Expected 2.
-        >>> fudge.clear_expectations()
-    
-    Instance methods will raise either AssertionError or :class:`fudge.FakeDeclarationError`
+        This is **deprecated**.  Use :meth:`Fake.expects_call` instead.
         
     """
     
@@ -700,18 +673,28 @@ class Fake(object):
 
     def expects_call(self):
         """The fake must be called.
+    
+        .. doctest::
+            :hide:
+        
+            >>> import fudge
+            >>> fudge.clear_expectations()
+            >>> fudge.clear_calls()
 
         This is useful for when you stub out a function
         as opposed to a class.  For example::
 
             >>> import fudge
-            >>> fudge.clear_expectations()
             >>> remove = fudge.Fake('os.remove').expects_call()
-            >>> fudge.clear_calls()
             >>> fudge.verify()
             Traceback (most recent call last):
             ...
             AssertionError: fake:os.remove() was not called
+    
+        .. doctest::
+            :hide:
+        
+            >>> fudge.clear_expectations()
         
         """
         self._callable = ExpectedCall(self, call_name=self._name,
@@ -748,12 +731,17 @@ class Fake(object):
     
     def expects(self, call_name):
         """Expect a call.
+    
+        .. doctest::
+            :hide:
+            
+            >>> import fudge
+            >>> fudge.clear_expectations()
+            >>> fudge.clear_calls()
         
         If the method *call_name* is never called, then raise an error.  I.E.::
             
             >>> session = Fake('session').expects('open').expects('close')
-            >>> import fudge
-            >>> fudge.clear_calls()
             >>> session.open()
             >>> fudge.verify()
             Traceback (most recent call last):
