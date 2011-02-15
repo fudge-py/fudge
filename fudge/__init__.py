@@ -15,7 +15,8 @@ from fudge.exc import FakeDeclarationError
 from fudge.patcher import *
 from fudge.util import wraps, fmt_val, fmt_dict_vals
 
-__all__ = ['clear_calls', 'verify', 'clear_expectations', 'Fake', 'patch']
+__all__ = ['Fake', 'patch', 'test', 'clear_calls', 'verify',
+           'clear_expectations']
 
 class Registry(object):
     """An internal, thread-safe registry of expected calls.
@@ -100,6 +101,7 @@ class Registry(object):
         
 registry = Registry()
 
+
 def clear_calls():
     """Begin a new set of calls on fake objects.
     
@@ -109,9 +111,10 @@ def clear_calls():
     You should call this any time you begin 
     making calls on fake objects.
     
-    This is also available as a decorator: :func:`fudge.with_fakes`
+    This is also available in :func:`fudge.patch`, :func:`fudge.test` and :func:`fudge.with_fakes`
     """
     registry.clear_calls()
+
 
 def verify():
     """Verify that all methods have been called as expected.
@@ -121,9 +124,10 @@ def verify():
     expected call was never made to one or more 
     objects.
     
-    This is also available as a decorator: :func:`fudge.with_fakes`
+    This is also available in :func:`fudge.patch`, :func:`fudge.test` and :func:`fudge.with_fakes`
     """
     registry.verify()
+
 
 ## Deprecated:
 
@@ -132,23 +136,28 @@ def start():
     
     Deprecated.  Use :func:`fudge.clear_calls` instead.
     """
-    warnings.warn("fudge.start() has been deprecated.  Use fudge.clear_calls() instead", 
-                    DeprecationWarning, 3)
+    warnings.warn(
+        "fudge.start() has been deprecated.  Use fudge.clear_calls() instead", 
+        DeprecationWarning, 3)
     clear_calls()
-    
+
+
 def stop():
     """Stop testing with fake objects.
     
     Deprecated.  Use :func:`fudge.verify` instead.
     """
-    warnings.warn("fudge.stop() has been deprecated.  Use fudge.verify() instead", 
-                    DeprecationWarning, 3)
+    warnings.warn(
+        "fudge.stop() has been deprecated.  Use fudge.verify() instead", 
+        DeprecationWarning, 3)
     verify()
 
 ##
 
+
 def clear_expectations():
     registry.clear_expectations()
+
 
 def with_fakes(method):
     """Decorator that calls :func:`fudge.clear_calls` before method() and :func:`fudge.verify` afterwards.
@@ -159,6 +168,48 @@ def with_fakes(method):
         method(*args, **kw)
         verify() # if no exceptions
     return apply_clear_and_verify
+
+
+def test(method):
+    """Decorator for a test that uses fakes directly (not patched).
+
+    Most of the time you probably want to use :func:`fudge.patch` instead.
+    
+    .. doctest::
+        :hide:
+        
+        >>> import fudge
+
+    .. doctest::
+        
+        >>> @fudge.test
+        ... def test():
+        ...     db = fudge.Fake('db').expects('connect')
+        ...     # do stuff...
+        ... 
+        >>> test()
+        Traceback (most recent call last):
+        ...
+        AssertionError: fake:db.connect() was not called
+    
+    .. doctest::
+        :hide:
+        
+        >>> fudge.clear_expectations()
+
+    """
+    @wraps(method)
+    def clear_and_verify(*args, **kw):
+        clear_expectations()
+        clear_calls()
+        try:
+            v = method(*args, **kw)
+            verify() # if no exceptions
+        finally:
+            clear_expectations()
+        return v
+    return clear_and_verify
+test.__test__ = False # Nose: do not collect
 
 class Call(object):
     """A call that can be made on a Fake object.
@@ -177,7 +228,8 @@ class Call(object):
         A call order to append each call to.  Default is None
     """
     
-    def __init__(self, fake, call_name=None, index=None, callable=False, call_order=None):
+    def __init__(self, fake, call_name=None, index=None,
+                 callable=False, call_order=None):
         self.fake = fake
         self.call_name = call_name
         self.call_replacement = None
@@ -208,7 +260,8 @@ class Call(object):
                 self.actual_times_called > self.expected_times_called:
             raise AssertionError(
                 '%s was called %s time(s). Expected %s.' % (
-                    self, self.actual_times_called, self.expected_times_called))
+                    self, self.actual_times_called,
+                    self.expected_times_called))
         
         return_val = None
         replacement_return = None
@@ -234,7 +287,8 @@ class Call(object):
                 raise AssertionError(
                     "%s was called unexpectedly with args %s" % (
                             self, 
-                            self._repr_call(args, kwargs, shorten_long_vals=False)))
+                            self._repr_call(args, kwargs,
+                                            shorten_long_vals=False)))
             
             if self.expected_args is None:
                 self.expected_args = tuple([]) # empty *args
@@ -242,19 +296,22 @@ class Call(object):
                 raise AssertionError(
                     "%s was called unexpectedly with args %s" % (
                             self, 
-                            self._repr_call(args, kwargs, shorten_long_vals=False)))
+                            self._repr_call(args, kwargs,
+                                            shorten_long_vals=False)))
         
         # now check for matching keyword args.
         # i.e. keyword args that are only checked if the call provided them
         if self.expected_matching_kwargs:
-            for expected_arg, expected_value in self.expected_matching_kwargs.items():
+            for expected_arg, expected_value in \
+                                self.expected_matching_kwargs.items():
                 if expected_arg in kwargs:
                     if expected_value != kwargs[expected_arg]:
                         raise AssertionError(
                             "%s was called unexpectedly with args %s" % (
                                     self, 
-                                    self._repr_call(args, {expected_arg: kwargs[expected_arg]}, 
-                                                                        shorten_long_vals=False))
+                                    self._repr_call(args, 
+                                        {expected_arg: kwargs[expected_arg]}, 
+                                        shorten_long_vals=False))
                         )
         
         # now check for matching args.
@@ -264,7 +321,8 @@ class Call(object):
                 raise AssertionError(
                     "%s was called unexpectedly with args %s" % (
                             self, 
-                            self._repr_call(args, kwargs, shorten_long_vals=False)))
+                            self._repr_call(args, kwargs,
+                                            shorten_long_vals=False)))
                             
         # determine whether we should inspect argument counts or not:
         with_arg_counts = (self.expected_arg_count is not None or 

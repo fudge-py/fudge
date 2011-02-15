@@ -7,6 +7,8 @@ fudge
 
 .. autofunction:: fudge.patch
 
+.. autofunction:: fudge.test
+
 .. autoclass:: fudge.Fake
    :members:
 

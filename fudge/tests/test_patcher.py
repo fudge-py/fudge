@@ -109,6 +109,9 @@ def test_patched_context():
 
 class TestPatch(unittest.TestCase):
 
+    def setUp(self):
+        fudge.clear_expectations()
+
     def test_decorator_on_def(self):
 
         class holder:

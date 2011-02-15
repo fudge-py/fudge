@@ -85,9 +85,10 @@ Changelog
 
   - After extensive usage and community input, the fudge interface has
     been greatly simplified!
-  - There is now a *way* better pattern for setting up fakes. The old way is
+  - There is now a :ref:`way better pattern <using-fudge>` for setting up fakes. The old way is
     still supported but you'll want to write all new code in this pattern once
     you see how much easier it is.
+  - Added :func:`fudge.patch` and :func:`fudge.test`
   - Added :func:`fudge.Fake.expects_call` and :func:`fudge.Fake.is_callable`
   - **Changed**: The tests are no longer maintained in Python 2.4 although 
     Fudge probably still supports 2.4

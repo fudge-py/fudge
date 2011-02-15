@@ -77,10 +77,16 @@ class patch(object):
             if not isinstance(fakes, (tuple, list)):
                 fakes = [fakes]
             args += tuple(fakes)
+            value = None
             try:
-                return fn(*args, **kw)
-            finally:
+                value = fn(*args, **kw)
+            except:
+                etype, val, tb = sys.exc_info()
+                self.__exit__(etype, val, tb)
+                raise etype, val, tb
+            else:
                 self.__exit__(None, None, None)
+            return value
         return caller
     
     def __enter__(self):

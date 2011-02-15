@@ -1068,6 +1068,41 @@ class TestPatchedFakes(unittest.TestCase):
         some_test()
         eq_(holder.test_called, True)
 
+    def test_expectations_are_always_cleared(self):
+
+        class holder:
+            test_called = False
+        
+        @raises(RuntimeError)
+        @fudge.patch('shutil.copy')
+        def some_test(copy):
+            holder.test_called = True
+            copy.expects_call()
+            raise RuntimeError
+
+        some_test()
+        fudge.verify() # should be no errors
+        eq_(holder.test_called, True)
+
+    def test_calls_are_cleared(self):
+
+        class holder:
+            test_called = False
+
+        sess = fudge.Fake('session').expects('save')
+        # call should be cleared:
+        sess.save()
+
+        @fudge.patch('shutil.copy')
+        def some_test(copy):
+            holder.test_called = True
+            copy.expects_call().times_called(1)
+            copy()
+
+        some_test()
+        fudge.verify() # should be no errors
+        eq_(holder.test_called, True)
+
     def test_with_statement(self):
 
         class holder:
@@ -1091,3 +1126,77 @@ class TestPatchedFakes(unittest.TestCase):
                 raise RuntimeError()
 
         run_test()
+
+
+class TestNonPatchedFakeTest(unittest.TestCase):
+    
+    def tearDown(self):
+        fudge.clear_expectations()
+
+    def test_preserve_method(self):
+
+        @fudge.test
+        def some_test():
+            holder.test_called = True
+
+        eq_(some_test.__name__, 'some_test')
+
+    def test_expectations_are_cleared(self):
+
+        class holder:
+            test_called = False
+
+        # Set up decoy expectation:
+        fake = fudge.Fake('db').expects('save')
+
+        @fudge.test
+        def some_test():
+            holder.test_called = True
+
+        some_test()
+        fudge.verify() # should be no errors
+        eq_(holder.test_called, True)
+
+    def test_expectations_are_always_cleared(self):
+
+        class holder:
+            test_called = False
+        
+        @raises(RuntimeError)
+        @fudge.test
+        def some_test():
+            holder.test_called = True
+            fake = fudge.Fake('db').expects('save')
+            raise RuntimeError
+
+        some_test()
+        fudge.verify() # should be no errors
+        eq_(holder.test_called, True)
+
+    def test_calls_are_cleared(self):
+
+        class holder:
+            test_called = False
+
+        sess = fudge.Fake('session').expects('save')
+        # call should be cleared:
+        sess.save()
+
+        @fudge.test
+        def some_test():
+            holder.test_called = True
+            db = fudge.Fake('db').expects('save').times_called(1)
+            db.save()
+
+        some_test()
+        fudge.verify() # should be no errors
+        eq_(holder.test_called, True)
+
+    @raises(AssertionError)
+    def test_verify(self):
+
+        @fudge.test
+        def some_test():
+            fake = fudge.Fake('db').expects('save')
+
+        some_test()

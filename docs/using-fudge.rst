@@ -67,60 +67,36 @@ Sweet, it passed.
 
 Fudge lets you declare expectations as loose or as tight as you want.  If you don't care about the exact arguments, you can leave off the call to :meth:`fudge.Fake.with_args`.  If you don't care if a method is actually called you can use :meth:`fudge.Fake.provides` instead of :meth:`fudge.Fake.expects`.  Likewise, :meth:`fudge.Fake.with_arg_count` can be used when you don't want to worry about the actual argument values.  There are `argument inspectors <working-with-arguments>`_ for checking values in other ways.
 
-Failed Expectations
-===================
+Fake objects without patches (dependency injection)
+===================================================
 
-Since the previous code declared expectations for how the 
-oauthtwitter module should be used, your test will raise an 
-AssertionError when those expectations are not met.  For example:
+If you don't need to patch anything, you can use the :func:`fudge.test` 
+decorator instead.  This will ensure an exception is raised in case any 
+expectations aren't met.  Here's an example:
+
+.. doctest::
+    
+    >>> def send_msg(api):
+    ...     if False: # a mistake
+    ...         api.UpdateStatus('hello')
+    ... 
+    >>> @fudge.test
+    ... def test_msg():
+    ...     FakeOAuthApi = (fudge.Fake('OAuthApi')
+    ...                          .is_callable()
+    ...                          .expects('UpdateStatus'))
+    ...     api = FakeOAuthApi()
+    ...     send_msg(api)
+    ... 
+    >>> test_msg()
+    Traceback (most recent call last):
+    ...
+    AssertionError: fake:OAuthApi.UpdateStatus() was not called
 
 .. doctest::
     :hide:
     
     >>> fudge.clear_expectations()
-    >>> FakeOAuthApi = (fudge.Fake('oauthtwitter.OAuthApi')
-    ...                     .expects('__init__')
-    ...                     .with_args(
-    ...                         '<consumer_key>', '<consumer_secret>',
-    ...                         '<oauth_token>', '<oauth_token_secret>'
-    ...                     )
-    ... )
-    >>> fake_api = (FakeOAuthApi.returns_fake()
-    ...                       .expects('UpdateStatus')
-    ... )
-    >>> patched_api = fudge.patch_object(oauthtwitter, "OAuthApi", FakeOAuthApi)
-    
-.. doctest::
-    
-    >>> api = oauthtwitter.OAuthApi('<nope>', '<wrong>')
-    Traceback (most recent call last):
-    ...
-    AssertionError: fake:oauthtwitter.OAuthApi.__init__('<consumer_key>', '<consumer_secret>', '<oauth_token>', '<oauth_token_secret>') was called unexpectedly with args ('<nope>', '<wrong>') 
-
-If your code forgets to call an important method, that would raise an error at verification time:
-
-.. doctest::
-    :hide:
-    
-    >>> fudge.clear_calls()
-    
-.. doctest::
-    
-    >>> api = oauthtwitter.OAuthApi(
-    ...     '<consumer_key>', '<consumer_secret>', '<oauth_token>', '<oauth_token_secret>'
-    ... )
-    >>> fudge.verify() # called by @patch
-    Traceback (most recent call last):
-    ...
-    AssertionError: fake:oauthtwitter.OAuthApi.__init__().UpdateStatus() was not called
-
-.. doctest::
-    :hide:
-    
-    >>> patched_api.restore()
-    >>> fudge.clear_expectations()
-
-Fudge is designed to report the best possible exception messages in your tests.
 
 Stubs Without Expectations
 ==========================
@@ -178,36 +154,10 @@ You can do this using :meth:`Fake.calls() <fudge.Fake.calls>` like this:
     >>> auth.show_secret_word_for_user("ernie")
     Access denied
 
-Fudging A Callable
-==================
-
-Instead of using :meth:`Fake().expects_call() <fudge.Fake.expects_call>`
-to replace a single method you can also use :meth:`Fake().is_callable() <fudge.Fake.is_callable>` which won't raise an error.
-
-.. doctest::
-    
-    >>> import auth
-    >>> def login_page():
-    ...     logged_in = auth.login("eziekel", "pazzword")
-    ...     if logged_in:
-    ...         print "Welcome!"
-    ...     else:
-    ...         print "Access Denied"
-    ... 
-    >>> @fudge.patch('auth.login')
-    ... def test_login(login):
-    ...     (login.is_callable()
-    ...           .with_args("eziekel", "pazzword")
-    ...           .returns(True))
-    ...     login_page()
-    ... 
-    >>> test_login()
-    Welcome!
-
 Cascading Objects
 =================
 
-Some objects you might want to work with will spawn a long chain of objects as you work with them.  Here is an example of fudging a cascading `SQLAlchemy query <http://www.sqlalchemy.org/docs/05/ormtutorial.html#querying>`_.  Notice that :meth:`Fake.returns_fake() <fudge.Fake.returns_fake>` is used to specify that ``session.query(User)`` should return a new object.  Notice also that because query() should be iterable, it is set to return a list of fake User objects.
+Some objects you might want to work with will spawn a long chain of objects.  Here is an example of fudging a cascading `SQLAlchemy query <http://www.sqlalchemy.org/docs/05/ormtutorial.html#querying>`_.  Notice that :meth:`Fake.returns_fake() <fudge.Fake.returns_fake>` is used to specify that ``session.query(User)`` should return a new object.  Notice also that because query() should be iterable, it is set to return a list of fake User objects.
 
 .. doctest::
     
