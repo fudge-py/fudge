@@ -2,7 +2,7 @@ from __future__ import with_statement
 import unittest
 
 from nose.exc import SkipTest
-from nose.tools import eq_
+from nose.tools import eq_, raises
 
 import fudge
 
@@ -41,6 +41,21 @@ def test_patch_builtin():
     finally:
         patched.restore()
     eq_(datetime.datetime.now, orig_datetime.now)
+
+
+def test_patch_long_path():
+    import fudge.tests.support._for_patch
+    orig = fudge.tests.support._for_patch.some_object.inner
+    long_path = 'fudge.tests.support._for_patch.some_object.inner'
+    with fudge.patch(long_path) as fake:
+        assert isinstance(fake, fudge.Fake)
+    eq_(fudge.tests.support._for_patch.some_object.inner, orig)
+
+
+@raises(ImportError)
+def test_patch_non_existant_path():
+    with fudge.patch('__not_a_real_import_path.nested.one.two.three') as fake:
+        pass
 
 
 def test_patch_builtin_as_string():

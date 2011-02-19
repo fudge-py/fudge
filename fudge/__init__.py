@@ -5,7 +5,7 @@ See :ref:`using-fudge` for common scenarios.
 
 """
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 import os
 import re
 import sys

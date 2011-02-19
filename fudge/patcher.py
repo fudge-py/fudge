@@ -243,8 +243,25 @@ def patch_object(obj, attr_name, patched_value):
         
     """
     if isinstance(obj, (str, unicode)):
-        obj_path = obj
-        obj = __import__(obj_path)
+        obj_path = adjusted_path = obj
+        done = False
+        exc = None
+        while not done:
+            try:
+                obj = __import__(adjusted_path)
+                done = True
+            except ImportError:
+                # Handle paths that traveerse object attributes.
+                # Such as: smtplib.SMTP.connect
+                #          smtplib <- module to import 
+                adjusted_path = adjusted_path.rsplit('.', 1)[0]
+                if not exc:
+                    exc = sys.exc_info()
+                if not adjusted_path.count('.'):
+                    # We're at the top level module and it doesn't exist.
+                    # Raise the first exception since it will make more sense:
+                    etype, val, tb = exc
+                    raise etype, val, tb
         for part in obj_path.split('.')[1:]:
             obj = getattr(obj, part)
 

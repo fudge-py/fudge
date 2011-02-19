@@ -81,6 +81,10 @@ Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contri
 Changelog
 =========
 
+- 1.0.1
+  
+  - Fixed ImportError when a patched path traverses object attributes within a module.
+
 - 1.0.0
 
   - After extensive usage and community input, the fudge interface has
