@@ -58,6 +58,12 @@ def test_patch_non_existant_path():
         pass
 
 
+@raises(AttributeError)
+def test_patch_non_existant_attribute():
+    with fudge.patch('fudge.tests.support._for_patch.does.not.exist') as fake:
+        pass
+
+
 def test_patch_builtin_as_string():
     import datetime
     orig_datetime = datetime.datetime
