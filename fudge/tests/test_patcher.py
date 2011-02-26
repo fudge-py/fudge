@@ -1,4 +1,5 @@
 from __future__ import with_statement
+import inspect
 import unittest
 
 from nose.exc import SkipTest
@@ -126,6 +127,81 @@ def test_patched_context():
     eq_(Boo.fargo, "is right here")
     ctx.__exit__(None, None, None)
     eq_(Boo.fargo, "is over there")
+
+
+def test_base_class_attribute():
+    class Base(object):
+        foo = 'bar'
+    class Main(Base):
+        pass
+    fake = fudge.Fake()
+    p = fudge.patch_object(Main, 'foo', fake)
+    eq_(Main.foo, fake)
+    eq_(Base.foo, 'bar')
+    p.restore()
+    eq_(Main.foo, 'bar')
+    assert 'foo' not in Main.__dict__, ('Main.foo was not restored correctly')
+
+
+def test_bound_methods():
+    class Klass(object):
+        def method(self):
+            return 'foozilate'
+    instance = Klass()
+    fake = fudge.Fake()
+    p = fudge.patch_object(instance, 'method', fake)
+    eq_(instance.method, fake)
+    p.restore()
+    eq_(instance.method(), Klass().method())
+    assert inspect.ismethod(instance.method)
+    assert 'method' not in instance.__dict__, (
+                            'instance.method was not restored correctly')
+
+
+def test_staticmethod_descriptor():
+    class Klass(object):
+        @staticmethod
+        def static():
+            return 'OK'
+    fake = fudge.Fake()
+    p = fudge.patch_object(Klass, 'static', fake)
+    eq_(Klass.static, fake)
+    p.restore()
+    eq_(Klass.static(), 'OK')
+
+
+def test_property():
+    class Klass(object):
+        @property
+        def prop(self):
+            return 'OK'
+    exact_prop = Klass.prop
+    instance = Klass()
+    fake = fudge.Fake()
+    p = fudge.patch_object(instance, 'prop', fake)
+    eq_(instance.prop, fake)
+    p.restore()
+    eq_(instance.prop, 'OK')
+    eq_(Klass.prop, exact_prop)
+
+
+def test_inherited_property():
+    class SubKlass(object):
+        @property
+        def prop(self):
+            return 'OK'
+    class Klass(SubKlass):
+        pass
+    exact_prop = SubKlass.prop
+    instance = Klass()
+    fake = fudge.Fake()
+    p = fudge.patch_object(instance, 'prop', fake)
+    eq_(instance.prop, fake)
+    p.restore()
+    eq_(instance.prop, 'OK')
+    assert 'prop' not in Klass.__dict__, (
+                                'Klass.prop was not restored properly')
+    eq_(SubKlass.prop, exact_prop)
 
 
 class TestPatch(unittest.TestCase):

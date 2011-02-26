@@ -81,6 +81,11 @@ Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contri
 Changelog
 =========
 
+- 1.0.2
+
+  - Object patching is a lot safer in many cases and now supports getter objects
+    and static methods. Thanks to Michael Foord and mock._patch for ideas and code.
+
 - 1.0.1
   
   - Fixed ImportError when a patched path traverses object attributes within a module.

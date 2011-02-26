@@ -8,12 +8,9 @@ __all__ = ['patch_object', 'with_patched_object', 'PatchHandler',
            'patched_context', 'patch']
 
 import sys
-from threading import Lock
 
 import fudge
 from fudge.util import wraps
-
-lock = Lock()
 
 
 class patch(object):
@@ -269,53 +266,100 @@ def patch_object(obj, attr_name, patched_value):
     handle.patch(patched_value)
     return handle
 
+
+class NonExistant(object):
+    """Represents a non-existant value."""
+
+
 class PatchHandler(object):
     """Low level patch handler that memorizes a patch so you can restore it later.
     
     You can use more convenient wrappers :func:`with_patched_object` and :func:`patched_context`
-    
-    .. note::
-        
-        This may produce unexpected results in a multi-threaded environment if you are 
-        patching global module variables.
         
     """
     def __init__(self, orig_object, attr_name):
         self.orig_object = orig_object
         self.attr_name = attr_name
         self.proxy_object = None
-        lock.acquire()
-        try:
-            self.orig_value = getattr(self.orig_object, self.attr_name)
-        finally:
-            lock.release()
+        self.orig_value, self.is_local = self._get_original(self.orig_object,
+                                                            self.attr_name)
+        self.getter_class, self.getter = self._handle_getter(self.orig_object,
+                                                             self.attr_name)
     
     def patch(self, patched_value):
-        """Set a new value for the attibute of the object."""
-        lock.acquire()
+        """Set a new value for the attribute of the object."""
         try:
-            try:
+            if self.getter:
+                setattr(self.getter_class, self.attr_name, patched_value)
+            else:
                 setattr(self.orig_object, self.attr_name, patched_value)
-            except TypeError:
-                proxy_name = 'fudge_proxy_%s_%s_%s' % (
-                                    self.orig_object.__module__,
-                                    self.orig_object.__name__,
-                                    patched_value.__class__.__name__
-                )
-                self.proxy_object = type(proxy_name, (self.orig_object,), { 
-                                            self.attr_name: patched_value })
-                setattr(sys.modules[self.orig_object.__module__], 
-                        self.orig_object.__name__, self.proxy_object)
-        finally:
-            lock.release()
+        except TypeError:
+            # Workaround for patching builtin objects:
+            proxy_name = 'fudge_proxy_%s_%s_%s' % (
+                                self.orig_object.__module__,
+                                self.orig_object.__name__,
+                                patched_value.__class__.__name__
+            )
+            self.proxy_object = type(proxy_name, (self.orig_object,),
+                                     {self.attr_name: patched_value})
+            mod = sys.modules[self.orig_object.__module__]
+            setattr(mod, self.orig_object.__name__, self.proxy_object)
         
     def restore(self):
         """Restore the saved value for the attribute of the object."""
-        lock.acquire()
-        try:
-            if self.proxy_object is None:
+        if self.proxy_object is None:
+            if self.getter:
+                setattr(self.getter_class, self.attr_name, self.getter)
+            elif self.is_local:
                 setattr(self.orig_object, self.attr_name, self.orig_value)
             else:
-                setattr(sys.modules[self.orig_object.__module__], self.orig_object.__name__, self.orig_object)
-        finally:
-            lock.release()
+                # Was not a local, safe to delete:
+                delattr(self.orig_object, self.attr_name)
+        else:
+            setattr(sys.modules[self.orig_object.__module__],
+                    self.orig_object.__name__,
+                    self.orig_object)
+
+    def _find_class_for_attr(self, cls, attr):
+        if attr in cls.__dict__:
+            return cls
+        else:
+            for base in cls.__bases__:
+                if self._find_class_for_attr(base, attr) is not NonExistant:
+                    return base
+            return NonExistant
+
+    def _get_original(self, orig_object, name):
+        try:
+            value = orig_object.__dict__[name]
+            is_local = True
+        except (AttributeError, KeyError):
+            value = getattr(orig_object, name, NonExistant)
+            is_local = False
+        if value is NonExistant:
+            raise AttributeError(
+                    "%s does not have the attribute %r" % (orig_object, name))
+        return value, is_local
+
+    def _get_exact_original(self, orig_object, name):
+        if hasattr(orig_object, '__dict__'):
+            if name not in orig_object.__dict__:
+                # TODO: handle class objects, not just instance objects?
+                # This is only here for Class.property.__get__
+                if hasattr(orig_object, '__class__'):
+                    cls = orig_object.__class__
+                    orig_object = self._find_class_for_attr(cls, name)
+        return orig_object
+
+    def _handle_getter(self, orig_object, name):
+        getter_class, getter = None, None
+        exact_orig = self._get_exact_original(orig_object, name)
+        try:
+            ob = exact_orig.__dict__[name]
+        except (AttributeError, KeyError):
+            pass
+        else:
+            if hasattr(ob, '__get__'):
+                getter_class = exact_orig
+                getter = ob
+        return getter_class, getter
