@@ -24,26 +24,27 @@ setup(
     long_description="""
 Complete documentation is available at http://farmdev.com/projects/fudge/
 
-This module is designed for two specific situations:
+Fudge is a Python module for using fake objects (mocks and stubs) to test real ones.
 
-- Replace an object
-  
-  - Temporarily return a canned value for a 
-    method or allow a method to be called without affect.
+In readable Python code, you declare what methods are available on your fake and
+how they should be called. Then you inject that into your application and start
+testing. This declarative approach means you don't have to record and playback
+actions and you don't have to inspect your fakes after running code. If the fake
+object was used incorrectly then you'll see an informative exception message
+with a traceback that points to the culprit.
 
-- Ensure an object is used correctly
-
-  - Declare expectations about what methods should be 
-    called and what arguments should be sent.
-
-Here is a quick preview of how you can test code that sends email without actually sending email::
+Here is a quick preview of how you can test code that sends
+email without actually sending email::
     
-    >>> import fudge
-    >>> SMTP = fudge.Fake('SMTP')
-    >>> SMTP = SMTP.expects('__init__')
-    >>> SMTP = SMTP.expects('connect')
-    >>> SMTP = SMTP.expects('sendmail').with_arg_count(3)
-    >>> SMTP = SMTP.expects('close')
+    @fudge.patch('smtplib.SMTP')
+    def test_mailer(FakeSMTP):
+        # Declare how the SMTP class should be used:
+        (FakeSMTP.expects_call()
+                 .expects('connect')
+                 .expects('sendmail').with_arg_count(3))
+        # Run production code:
+        send_mail()
+        # ...expectations are verified automatically at the end of the test
     
 """,
     author='Kumar McMillan',
