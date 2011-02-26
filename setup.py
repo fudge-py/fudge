@@ -51,15 +51,19 @@ Here is a quick preview of how you can test code that sends email without actual
     license="The MIT License",
     packages=find_packages(exclude=['ez_setup']),
     install_requires=[],
-    tests_require=['nose', 'NoseJS', 'Sphinx'],
     url='http://farmdev.com/projects/fudge/',
     include_package_data=True,
     classifiers = [
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'Operating System :: OS Independent',
-        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 2.5',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.1',
+        'Programming Language :: Python :: 3.2',
         'Topic :: Software Development :: Testing'
         ],
     **extra_setup
