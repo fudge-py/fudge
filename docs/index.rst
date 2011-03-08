@@ -81,6 +81,11 @@ Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contri
 Changelog
 =========
 
+- 1.0.3
+
+  - Attributes declared by :func:`fudge.Fake.has_attr` are now settable.
+    Thanks to Mike Kent for the bug report.
+
 - 1.0.2
 
   - Object patching is a lot safer in many cases and now supports getter objects

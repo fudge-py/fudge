@@ -50,11 +50,22 @@ class TestFake(unittest.TestCase):
         my_obj = fudge.Fake()
         eq_(repr(my_obj), "fake:my_obj")
     
-    def test_attributes(self):
+    def test_has_attr(self):
         my_obj = fudge.Fake().has_attr(vice='versa', beach='playa')
         eq_(my_obj.vice, 'versa')
         eq_(my_obj.beach, 'playa')
-    
+
+    def test_attributes_are_settable(self):
+        my_obj = fudge.Fake().has_attr(vice='versa')
+        my_obj.vice = 'miami'
+        eq_(my_obj.vice, 'miami')
+
+    def test_none_type_attributes_are_settable(self):
+        my_obj = fudge.Fake().has_attr(vice=None)
+        eq_(my_obj.vice, None)
+        my_obj.vice = 'miami'
+        eq_(my_obj.vice, 'miami')
+
     def test_attributes_can_replace_internals(self):
         my_obj = fudge.Fake().has_attr(provides='hijacked')
         eq_(my_obj.provides, 'hijacked')

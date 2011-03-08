@@ -5,7 +5,7 @@ See :ref:`using-fudge` for common scenarios.
 
 """
 
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 import os
 import re
 import sys
@@ -657,9 +657,16 @@ class Fake(object):
         elif self._callable:
             return self._callable(*args, **kwargs)
         else:
-            raise RuntimeError("%s object cannot be called (maybe you want %s(callable=True) ?)" % (
-                                                                        self, self.__class__.__name__))
-    
+            raise RuntimeError(
+                "%s object cannot be called (maybe you want "
+                "%s(callable=True) ?)" % (self, self.__class__.__name__))
+
+    def __setattr__(self, name, val):
+        if hasattr(self, '_attributes') and name in self._attributes:
+            self._attributes[name] = val
+        else:
+            object.__setattr__(self, name, val)
+
     def __repr__(self):
         return "fake:%s" % (self._name or "unnamed")
     
