@@ -1,7 +1,9 @@
 
 import thread
+import sys
 import unittest
 import fudge
+from nose.exc import SkipTest
 from nose.tools import eq_, raises
 from fudge import (
     Fake, Registry, ExpectedCall, ExpectedCallOrder, Call, CallStack, FakeDeclarationError)
@@ -93,7 +95,9 @@ class TestRegistry(unittest.TestCase):
             "clear_expectations() should reset expected call order")
     
     def test_multithreading(self):
-        
+        if sys.platform.startswith('java'):
+            raise SkipTest('this test is flaky in Jython')
+
         reg = fudge.registry
         
         class thread_run:
