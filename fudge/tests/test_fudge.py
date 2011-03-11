@@ -227,7 +227,7 @@ class TestArguments(unittest.TestCase):
             def __eq__(self, other):
                 return False
         obj = NeverEqual()
-        self.fake.expects('save').with_args(arg.any_value())
+        self.fake.expects('save').with_args(arg.any())
         self.fake.save(obj) # this should pass but was failing prior to issue 9
 
     def test_with_kwargs_with_object_that_is_never_equal_to_anything(self):
@@ -235,7 +235,7 @@ class TestArguments(unittest.TestCase):
             def __eq__(self, other):
                 return False
         obj = NeverEqual()
-        self.fake.expects('save').with_args(foo=arg.any_value())
+        self.fake.expects('save').with_args(foo=arg.any())
         self.fake.save(foo=obj) # this should pass but was failing prior to issue 9
     
     def test_with_matching_positional_args(self):

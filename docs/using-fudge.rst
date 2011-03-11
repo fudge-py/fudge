@@ -256,7 +256,7 @@ Here is a short example:
     >>> from fudge.inspector import arg
     >>> image = (fudge.Fake("image")
     ...               .expects("save")
-    ...               .with_args("JPEG", arg.endswith(".jpg"), resolution=arg.any_value())
+    ...               .with_args("JPEG", arg.endswith(".jpg"), resolution=arg.any())
     ... )
 
 This declaration is very flexible; it allows the following calls:

@@ -20,6 +20,7 @@ should end with the suffix ".jpg"
     >>> fudge.clear_expectations()
 
 """
+import warnings
 
 from fudge.util import fmt_val, fmt_dict_vals
 
@@ -29,7 +30,7 @@ class ValueInspector(object):
     """Dispatches tests to inspect values. 
     """
     
-    def any_value(self):
+    def any(self):
         """Match any value.
         
         This is pretty much just a placeholder for when you 
@@ -42,7 +43,7 @@ class ValueInspector(object):
             >>> from fudge.inspector import arg
             >>> db = fudge.Fake("db")
             >>> db = db.expects("transaction").with_args(
-            ...             "insert", isolation_level=arg.any_value())
+            ...             "insert", isolation_level=arg.any())
             ... 
             >>> db.transaction("insert", isolation_level="lock")
             >>> fudge.verify()
@@ -66,7 +67,13 @@ class ValueInspector(object):
         
         """
         return AnyValue()
-    
+
+    def any_value(self):
+        """**DEPRECATED**: use :func:`arg.any() <fudge.inspector.ValueInspector.any>`
+        """
+        warnings.warn('arg.any_value() is deprecated in favor of arg.any()')
+        return self.any()
+
     def contains(self, part):
         """Ensure that a value contains some part.
         
@@ -339,7 +346,7 @@ class HasAttr(ValueTest):
         return True
 
 class AnyValue(ValueTest):
-    arg_method = "any_value"
+    arg_method = "any"
     
     def __eq__(self, other):
         # will match anything:

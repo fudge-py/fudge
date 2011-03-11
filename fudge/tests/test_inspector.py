@@ -15,16 +15,16 @@ class TestAnyValue(unittest.TestCase):
         fudge.clear_expectations()
     
     def test_any_value(self):
-        db = Fake("db").expects("execute").with_args(arg.any_value())
+        db = Fake("db").expects("execute").with_args(arg.any())
         db.execute("delete from foo where 1")
     
     def test_repr(self):
         any = inspector.AnyValue()
-        eq_(repr(any), "arg.any_value()")
+        eq_(repr(any), "arg.any()")
         
     def test_str(self):
         any = inspector.AnyValue()
-        eq_(str(any), "arg.any_value()")
+        eq_(str(any), "arg.any()")
         
 class TestPassesTest(unittest.TestCase):
     

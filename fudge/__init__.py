@@ -1140,7 +1140,7 @@ class Fake(object):
             >>> from fudge.inspector import arg
             >>> counter = fudge.Fake('counter')
             >>> counter = counter.expects('increment').with_args(
-            ...                                         arg.any_value(), 
+            ...                                         arg.any(), 
             ...                                         table=arg.endswith("hits"))
             ... 
         

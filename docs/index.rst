@@ -83,6 +83,9 @@ Changelog
 
 - 1.0.3
 
+  - :func:`arg.any_value() <fudge.inspector.ValueInspector.any_value>`
+    is **DEPRECATED** in favor of
+    :func:`arg.any() <fudge.inspector.ValueInspector.any>`
   - Attributes declared by :func:`fudge.Fake.has_attr` are now settable.
     Thanks to Mike Kent for the bug report.
   - Fixes ImportError when patching certain class methods like
