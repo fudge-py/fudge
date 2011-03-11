@@ -1063,7 +1063,10 @@ class Fake(object):
         """
         exp = self._get_current_call()
         endpoint = kwargs.get('name', exp.call_name)
-        name = "%s.%s()" % (self._name, endpoint)
+        if endpoint == self._name:
+            name = "%s()" % (self._name)
+        else:
+            name = "%s.%s()" % (self._name, endpoint)
         kwargs['name'] = name
         fake = self.__class__(*args, **kwargs)
         exp.return_val = fake

@@ -102,6 +102,18 @@ class TestChainedNames(unittest.TestCase):
         f = f.provides('cursor').returns_fake()
         eq_(repr(f), 'fake:db.Adapter.query().cursor()')
 
+    def test_more_nesting(self):
+        class ctx:
+            fake = None
+        @fudge.patch('smtplib.SMTP')
+        def test(fake_SMTP):
+            (fake_SMTP.is_callable()
+             .returns_fake()
+             .provides('sendmail'))
+            ctx.fake = fake_SMTP()
+        test()
+        eq_(str(ctx.fake), 'fake:smtplib.SMTP()')
+
 class TestLongArgValues(unittest.TestCase):
     
     def test_arg_diffs_are_not_shortened(self):
