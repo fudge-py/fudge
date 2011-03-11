@@ -243,6 +243,7 @@ def patch_object(obj, attr_name, patched_value):
         obj_path = adjusted_path = obj
         done = False
         exc = None
+        at_top_level = False
         while not done:
             try:
                 obj = __import__(adjusted_path)
@@ -254,11 +255,13 @@ def patch_object(obj, attr_name, patched_value):
                 adjusted_path = adjusted_path.rsplit('.', 1)[0]
                 if not exc:
                     exc = sys.exc_info()
-                if not adjusted_path.count('.'):
+                if at_top_level:
                     # We're at the top level module and it doesn't exist.
                     # Raise the first exception since it will make more sense:
                     etype, val, tb = exc
                     raise etype, val, tb
+                if not adjusted_path.count('.'):
+                    at_top_level = True
         for part in obj_path.split('.')[1:]:
             obj = getattr(obj, part)
 

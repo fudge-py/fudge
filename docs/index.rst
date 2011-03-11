@@ -83,9 +83,11 @@ Changelog
 
 - 1.0.3
 
-  - Fixes representation of chained fakes for class instances.
   - Attributes declared by :func:`fudge.Fake.has_attr` are now settable.
     Thanks to Mike Kent for the bug report.
+  - Fixes ImportError when patching certain class methods like
+    smtplib.SMTP.sendmail
+  - Fixes representation of chained fakes for class instances.
 
 - 1.0.2
 

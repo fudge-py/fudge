@@ -312,3 +312,19 @@ class TestPatch(unittest.TestCase):
         assert not isinstance(shutil.copy, fudge.Fake)
         import os
         assert not isinstance(os.remove, fudge.Fake)
+
+    def test_class_method_path(self):
+        class ctx:
+            sendmail = None
+
+        @fudge.patch('smtplib.SMTP.sendmail')
+        def test(fake_sendmail):
+            import smtplib
+            s = smtplib.SMTP()
+            ctx.sendmail = s.sendmail
+
+        test()
+        assert isinstance(ctx.sendmail, fudge.Fake)
+        import smtplib
+        s = smtplib.SMTP()
+        assert not isinstance(s.sendmail, fudge.Fake)
