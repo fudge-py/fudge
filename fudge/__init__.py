@@ -583,9 +583,7 @@ class Fake(object):
         frame (if possible).
 
     **allows_any_call=False**
-        When True, any method is allowed to be called on the Fake() instance. 
-        Each method will be a stub that does nothing if it has not bee
-        defined.  Implies callable=True.
+        This is **deprecated**.  Use :meth:`Fake:is_a_stub()` instead.
 
     **callable=False**
         This is **deprecated**.  Use :meth:`Fake.is_callable` instead.
@@ -601,7 +599,11 @@ class Fake(object):
         self._declared_calls = {}
         self._name = (name or self._guess_name())
         self._last_declared_call_name = None
-        self._allows_any_call = allows_any_call
+        self._is_a_stub = False
+        if allows_any_call:
+            warnings.warn('Fake(allows_any_call=True) is deprecated;'
+                          ' use Fake.is_a_stub()')
+            self.is_a_stub()
         self._call_stack = None
         if expect_call:
             self.expects_call()
@@ -636,12 +638,16 @@ class Fake(object):
             else:
                 return self_call
             
-            if g('_allows_any_call'):
-                g('_callable').call_name = name
-                return g('_callable')
-            
-            raise AttributeError("%s object does not allow call or attribute '%s'" % (
-                                    self, name))
+            if g('_is_a_stub'):
+                # Lazily create a attribute (which might later get called):
+                stub = Fake(name=self._endpoint_name(name)).is_a_stub()
+                self.has_attr(**{name: stub})
+                return getattr(self, name)
+
+            raise AttributeError(
+                    "%s object does not allow call or attribute '%s' "
+                    "(maybe you want %s.is_a_stub() ?)" % (
+                                    self, name, self.__class__.__name__))
     
     def __call__(self, *args, **kwargs):
         if '__init__' in self._declared_calls:
@@ -656,10 +662,13 @@ class Fake(object):
                 return result
         elif self._callable:
             return self._callable(*args, **kwargs)
+        elif self._is_a_stub:
+            self.is_callable().returns_fake().is_a_stub()
+            return self.__call__(*args, **kwargs)
         else:
             raise RuntimeError(
                 "%s object cannot be called (maybe you want "
-                "%s(callable=True) ?)" % (self, self.__class__.__name__))
+                "%s.is_callable() ?)" % (self, self.__class__.__name__))
 
     def __setattr__(self, name, val):
         if hasattr(self, '_attributes') and name in self._attributes:
@@ -736,6 +745,12 @@ class Fake(object):
         exp = self._declared_calls[self._last_declared_call_name].get_call_object()
         return exp
 
+    def _endpoint_name(self, endpoint):
+        p = [self._name or 'unnamed']
+        if endpoint != self._name:
+            p.append(str(endpoint))
+        return '.'.join(p)
+
     def expects_call(self):
         """The fake must be called.
     
@@ -778,6 +793,17 @@ class Fake(object):
 
         """
         self._callable = Call(self, call_name=self._name, callable=True)
+        return self
+
+    def is_a_stub(self):
+        """Turns this fake into a stub.
+
+        When a stub, any method is allowed to be called on the Fake() instance
+        and any attribute can be accessed.  When an unknown attribute or
+        call is made, a new Fake() is returned.  You can of course override
+        any of this with :meth:`Fake.expects` and the other methods.
+        """
+        self._is_a_stub = True
         return self
 
     def calls(self, call):
@@ -917,8 +943,9 @@ class Fake(object):
         elif self._callable:
             exp = self._callable
         else:
-            raise FakeDeclarationError("next_call() must follow provides(), expects() or Fake(callable=True)")
-            
+            raise FakeDeclarationError('next_call() must follow provides(), '
+                                       'expects() or is_callable()')
+
         if getattr(exp, 'expected_times_called', None) is not None:
             raise FakeDeclarationError("Cannot use next_call() in combination with times_called()")
         
@@ -1063,11 +1090,8 @@ class Fake(object):
         """
         exp = self._get_current_call()
         endpoint = kwargs.get('name', exp.call_name)
-        if endpoint == self._name:
-            name = "%s()" % (self._name)
-        else:
-            name = "%s.%s()" % (self._name, endpoint)
-        kwargs['name'] = name
+        name = self._endpoint_name(endpoint)
+        kwargs['name'] = '%s()' % name
         fake = self.__class__(*args, **kwargs)
         exp.return_val = fake
         return fake

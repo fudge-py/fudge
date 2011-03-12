@@ -35,7 +35,7 @@ def test_patch_builtin():
     import datetime
     orig_datetime = datetime.datetime
     now = datetime.datetime(2010, 11, 4, 8, 19, 11, 28778)
-    fake = fudge.Fake('now', callable=True).returns(now)
+    fake = fudge.Fake('now').is_callable().returns(now)
     patched = fudge.patch_object(datetime.datetime, 'now', fake)
     try:
         eq_(datetime.datetime.now(), now)

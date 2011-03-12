@@ -114,6 +114,62 @@ class TestChainedNames(unittest.TestCase):
         test()
         eq_(str(ctx.fake), 'fake:smtplib.SMTP()')
 
+
+class TestIsAStub(unittest.TestCase):
+    
+    def tearDown(self):
+        fudge.clear_expectations()
+
+    def test_is_callable(self):
+        f = fudge.Fake().is_a_stub()
+        result = f()
+        assert isinstance(result, fudge.Fake)
+
+    def test_infinite_callables(self):
+        f = fudge.Fake().is_a_stub()
+        result = f()()()
+        assert isinstance(result, fudge.Fake)
+
+    def test_is_any_call(self):
+        f = fudge.Fake().is_a_stub()
+        assert isinstance(f.foobar(), fudge.Fake)
+        assert isinstance(f.foozilated(), fudge.Fake)
+
+    def test_is_any_call_with_any_args(self):
+        f = fudge.Fake().is_a_stub()
+        assert isinstance(f.foobar(blazz='Blaz', kudoz='Klazzed'),
+                          fudge.Fake)
+
+    def test_stubs_are_infinite(self):
+        f = fudge.Fake().is_a_stub()
+        assert isinstance(f.one().two().three(), fudge.Fake)
+
+    def test_stubs_have_any_attribute(self):
+        f = fudge.Fake().is_a_stub()
+        assert isinstance(f.foo, fudge.Fake)
+        assert isinstance(f.bar, fudge.Fake)
+
+    def test_attributes_are_infinite(self):
+        f = fudge.Fake().is_a_stub()
+        assert isinstance(f.foo.bar.barfoo, fudge.Fake)
+
+    def test_infinite_path_expectation(self):
+        f = fudge.Fake().is_a_stub()
+        f.foo.bar().expects('barfoo')
+        f.foo.bar().barfoo()
+
+    @raises(AssertionError)
+    def test_infinite_path_expectation_is_verified(self):
+        f = fudge.Fake().is_a_stub()
+        f.foo.bar().expects('barfoo').with_args(foo='bar')
+        f.foo.bar().barfoo()
+        fudge.verify()
+
+    def test_infinite_path_naming(self):
+        f = fudge.Fake(name='base').is_a_stub()
+        eq_(str(f.foo.bar().baz), 'fake:base.foo.bar().baz')
+
+
 class TestLongArgValues(unittest.TestCase):
     
     def test_arg_diffs_are_not_shortened(self):
@@ -505,7 +561,7 @@ class TestFakeCallables(unittest.TestCase):
         self.fake()
     
     def test_callable(self):
-        fake = fudge.Fake(callable=True)
+        fake = fudge.Fake().is_callable()
         fake() # allow the call
         fudge.verify() # no error
     
@@ -513,25 +569,19 @@ class TestFakeCallables(unittest.TestCase):
     def test_cannot_stub_any_call_by_default(self):
         self.fake.Anything() # must define this first
     
-    def test_can_stub_any_call(self):
-        self.fake = fudge.Fake(allows_any_call=True)
-        self.fake.Anything()
-        self.fake.something_else(blazz='Blaz', kudoz='Klazzed')
-        self.fake()
-    
     @raises(AssertionError)
     def test_stub_with_args(self):
-        self.fake = fudge.Fake(callable=True).with_args(1,2)
+        self.fake = fudge.Fake().is_callable().with_args(1,2)
         self.fake(1)
     
     @raises(AssertionError)
     def test_stub_with_arg_count(self):
-        self.fake = fudge.Fake(callable=True).with_arg_count(3)
+        self.fake = fudge.Fake().is_callable().with_arg_count(3)
         self.fake('bah')
     
     @raises(AssertionError)
     def test_stub_with_kwarg_count(self):
-        self.fake = fudge.Fake(callable=True).with_kwarg_count(3)
+        self.fake = fudge.Fake().is_callable().with_kwarg_count(3)
         self.fake(two=1)
     
     def test_stub_with_provides(self):
@@ -826,12 +876,13 @@ class TestNextCall(unittest.TestCase):
         eq_(fake.something(), 2)
     
     def test_next_call_with_callables(self):
-        login = fudge.Fake('login',callable=True)\
-                                .returns("yes")\
-                                .next_call()\
-                                .returns("maybe")\
-                                .next_call()\
-                                .returns("no")
+        login = (fudge.Fake('login')
+                                .is_callable()
+                                .returns("yes")
+                                .next_call()
+                                .returns("maybe")
+                                .next_call()
+                                .returns("no"))
         eq_(login(), "yes")
         eq_(login(), "maybe")
         eq_(login(), "no")
@@ -954,7 +1005,7 @@ class TestOrderedCalls(unittest.TestCase):
     
     @raises(FakeDeclarationError)
     def test_cannot_remember_order_when_callable_is_true(self):
-        fake = fudge.Fake(callable=True).remember_order()
+        fake = fudge.Fake().is_callable().remember_order()
     
     @raises(FakeDeclarationError)
     def test_cannot_remember_order_when_expect_call_is_true(self):

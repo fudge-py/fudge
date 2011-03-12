@@ -83,6 +83,7 @@ Changelog
 
 - 1.0.3
 
+  - Added :func:`fudge.Fake.is_a_stub` :ref:`documented here <creating-a-stub>`
   - :func:`arg.any_value() <fudge.inspector.ValueInspector.any_value>`
     is **DEPRECATED** in favor of
     :func:`arg.any() <fudge.inspector.ValueInspector.any>`

@@ -239,6 +239,40 @@ A descriptive error is printed if you call things out of order:
     
     >>> fudge.clear_expectations()
 
+.. _creating-a-stub:
+
+Allowing any call or attribute (a complete stub)
+================================================
+
+If you need an object that lazily provides any call or any attribute then
+you can declare :func:`fudge.Fake.is_a_stub`.  Any requested method or
+attribute will always return a new :class:`fudge.Fake` instance making it
+easier to work complex objects.  Here is an example:
+
+.. doctest::
+  
+  >>> Server = fudge.Fake('xmlrpclib.Server').is_a_stub()
+  >>> pypi = Server('http://pypi.python.org/pypi')
+  >>> pypi.list_packages()
+  fake:xmlrpclib.Server().list_packages()
+  >>> pypi.package_releases()
+  fake:xmlrpclib.Server().package_releases()
+
+Stubs like this carry on infinitely:
+
+.. doctest::
+
+  >>> f = fudge.Fake('base').is_a_stub()
+  >>> f.one.two.three().four
+  fake:base.one.two.three().four
+
+.. note::
+  
+  When using :func:`fudge.Fake.is_a_stub` you can't lazily access any
+  attributes or methods if they have the same name as a Fake method,
+  like ``returns()`` or ``with_args()``.  You would need to declare
+  expectations for those directly using :func:`fudge.expects`, etc.
+
 .. _working-with-arguments:
 
 Working with Arguments
