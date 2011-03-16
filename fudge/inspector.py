@@ -71,7 +71,8 @@ class ValueInspector(object):
     def any_value(self):
         """**DEPRECATED**: use :func:`arg.any() <fudge.inspector.ValueInspector.any>`
         """
-        warnings.warn('arg.any_value() is deprecated in favor of arg.any()')
+        warnings.warn('arg.any_value() is deprecated in favor of arg.any()',
+                      DeprecationWarning, 3)
         return self.any()
 
     def contains(self, part):

@@ -602,7 +602,8 @@ class Fake(object):
         self._is_a_stub = False
         if allows_any_call:
             warnings.warn('Fake(allows_any_call=True) is deprecated;'
-                          ' use Fake.is_a_stub()')
+                          ' use Fake.is_a_stub()',
+                          DeprecationWarning, 3)
             self.is_a_stub()
         self._call_stack = None
         if expect_call:
