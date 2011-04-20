@@ -1279,7 +1279,7 @@ class Fake(object):
             >>> query('http://python.org', name='Steve')
             Traceback (most recent call last):
             ...
-            AssertionError: fake:query() was called unexpectedly with arg name=Steve
+            AssertionError: fake:query() was called unexpectedly with kwarg name=Steve
 
         """
         exp = self._get_current_call()
