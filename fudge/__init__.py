@@ -239,6 +239,8 @@ class Call(object):
         self.expected_kwargs = None
         self.expected_matching_args = None
         self.expected_matching_kwargs = None
+        self.unexpected_args = None
+        self.unexpected_kwargs = None
         self.index = index
         self.exception_to_raise = None
         self.return_val = None
@@ -342,6 +344,22 @@ class Call(object):
                 raise AssertionError(
                     "%s was called with %s keyword arg(s) but expected %s" % (
                         self, len(kwargs.keys()), self.expected_kwarg_count))
+
+        if self.unexpected_kwargs:
+            for un_key, un_val in self.unexpected_kwargs.items():
+                if un_key in kwargs and kwargs[un_key] == un_val:
+                    raise AssertionError(
+                        "%s was called unexpectedly with kwarg %s=%s" %
+                        (self, un_key, un_val)
+                    )
+
+        if self.unexpected_args:
+            for un_arg in self.unexpected_args:
+                if un_arg in args:
+                    raise AssertionError(
+                        "%s was called unexpectedly with arg %s" %
+                        (self, un_arg)
+                    )
 
         if self.exception_to_raise is not None:
             raise self.exception_to_raise
@@ -1239,6 +1257,36 @@ class Fake(object):
             exp.expected_matching_args = args
         if kwargs:
             exp.expected_matching_kwargs = kwargs
+        return self
+
+    def without_args(self, *args, **kwargs):
+        """Set the last call to expect that certain arguments will not exist.
+
+        This is the opposite of :func:`fudge.Fake.with_matching_args.  It will
+        fail if any of the arguments are passed.
+
+        .. doctest::
+
+            >>> import fudge
+            >>> query = fudge.Fake('query').expects_call().without_args(
+            ...     'http://example.com', name="Steve"
+            ... )
+            >>> query('http://python.org', name="Joe")
+            >>> query('http://example.com')
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:query() was called unexpectedly with arg http://example.com
+            >>> query('http://python.org', name='Steve')
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:query() was called unexpectedly with arg name=Steve
+
+        """
+        exp = self._get_current_call()
+        if args:
+            exp.unexpected_args = args
+        if kwargs:
+            exp.unexpected_kwargs = kwargs
         return self
 
     def with_arg_count(self, count):
