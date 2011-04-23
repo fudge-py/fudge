@@ -24,11 +24,23 @@ import warnings
 
 from fudge.util import fmt_val, fmt_dict_vals
 
-__all__ = ['arg']
+__all__ = ['arg', 'arg_not']
 
 class ValueInspector(object):
     """Dispatches tests to inspect values.
     """
+
+    invert_eq = False
+
+    def _make_value_test(self, test_class, *args, **kwargs):
+        if not self.invert_eq:
+            return test_class(*args, **kwargs)
+        class ValueTestInverter(test_class):
+            def __repr__(wrapper_self):
+                return "(NOT) %s" % test_class.__repr__(wrapper_self)
+            def __eq__(wrapper_self, other):
+                return not test_class.__eq__(wrapper_self, other)
+        return ValueTestInverter(*args, **kwargs)
 
     def any(self):
         """Match any value.
@@ -66,7 +78,7 @@ class ValueInspector(object):
             >>> fudge.clear_expectations()
 
         """
-        return AnyValue()
+        return self._make_value_test(AnyValue)
 
     def any_value(self):
         """**DEPRECATED**: use :func:`arg.any() <fudge.inspector.ValueInspector.any>`
@@ -112,7 +124,7 @@ class ValueInspector(object):
             >>> fudge.clear_expectations()
 
         """
-        return Contains(part)
+        return self._make_value_test(Contains, part)
 
     def endswith(self, part):
         """Ensure that a value ends with some part.
@@ -135,7 +147,7 @@ class ValueInspector(object):
             >>> fudge.clear_expectations()
 
         """
-        return Endswith(part)
+        return self._make_value_test(Endswith, part)
 
     def has_attr(self, **attributes):
         """Ensure that an object value has at least these attributes.
@@ -185,7 +197,7 @@ class ValueInspector(object):
             >>> fudge.clear_expectations()
 
         """
-        return HasAttr(**attributes)
+        return self._make_value_test(HasAttr, **attributes)
 
     def passes_test(self, test):
         """Check that a value passes some test.
@@ -251,7 +263,7 @@ class ValueInspector(object):
             >>> fudge.clear_expectations()
 
         """
-        return PassesTest(test)
+        return self._make_value_test(PassesTest, test)
 
     def startswith(self, part):
         """Ensure that a value starts with some part.
@@ -274,9 +286,13 @@ class ValueInspector(object):
             >>> fudge.clear_expectations()
 
         """
-        return Startswith(part)
+        return self._make_value_test(Startswith, part)
+
+class NotValueInspector(ValueInspector):
+    invert_eq = True
 
 arg = ValueInspector()
+arg_not = NotValueInspector()
 
 class ValueTest(object):
 
