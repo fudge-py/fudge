@@ -1262,7 +1262,7 @@ class Fake(object):
     def without_args(self, *args, **kwargs):
         """Set the last call to expect that certain arguments will not exist.
 
-        This is the opposite of :func:`fudge.Fake.with_matching_args.  It will
+        This is the opposite of :func:`fudge.Fake.with_matching_args`.  It will
         fail if any of the arguments are passed.
 
         .. doctest::
