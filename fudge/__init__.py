@@ -1271,15 +1271,59 @@ class Fake(object):
             >>> query = fudge.Fake('query').expects_call().without_args(
             ...     'http://example.com', name="Steve"
             ... )
+
             >>> query('http://python.org', name="Joe")
             >>> query('http://example.com')
             Traceback (most recent call last):
             ...
             AssertionError: fake:query() was called unexpectedly with arg http://example.com
+            >>> query("Joe", "Frank", "Bartholomew", "Steve")
+            >>> query(name='Steve')
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:query() was called unexpectedly with kwarg name=Steve
             >>> query('http://python.org', name='Steve')
             Traceback (most recent call last):
             ...
             AssertionError: fake:query() was called unexpectedly with kwarg name=Steve
+            >>> query(city='Chicago', name='Steve')
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:query() was called unexpectedly with kwarg name=Steve
+
+            >>> query.expects_call().without_args('http://example2.com')
+            fake:query
+            >>> query('foobar')
+            >>> query('foobar', 'http://example2.com')
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:query() was called unexpectedly with arg http://example2.com
+
+            >>> query.expects_call().without_args(name="Hieronymus")
+            fake:query
+            >>> query("Gottfried", "Hieronymus")
+            >>> query(name="Wexter", other_name="Hieronymus")
+            >>> query('asdf', name="Hieronymus")
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:query() was called unexpectedly with kwarg name=Hieronymus
+            >>> query(name="Hieronymus")
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:query() was called unexpectedly with kwarg name=Hieronymus
+
+            >>> query = fudge.Fake('query').expects_call().without_args(
+            ...     'http://example.com', name="Steve"
+            ... ).with_args('dog')
+            >>> query('dog')
+            >>> query('dog', 'http://example.com')
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:query('dog') was called unexpectedly with args ('dog', 'http://example.com')
+            >>> query()
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:query('dog') was called unexpectedly with args ()
 
         """
         exp = self._get_current_call()

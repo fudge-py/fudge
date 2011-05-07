@@ -77,6 +77,30 @@ class ValueInspector(object):
 
             >>> fudge.clear_expectations()
 
+        The arg_not version will not match anything and is probably not very
+        useful.
+
+        .. doctest::
+
+            >>> import fudge
+            >>> from fudge.inspector import arg_not
+            >>> query = fudge.Fake('query').expects_call().with_args(
+            ...     arg_not.any()
+            ... )
+            >>> query('asdf')
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:query((NOT) arg.any()) was called unexpectedly with args ('asdf')
+            >>> query()
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:query((NOT) arg.any()) was called unexpectedly with args ()
+
+        .. doctest::
+            :hide:
+
+            >>> fudge.clear_expectations()
+
         """
         return self._make_value_test(AnyValue)
 
@@ -123,6 +147,30 @@ class ValueInspector(object):
 
             >>> fudge.clear_expectations()
 
+        arg_not.contains matches an argument not containing some element.
+
+        .. doctest::
+
+            >>> from fudge.inspector import arg_not
+            >>> colorpicker = colorpicker.expects('select').with_args(arg_not.contains('blue'))
+            >>> colorpicker.select('reddish')
+            >>> colorpicker.select(['red', 'green'])
+            >>> fudge.verify()
+
+            >>> colorpicker.select('blue-green')
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:colorpicker.select(arg.contains('red'))[0] was called unexpectedly with args ('blue-green')
+            >>> colorpicker.select(['red', 'blue', 'green'])
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:colorpicker.select((NOT) arg.contains('blue'))[1] was called unexpectedly with args (['red', 'blue', 'green'])
+
+        .. doctest::
+            :hide:
+
+            >>> fudge.clear_expectations()
+
         """
         return self._make_value_test(Contains, part)
 
@@ -139,6 +187,21 @@ class ValueInspector(object):
             ...                                             arg.endswith(".tmp"))
             ...
             >>> tmpfile.mkname("7AakkkLazUUKHKJgh908JKjlkh.tmp")
+            >>> fudge.verify()
+
+        .. doctest::
+            :hide:
+
+            >>> fudge.clear_expectations()
+
+        The arg_not version works as expected, matching arguments that do not
+        end with the given element.
+
+        .. doctest::
+
+            >>> from fudge.inspector import arg_not
+            >>> query = fudge.Fake('query').expects_call().with_args(arg_not.endswith('Ringo'))
+            >>> query('John, Paul, George and Steve')
             >>> fudge.verify()
 
         .. doctest::
@@ -190,6 +253,20 @@ class ValueInspector(object):
             ...
             AssertionError: fake:db.update(arg.has_attr(first_name='Bob', last_name='James')) was called unexpectedly with args ({'first_name': 'Bob'})
 
+        When called as a method on arg_not, has_attr does the opposite, and
+        ensures that the argument does not have the specified attributes.
+
+        .. doctest::
+
+            >>> from fudge.inspector import arg_not
+            >>> class User:
+            ...     first_name = 'Bob'
+            ...     last_name = 'Dobbs'
+            >>> query = fudge.Fake('query').expects_call().with_args(
+            ...     arg_not.has_attr(first_name='James')
+            ... )
+            >>> query(User())
+            >>> fudge.verify()
 
         .. doctest::
             :hide:
@@ -262,6 +339,23 @@ class ValueInspector(object):
 
             >>> fudge.clear_expectations()
 
+        Using the inverted version, arg_not.passes_test, asserts that the
+        argument does not pass the provided test.
+
+        .. doctest::
+
+            >>> from fudge.inspector import arg_not
+            >>> query = fudge.Fake('query').expects_call().with_args(
+            ...     arg_not.passes_test(lambda x: x > 10)
+            ... )
+            >>> query(5)
+            >>> fudge.verify()
+
+        .. doctest::
+            :hide:
+
+            >>> fudge.clear_expectations()
+
         """
         return self._make_value_test(PassesTest, test)
 
@@ -278,6 +372,23 @@ class ValueInspector(object):
             ...                                                     arg.startswith("_key"))
             ...
             >>> keychain.accept_key("_key-18657yojgaodfty98618652olkj[oollk]")
+            >>> fudge.verify()
+
+        .. doctest::
+            :hide:
+
+            >>> fudge.clear_expectations()
+
+        Using arg_not.startswith instead ensures that arguments do not start
+        with that part.
+
+        .. doctest::
+
+            >>> from fudge.inspector import arg_not
+            >>> query = fudge.Fake('query').expects_call().with_args(
+            ...     arg_not.startswith('asdf')
+            ... )
+            >>> query('qwerty')
             >>> fudge.verify()
 
         .. doctest::
