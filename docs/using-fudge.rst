@@ -328,6 +328,7 @@ There also inverted version of all the :class:`fudge.inspector.arg <fudge.inspec
 The methods all have the same name, but assert the opposite of the ``arg`` versions.
 See the docstrings for the various :meth:`fudge.inspector.arg <fudge.inspector.ValueInspector>` methods for examples of their usage.
 
+:class:`fudge.inspector.arg_not <fudge.inspector.NotValueInspector>` can also be called on an object to match anything except that object.
 
 .. doctest::
     :hide:

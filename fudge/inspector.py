@@ -400,7 +400,37 @@ class ValueInspector(object):
         return self._make_value_test(Startswith, part)
 
 class NotValueInspector(ValueInspector):
+    """Inherits all the argument methods from ValueInspector, but inverts them
+    to expect the opposite. See the ValueInspector method docstrings for
+    examples.
+    """
+
     invert_eq = True
+
+    def __call__(self, thing):
+        """This will match any value except the argument given.
+
+        .. doctest::
+
+            >>> import fudge
+            >>> from fudge.inspector import arg, arg_not
+            >>> query = fudge.Fake('query').expects_call().with_args(
+            ...     arg.any(),
+            ...     arg_not('foobar')
+            ... )
+            >>> query([1, 2, 3], 'asdf')
+            >>> query('asdf', 'foobar')
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:query(arg.any(), arg_not(foobar)) was called unexpectedly with args ('asdf', 'foobar')
+
+        .. doctest::
+            :hide:
+
+            >>> fudge.clear_expectations()
+
+        """
+        return NotValue(thing)
 
 arg = ValueInspector()
 arg_not = NotValueInspector()
@@ -510,3 +540,12 @@ class PassesTest(ValueTest):
     def _repr_argspec(self):
         return self._make_argspec(repr(self.test))
 
+class NotValue(ValueTest):
+    def __init__(self, item):
+        self.item = item
+
+    def __eq__(self, other):
+        return not self.item == other
+
+    def _repr_argspec(self):
+        return "arg_not(%s)" % self.item
