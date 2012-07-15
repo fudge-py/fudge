@@ -65,6 +65,28 @@ class TestPassesTest(unittest.TestCase):
         passes = inspector.PassesTest(test())
         eq_(str(passes), "arg.passes_test(v is an int)")
 
+class TestIsInstance(unittest.TestCase):
+
+    def tearDown(self):
+        fudge.clear_expectations()
+
+    def test_passes(self):
+        counter = Fake("counter").expects("increment").with_args(arg.isinstance(int))
+        counter.increment(25)
+
+    @raises(AssertionError)
+    def test_passes_fail(self):
+        counter = Fake("counter").expects("set_name").with_args(arg.isinstance(str))
+        counter.set_name(25)
+
+    def test_repr(self):
+        passes = inspector.IsInstance(int)
+        eq_(repr(passes), "arg.isinstance('int')")
+
+    def test_str(self):
+        passes = inspector.IsInstance(str)
+        eq_(str(passes), "arg.isinstance('str')")
+
 class TestObjectlike(unittest.TestCase):
 
     def tearDown(self):

@@ -359,6 +359,41 @@ class ValueInspector(object):
         """
         return self._make_value_test(PassesTest, test)
 
+    def isinstance(self, cls):
+        """Check that a value is instance of specified class.
+
+        .. doctest::
+
+            >>> import fudge
+            >>> from fudge.inspector import arg
+            >>> system = fudge.Fake("system")
+            >>> system = system.expects("set_status").with_args(arg.isinstance(str))
+            >>> system.set_status("active")
+            >>> fudge.verify()
+
+        .. doctest::
+            :hide:
+
+            >>> fudge.clear_calls()
+
+        Should return True if it's allowed class or False if not.
+
+        .. doctest::
+
+            >>> system.set_status(31337) # doctest: +ELLIPSIS
+            Traceback (most recent call last):
+            ...
+            AssertionError: fake:system.set_status(arg.isinstance('str')) was called unexpectedly with args (31337)
+
+        .. doctest::
+            :hide:
+
+            >>> fudge.clear_expectations()
+
+        """
+        return self._make_value_test(IsInstance, cls)
+
+
     def startswith(self, part):
         """Ensure that a value starts with some part.
 
@@ -539,6 +574,18 @@ class PassesTest(ValueTest):
 
     def _repr_argspec(self):
         return self._make_argspec(repr(self.test))
+
+class IsInstance(ValueTest):
+    arg_method = "isinstance"
+
+    def __init__(self, cls):
+        self.cls = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.cls)
+
+    def _repr_argspec(self):
+        return self._make_argspec(repr(self.cls.__name__))
 
 class NotValue(ValueTest):
     def __init__(self, item):
