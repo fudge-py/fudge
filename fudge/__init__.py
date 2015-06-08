@@ -614,6 +614,7 @@ class Fake(object):
     def __init__(self, name=None, allows_any_call=False,
                  callable=False, expect_call=False):
         self._attributes = {}
+        self._properties = {}
         self._declared_calls = {}
         self._name = (name or self._guess_name())
         self._last_declared_call_name = None
@@ -647,6 +648,9 @@ class Fake(object):
         elif name in g('_attributes'):
             # return attribute declared on real object
             return g('_attributes')[name]
+        elif name in g('_properties'):
+            # execute function and return result
+            return g('_properties')[name]()
         else:
             # otherwise, first check if it's a call
             # of Fake itself (i.e. returns(),  with_args(), etc)
@@ -886,6 +890,25 @@ class Fake(object):
 
         """
         self._attributes.update(attributes)
+        return self
+
+    def has_property(self, **properties):
+        """Sets available properties.
+
+        I.E.::
+
+            >>> mock_name = Fake().is_callable().returns('Jim Bob')
+            >>> mock_age = Fake().is_callable().raises(AttributeError('DOB not set'))
+            >>> user = Fake('User').has_property(name=mock_name, age=mock_age)
+            >>> user.name
+            'Jim Bob'
+            >>> user.age
+            Traceback (most recent call last):
+            ...
+            AttributeError: DOB not set
+
+        """
+        self._properties.update(properties)
         return self
 
     def next_call(self, for_method=None):
