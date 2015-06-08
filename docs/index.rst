@@ -37,9 +37,9 @@ This step will convert the Fudge source code using the 2to3 tool.
 Source
 ======
 
-The Fudge source can be downloaded as a tar.gz file from http://pypi.python.org/pypi/fudge  
+The Fudge source can be downloaded as a tar.gz file from http://pypi.python.org/pypi/fudge
 
-Using `Mercurial <http://www.selenic.com/mercurial/wiki/>`_ you can clone the source from http://bitbucket.org/kumar303/fudge/  
+Using `Git <https://git-scm.com/>`_ you can clone the source from https://github.com/fudge-py/fudge/
 
 Fudge is free and open for usage under the `MIT license`_.
 
@@ -69,17 +69,26 @@ API Reference
 Contributing
 ============
 
-Please submit `bugs and patches <http://bitbucket.org/kumar303/fudge/issues/>`_, preferably with tests.  All contributors will be acknowledged.  Thanks!
+Please submit `bugs and patches <https://github.com/fudge-py/fudge/issues>`_, preferably with tests.  All contributors will be acknowledged.  Thanks!
 
 Credits
 =======
 
-Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contributions by Cristian Esquivias, Michael Williamson, and Luis Fagundes.
+Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contributions by Cristian Esquivias, Michael Williamson, Luis Fagundes and Jeremy Satterfield.
 
 .. _fudge-changelog:
 
 Changelog
 =========
+
+- 1.1.0
+
+  - **Changed** `moved to github <https://github.com/fudge-py/fudge/>`_ and added maintainers
+  - **Changed** remove support for python 3.1 and 3.2 in tests in lieu of 3.4
+  - added :func:`fudge.Fake.has_property`
+  - added :class:`IsInstance`
+  - added :func:`without_args`
+  - Deprecation warnings are now real warnings.
 
 - 1.0.3
 

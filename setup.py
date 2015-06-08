@@ -52,7 +52,7 @@ email without actually sending email::
     license="The MIT License",
     packages=find_packages(exclude=['ez_setup']),
     install_requires=[],
-    url='http://farmdev.com/projects/fudge/',
+    url='https://github.com/fudge-py/fudge',
     include_package_data=True,
     classifiers = [
         'Intended Audience :: Developers',
