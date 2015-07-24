@@ -1,7 +1,7 @@
 Fudge is a module for replacing real objects with fakes (mocks, stubs, etc) while testing.
 
 Documentation is available at
-[http://farmdev.com/projects/fudge/](http://farmdev.com/projects/fudge/)
+[https://fudge.readthedocs.org/en/latest/](https://fudge.readthedocs.org/en/latest/)
 or else, you can build it from source like this:
 
     $ easy_install Sphinx
