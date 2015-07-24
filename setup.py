@@ -22,7 +22,7 @@ setup(
     version=version,
     description="Replace real objects with fakes (mocks, stubs, etc) while testing.",
     long_description="""
-Complete documentation is available at http://farmdev.com/projects/fudge/
+Complete documentation is available at https://fudge.readthedocs.org/en/latest/
 
 Fudge is a Python module for using fake objects (mocks and stubs) to test real ones.
 
@@ -35,7 +35,7 @@ with a traceback that points to the culprit.
 
 Here is a quick preview of how you can test code that sends
 email without actually sending email::
-    
+
     @fudge.patch('smtplib.SMTP')
     def test_mailer(FakeSMTP):
         # Declare how the SMTP class should be used:
@@ -45,7 +45,7 @@ email without actually sending email::
         # Run production code:
         send_mail()
         # ...expectations are verified automatically at the end of the test
-    
+
 """,
     author='Kumar McMillan',
     author_email='kumar.mcmillan@gmail.com',

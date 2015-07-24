@@ -2,7 +2,7 @@
 
 project_name="Fudge"
 
-project_url="http://farmdev.com/projects/fudge/"
+project_url="https://fudge.readthedocs.org/en/latest/"
 
 # The location of your yuidoc install
 yuidoc_home=~/src/yuidoc
