@@ -585,7 +585,10 @@ class IsInstance(ValueTest):
         return isinstance(other, self.cls)
 
     def _repr_argspec(self):
-        return self._make_argspec(repr(self.cls.__name__))
+        if isinstance(self.cls, (tuple, list)):
+            return self._make_argspec(repr(self.cls))
+        else:
+            return self._make_argspec(repr(self.cls.__name__))
 
 class NotValue(ValueTest):
     def __init__(self, item):
