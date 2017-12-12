@@ -81,6 +81,10 @@ Fudge was created by `Kumar McMillan <http://farmdev.com/>`_ and contains contri
 Changelog
 =========
 
+- 1.1.1
+
+  - Fixes error when providing tuple or list to arg.isinstance
+
 - 1.1.0
 
   - **Changed** `moved to github <https://github.com/fudge-py/fudge/>`_ and added maintainers
