@@ -87,6 +87,10 @@ class TestIsInstance(unittest.TestCase):
         passes = inspector.IsInstance(str)
         eq_(str(passes), "arg.isinstance('str')")
 
+    def test_list(self):
+        passes = inspector.IsInstance((str, int))
+        eq_(str(passes), "arg.isinstance(('str', 'int'))")
+
 class TestObjectlike(unittest.TestCase):
 
     def tearDown(self):

@@ -586,7 +586,7 @@ class IsInstance(ValueTest):
 
     def _repr_argspec(self):
         if isinstance(self.cls, (tuple, list)):
-            return self._make_argspec(repr(self.cls))
+            return self._make_argspec(repr(tuple((cls.__name__ for cls in self.cls))))
         else:
             return self._make_argspec(repr(self.cls.__name__))
 
