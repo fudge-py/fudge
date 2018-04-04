@@ -15,58 +15,75 @@ from fudge.util import wraps
 
 class patch(object):
     """A test decorator that patches importable names with :class:`fakes <Fake>`
-    
+
     Each fake is exposed as an argument to the test:
-    
+
     .. doctest::
         :hide:
-        
+
         >>> import fudge
 
     .. doctest::
-        
+
         >>> @fudge.patch('os.remove')
         ... def test(fake_remove):
         ...     fake_remove.expects_call()
         ...     # do stuff...
-        ... 
+        ...
         >>> test()
         Traceback (most recent call last):
         ...
         AssertionError: fake:os.remove() was not called
-    
+
     .. doctest::
         :hide:
-        
+
         >>> fudge.clear_expectations()
-    
+
     Many paths can be patched at once:
 
     .. doctest::
-        
+
         >>> @fudge.patch('os.remove',
         ...              'shutil.rmtree')
         ... def test(fake_remove, fake_rmtree):
         ...     fake_remove.is_callable()
         ...     # do stuff...
-        ... 
-        >>> test()
-    
+        ...
+
+    You can also use :func:`fudge.patch` as a context manager. This is useful when
+    working with testing frameworks which mangle the calling signature of test functions,
+    such as pytest.
+
+    .. doctest::
+
+        >>> def test():
+        ...     with fudge.patch('os.remove') as fake_remove:
+        ...         fake_remove.expects_call()
+        ...         # do stuff...
+        ...
+        >>> def test():
+        ...     with fudge.patch('os.remove',
+        ...                      'shutil.rmtree') as (fake_remove, fake_rmtree):
+        ...         fake_remove.is_callable()
+        ...         # do stuff...
+        ...
+
     For convenience, the patch method calls
     :func:`fudge.clear_calls`, :func:`fudge.verify`, and :func:`fudge.clear_expectations`.  For that reason, you must manage all your fake objects within the test function itself.
 
     .. note::
-    
+
         If you are using a unittest class, you cannot declare fakes
-        within ``setUp()`` unless you manually clear calls and clear 
-        expectations.  If you do that, you'll want to use the 
+        within ``setUp()`` unless you manually clear calls and clear
+        expectations.  If you do that, you'll want to use the
         :func:`fudge.with_fakes` decorator instead of ``@patch``.
-    
+
     """
-    
+
     def __init__(self, *obj_paths):
         self.obj_paths = obj_paths
-    
+
     def __call__(self, fn):
         @wraps(fn)
         def caller(*args, **kw):
@@ -85,7 +102,7 @@ class patch(object):
                 self.__exit__(None, None, None)
             return value
         return caller
-    
+
     def __enter__(self):
         fudge.clear_expectations()
         fudge.clear_calls()
@@ -93,7 +110,7 @@ class patch(object):
         all_fakes = []
         for path in self.obj_paths:
             try:
-                target, attr = path.rsplit('.', 1)    
+                target, attr = path.rsplit('.', 1)
             except (TypeError, ValueError):
                 raise TypeError(
                     "Need a valid target to patch. You supplied: %r"
@@ -105,7 +122,7 @@ class patch(object):
             return all_fakes[0]
         else:
             return all_fakes
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         try:
             if not exc_type:
@@ -117,26 +134,26 @@ class patch(object):
 
 
 def with_patched_object(obj, attr_name, patched_value):
-    """Decorator that patches an object before the decorated method 
+    """Decorator that patches an object before the decorated method
     is called and restores it afterwards.
-    
+
     This is a wrapper around :func:`fudge.patcher.patch_object`
-    
+
     Example::
-        
+
         >>> from fudge import with_patched_object
         >>> class Session:
         ...     state = 'clean'
-        ... 
+        ...
         >>> @with_patched_object(Session, "state", "dirty")
         ... def test():
         ...     print Session.state
-        ... 
+        ...
         >>> test()
         dirty
         >>> print Session.state
         clean
-        
+
     """
     def patcher(method):
         @wraps(method)
@@ -151,71 +168,71 @@ def with_patched_object(obj, attr_name, patched_value):
 
 class patched_context(object):
     """A context manager to patch an object temporarily during a `with statement`_ block.
-        
+
     This is a wrapper around :func:`fudge.patcher.patch_object`
-    
-    .. lame, lame, cannot figure out how to apply __future__ to doctest 
+
+    .. lame, lame, cannot figure out how to apply __future__ to doctest
        so this output is currently skipped
-    
+
     .. doctest:: python25
         :options: +SKIP
-        
+
         >>> from fudge import patched_context
         >>> class Session:
         ...     state = 'clean'
-        ... 
+        ...
         >>> with patched_context(Session, "state", "dirty"): # doctest: +SKIP
         ...     print Session.state
-        ... 
+        ...
         dirty
         >>> print Session.state
         clean
-    
+
     .. _with statement: http://www.python.org/dev/peps/pep-0343/
-        
+
     """
     def __init__(self, obj, attr_name, patched_value):
-        
-        # note that a @contextmanager decorator would be simpler 
-        # but it can't be used since a value cannot be yielded within a 
+
+        # note that a @contextmanager decorator would be simpler
+        # but it can't be used since a value cannot be yielded within a
         # try/finally block which is needed to restore the object on finally.
-        
+
         self.patched_object = patch_object(obj, attr_name, patched_value)
-    
+
     def __enter__(self):
         return self.patched_object
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.patched_object.restore()
 
 def patch_object(obj, attr_name, patched_value):
     """Patches an object and returns an instance of :class:`fudge.patcher.PatchHandler` for later restoration.
-    
+
     Note that if *obj* is not an object but a path to a module then it will be imported.
-    
+
     You may want to use a more convenient wrapper :func:`with_patched_object` or :func:`patched_context`
-    
+
     Example::
-        
+
         >>> from fudge import patch_object
         >>> class Session:
         ...     state = 'clean'
-        ... 
+        ...
         >>> patched_session = patch_object(Session, "state", "dirty")
         >>> Session.state
         'dirty'
         >>> patched_session.restore()
         >>> Session.state
         'clean'
-    
+
     Here is another example showing how to patch multiple objects at once::
-        
+
         >>> class Session:
         ...     state = 'clean'
-        ... 
+        ...
         >>> class config:
         ...     session_strategy = 'database'
-        ... 
+        ...
         >>> patches = [
         ...     patch_object(config, "session_strategy", "filesystem"),
         ...     patch_object(Session, "state", "dirty")
@@ -237,7 +254,7 @@ def patch_object(obj, attr_name, patched_value):
         'database'
         >>> Session.state
         'clean'
-        
+
     """
     if isinstance(obj, (str, unicode)):
         obj_path = adjusted_path = obj
@@ -251,7 +268,7 @@ def patch_object(obj, attr_name, patched_value):
             except ImportError:
                 # Handle paths that traveerse object attributes.
                 # Such as: smtplib.SMTP.connect
-                #          smtplib <- module to import 
+                #          smtplib <- module to import
                 adjusted_path = adjusted_path.rsplit('.', 1)[0]
                 if not exc:
                     exc = sys.exc_info()
@@ -276,9 +293,9 @@ class NonExistant(object):
 
 class PatchHandler(object):
     """Low level patch handler that memorizes a patch so you can restore it later.
-    
+
     You can use more convenient wrappers :func:`with_patched_object` and :func:`patched_context`
-        
+
     """
     def __init__(self, orig_object, attr_name):
         self.orig_object = orig_object
@@ -288,7 +305,7 @@ class PatchHandler(object):
                                                             self.attr_name)
         self.getter_class, self.getter = self._handle_getter(self.orig_object,
                                                              self.attr_name)
-    
+
     def patch(self, patched_value):
         """Set a new value for the attribute of the object."""
         try:
@@ -307,7 +324,7 @@ class PatchHandler(object):
                                      {self.attr_name: patched_value})
             mod = sys.modules[self.orig_object.__module__]
             setattr(mod, self.orig_object.__name__, self.proxy_object)
-        
+
     def restore(self):
         """Restore the saved value for the attribute of the object."""
         if self.proxy_object is None:

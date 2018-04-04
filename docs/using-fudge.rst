@@ -58,6 +58,11 @@ Let's break this down:
 
 Let's run the test!
 
+.. note::
+
+  When paired with testing frameworks which mangle testing function calling signatures, such as pytest, you must
+  use :func:`fudge.patch` as a context manager rather than a decorator.
+
 .. doctest::
 
   >>> test()
