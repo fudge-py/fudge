@@ -51,7 +51,7 @@ email without actually sending email::
     author_email='kumar.mcmillan@gmail.com',
     license="The MIT License",
     packages=find_packages(exclude=['ez_setup']),
-    install_requires=[],
+    install_requires=['six'],
     url='https://github.com/fudge-py/fudge',
     include_package_data=True,
     classifiers = [

@@ -21,6 +21,7 @@ should end with the suffix ".jpg"
 
 """
 import warnings
+import six
 
 from fudge.util import fmt_val, fmt_dict_vals
 
@@ -505,7 +506,7 @@ class Stringlike(ValueTest):
         return self._make_argspec(fmt_val(self.part))
 
     def stringlike(self, value):
-        if isinstance(value, (str, unicode)):
+        if isinstance(value, six.string_types):
             return value
         else:
             return str(value)
