@@ -1,4 +1,5 @@
 from __future__ import with_statement
+from __future__ import absolute_import
 import sys
 import unittest
 
@@ -63,7 +64,7 @@ class TestFake(unittest.TestCase):
         eq_(my_obj.vice, 'versa')
         try:
             my_obj.stuff
-        except Exception, exc:
+        except Exception as exc:
             eq_(str(exc), 'broken stuff')
         else:
             raise RuntimeError('expected Exception')
@@ -89,7 +90,7 @@ class TestFake(unittest.TestCase):
         )
         try:
             fake.set_bits()
-        except AssertionError, exc:
+        except AssertionError as exc:
             eq_(str(exc),
             "fake:widget.set_bits('123456789101112131415161718192021222324252627...') "
             "was called unexpectedly with args ()")
@@ -192,7 +193,7 @@ class TestLongArgValues(unittest.TestCase):
         try:
             # this should not be shortened but the above arg spec should:
             fake.set_bits("99999999999999999999999999999999999999999999999999999999")
-        except AssertionError, exc:
+        except AssertionError as exc:
             eq_(str(exc),
             "fake:widget.set_bits('123456789101112131415161718192021222324252627...') "
             "was called unexpectedly with args "
@@ -207,7 +208,7 @@ class TestLongArgValues(unittest.TestCase):
         try:
             # this should not be shortened but the above arg spec should:
             fake.set_bits(newbits="99999999999999999999999999999999999999999999999999999999")
-        except AssertionError, exc:
+        except AssertionError as exc:
             eq_(str(exc),
             "fake:widget.set_bits(newbits='123456789101112131415161718192021222324252627...') "
             "was called unexpectedly with args "

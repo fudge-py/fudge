@@ -5,6 +5,7 @@
 
 # FIXME: this is dumb
 
+from __future__ import absolute_import
 from fudge.tests.test_fudge import *
 from fudge.tests.test_import_all import *
 from fudge.tests.test_inspector import *

@@ -1,5 +1,6 @@
 
-import thread
+from __future__ import absolute_import
+import six.moves._thread
 import sys
 import unittest
 import fudge
@@ -85,13 +86,13 @@ class TestRegistry(unittest.TestCase):
         eq_(len(self.reg.get_expected_calls()), 1)
         exp_order = ExpectedCallOrder(self.fake)
         self.reg.remember_expected_call_order(exp_order)
-        eq_(self.reg.get_expected_call_order().keys(), [self.fake])
+        eq_(list(self.reg.get_expected_call_order().keys()), [self.fake])
         
         fudge.clear_expectations()
         
         eq_(len(self.reg.get_expected_calls()), 0, 
             "clear_expectations() should reset expectations")
-        eq_(len(self.reg.get_expected_call_order().keys()), 0,
+        eq_(len(list(self.reg.get_expected_call_order().keys())), 0,
             "clear_expectations() should reset expected call order")
     
     def test_multithreading(self):
@@ -114,7 +115,7 @@ class TestRegistry(unittest.TestCase):
                     
                     exp_order = ExpectedCallOrder(self.fake)
                     reg.remember_expected_call_order(exp_order)
-                    eq_(len(reg.get_expected_call_order().keys()), 1)
+                    eq_(len(list(reg.get_expected_call_order().keys())), 1)
                     
                     # registered first time on __init__ :
                     exp = ExpectedCall(self.fake, 'callMe', call_order=exp_order) 
@@ -131,17 +132,17 @@ class TestRegistry(unittest.TestCase):
                     
                     fudge.verify()
                     fudge.clear_expectations()
-                except Exception, er:
+                except Exception as er:
                     thread_run.errors.append(er)
                     raise
             finally:
                 thread_run.waiting -= 1
                 
-        thread.start_new_thread(registry, (1,))
-        thread.start_new_thread(registry, (2,))
-        thread.start_new_thread(registry, (3,))
-        thread.start_new_thread(registry, (4,))
-        thread.start_new_thread(registry, (5,))
+        six.moves._thread.start_new_thread(registry, (1,))
+        six.moves._thread.start_new_thread(registry, (2,))
+        six.moves._thread.start_new_thread(registry, (3,))
+        six.moves._thread.start_new_thread(registry, (4,))
+        six.moves._thread.start_new_thread(registry, (5,))
 
         count = 0
         while thread_run.waiting > 0:

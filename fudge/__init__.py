@@ -5,11 +5,12 @@ See :ref:`using-fudge` for common scenarios.
 
 """
 
+from __future__ import absolute_import
 __version__ = '1.1.1'
 import os
 import re
 import sys
-import thread
+import six.moves._thread
 import warnings
 from fudge.exc import FakeDeclarationError
 from fudge.patcher import *
@@ -67,12 +68,12 @@ class Registry(object):
             this_call_order.add_expected_call(expected_call)
 
     def get_expected_calls(self):
-        self.expected_calls.setdefault(thread.get_ident(), [])
-        return self.expected_calls[thread.get_ident()]
+        self.expected_calls.setdefault(six.moves._thread.get_ident(), [])
+        return self.expected_calls[six.moves._thread.get_ident()]
 
     def get_expected_call_order(self):
-        self.expected_call_order.setdefault(thread.get_ident(), {})
-        return self.expected_call_order[thread.get_ident()]
+        self.expected_call_order.setdefault(six.moves._thread.get_ident(), {})
+        return self.expected_call_order[six.moves._thread.get_ident()]
 
     def remember_expected_call_order(self, expected_call_order):
         ordered_fakes = self.get_expected_call_order()
@@ -340,10 +341,10 @@ class Call(object):
 
             if self.expected_kwarg_count is None:
                 self.expected_kwarg_count = 0
-            if len(kwargs.keys()) != self.expected_kwarg_count:
+            if len(list(kwargs.keys())) != self.expected_kwarg_count:
                 raise AssertionError(
                     "%s was called with %s keyword arg(s) but expected %s" % (
-                        self, len(kwargs.keys()), self.expected_kwarg_count))
+                        self, len(list(kwargs.keys())), self.expected_kwarg_count))
 
         if self.unexpected_kwargs:
             for un_key, un_val in self.unexpected_kwargs.items():
