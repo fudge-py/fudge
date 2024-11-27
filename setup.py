@@ -15,6 +15,8 @@ assert version
 extra_setup = {}
 if sys.version_info >= (3,):
     extra_setup['use_2to3'] = True
+    # use_2to3 removed in setuptools v58
+    extra_setup['setup_requires']=['setuptools<58'],
     # extra_setup['use_2to3_fixers'] = ['your.fixers']
 
 setup(
